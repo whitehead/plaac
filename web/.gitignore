@@ -1,0 +1,5 @@
+public/sequence*.fasta
+.sass*
+logs/*
+.idea/*
+tmp/*

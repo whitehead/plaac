@@ -1,0 +1,193 @@
+Developer Installation
+
+  Requirements
+
+    Ruby 1.9.3
+    https://rvm.io/
+    > rvm install 1.9.3
+    > rvm use 1.9.3
+
+    Dependencies (bundler)
+    > gem install bundler
+    > bundle install
+
+Infrastructure
+
+  bin/sinatra_server
+    a webrick server (same as ruby lib/server.rb)
+
+  bin/shotgun_server
+    a development server that reloads all the 
+    code every request (slow but useful)
+
+  config.ru
+    makes the application rackable 
+    (e.g. you can drop it into passenger)
+
+  lib/server.rb
+    Start here.
+
+
+Application
+
+  Designed to handle the submission of fasta files
+  to a sequence analysis application called spewey-ross.
+
+
+  flow:
+  / - input form
+  /run - handles post from the input form
+         runs spewey with given options
+  /sequence(.*).fasta - the format of the results files
+
+  Thoughts:
+  since there is multi step processing, and spewey is slow
+  we probably need to produce tickets and have background
+  processing and progress checking.
+
+  ticket = sha1(fasta_file + options)
+
+  public/runs/#{ticket}/
+    input.fasta
+    primary_output.fasta
+    secondary_output.fasta
+    individual/
+        a.fasta
+        a.png
+        b.fasta
+        b.png
+    all.zip
+
+TODO:
+
+  - Implement use of a dropdown list of genomes, initially use the AA 
+    files in /nfs/seq/Data, specifically: drosoph.aa, ensembl_human.aa,
+    ensembl_mouse.aa, yeast.aa.  I recommend we do an initial import 
+    and "freeze" the .aa files along with their dates, for reproducibility.
+    
+    I envision the web front-end loading the information using a CSV
+    text file with metadata that I will create in the following form:
+
+    "filename","species","date","upstream_url"
+    "/some/location/yeast.aa","S. cerevisiae","2013-09-12","ftp://genome-ftp.stanford.edu/pub/yeast/data_download/sequence/genomic_sequence/orf_protein"
+    ...
+
+    It would then load this metadata and use the columns to create a
+    dropdown list in the web UI (or set of radio buttons, depending on
+    the number of genomes we choose), where the button or list item
+    would be: "S. cerevisiae protein sequences (2013-09-12)".  Ideally
+    it would also include the upstream URL somewhere, but that's not
+    needed initially.  Once the user has chosen the option, it would
+    feed the local filename (on the server) to the "java -jar
+    plaac.jar" call.
+
+    Selecting a genome would be mandatory if a user enters proteins in
+    the text box, no default would be provided and the "Run Analysis"
+    option greyed out, forcing the user to select a species.
+
+    The slider should only appear when the upload file option is chosen
+    (if the slider is not shown, it will default to alpha=1).
+
+    If upload file is chosen, then by default the slider should be set
+    to alpha=0 (i.e. it uses the input file as the sole source of AA
+    background information) and in this case, the species/genome
+    options would be greyed out completely, because then we are using
+    only the uploaded file as background information.
+
+    If the slider is dragged somewhere between 0 < alpha < 1, then
+    both a species/genome selection is mandatory and the file upload
+    option must have been selected.  (This handled automatically
+    because the slider is only ever shown if the file upload option is
+    selected.)
+
+  - saved/cached runs (added AKL 2013-04-29)
+ 
+     - link to the Excel file Scer-all-proteins-2012-07-20.xls
+          in /lab/lindquist_lab/users/Alex_Lancaster//scer-prion-predictions/latest/ 
+     - start with yeast, then have one for Arabidopsis, humans etc.
+
+  - In the select candidate page, the "Advanced options",
+    i.e. background probabilities and core length need to carry over
+    from the initial page.  In fact, a user should rarely have a
+    reason to change them from the initial page, because the plots
+    would then be inconsistent with the initial rankings used to
+    choose them.
+
+  - textbox  
+
+    - parsing of sequence to make sure that it's a valid sequence, e.g 
+      all letters must be part of the amino acid alphabet, a stop
+      codon ("*") or gap character ("-")
+
+    - handle FASTA formatted cut-and-paste (i.e. should parse the
+      header), as well as bare sequences
+      - Do we make up an info line for it? 
+      - Does the java handle missing info lines?
+    
+    - gap characters should be dropped as should stops
+      - Spaces? Newlines? What do you mean by 'gap characters'?
+
+    - feedback to user if sequence invalid
+
+  - column features
+    
+    - make columns "sortable", with "Asc"/"Dec" arrows next to each
+      header
+
+    - add mouseover "popups" with descriptions of each displayed
+      column (AKL will provide text)
+    
+    - add mouseover to show verbose output for each candidate, such as
+      the actual PrD and COREscore amino-acid sequence (Javascript?)
+      as well as columns not currently displayed
+
+
+  - make default images in details pages be a bit smaller, but have
+    mouseover "zoom" on each image, so we can fit more on page and get
+    an overall sense of prion signature "at-a-glance".  also have a 
+    download link in the zoomed version.
+
+  - AKL TODO: need to tweak default title in image/PDF if the name of
+    the sequence is too long (should probably truncate after certain
+    length)
+
+DONE
+
+  X textbox on first page to allow a user to paste in a random
+    protein, needs to handle: 
+
+  X parse output candidates file and show columns 
+    
+     X currently we parse the file and include the header as a
+      "candidate", the program to - use the header as keys for a
+      dictionary so the code could use - symbolic names for columns
+      (e.g. "COREscore" etc.) rather than - absolute column positions
+      because later iterations of the cli - code might rearrange the
+      column order (or add new columns). (AKL, 2012-02-29)
+
+  X rank candidates by "COREscore" column
+    X made a start on this by reordering the array (AKL, 2012-02-29)
+
+  X add "Next", "Previous" page, default to, say 50 per page
+
+  X some proteomes have 35,000+ genes, although we currently can
+    filter on the geneIDs, this resets any genes selected so far.  We
+    need to have a way of creating a custom list by successive
+    browsing and searching.  
+
+    Here is an example use-case:
+
+      By default you see the first page of top hits, let's say you
+      select 3 of those, but then you think of a particular gene
+      you're interested, then search for that, and add it to the list,
+      and now you've got 4 genes.  Once you finalize the list, then
+      you'd press "Submit" to generate the final PDF.
+
+    Possible interface implementation idea: would be to adding a new
+    pane (perhaps above or below the current list) that keeps track of
+    the genes selected so far, those added either via browsing the
+    pages, or by searching the geneIDs.
+
+  X Add Alex to the commit emails.
+
+

@@ -1,0 +1,99 @@
+
+.container-fluid
+  .row-fluid
+    .span12
+
+
+      .pull-right
+        %ul.inline
+          %li
+            %a.btn.btn-success.btn-large{href: "/visualize/#{@job.token}/pdf"}
+              %i.icon-download.icon-white
+              Graphical details
+            .inline-help.muted Adobe PDF (.pdf)
+          %li
+            %a.btn.btn-success.btn-large{href: "/visualize/#{@job.token}/csv"}
+              %i.icon-download.icon-white
+              Text details
+            .inline-help.muted Tab-separated Text File (.tsv)
+
+      %h2 Visualization & Details
+
+      %br.clear
+      #candidates
+        - if !@output.nil? && !@output.empty?
+          %table.long
+            %tr
+              %td
+                %b Sequences
+              %td &nbsp;
+            - @output.each_with_index do |row,r|
+              - row = row.first
+              - next if row =~ /^geneID/
+              %tr
+                %td.tt
+                  %a{href: "#img#{r}"}
+                    %i.icon-arrow-down
+                    = row
+                %td
+                  - if row =~ /[\s|](NP_[\d\.]+)[\s|]/
+                    - np_number = $1.to_s
+                    %a{target:'_blank',href:"http://www.ncbi.nlm.nih.gov/protein/#{np_number}"}
+                      %img{src:'/images/ncbi.png', border:0}
+                      = np_number
+
+          - @output.each_with_index do |row,r|
+            - row = row.first
+            - next if row =~ /^geneID/
+            %hr
+            .detail
+              %a.anchor{name: "img#{r}"}
+              %a{href: '#top'}
+                %i.icon-arrow-up
+                top
+              %br
+              %br.clear
+
+              - row = @candidates[r]
+              - idstr = row[@idx[:geneID]].split(/\|/)
+              - idstr = "<b>" + idstr[0] + "</b><br/><small>"+ idstr[1..-1].join("|") + "</small>"
+              = idstr
+              %br
+              %br
+              %table.long#candidate_list{style:'background: white'}
+                %tr.header_details
+                  %th{width:'1%'} &nbsp;
+                  %th COREscore
+                  %th LLR
+                  %th PAPAprd
+                  %th PAPAfi
+                  %th &nbsp;
+                  - next if row.first == "geneID"
+                  -#%tr.candidate_geneId
+                  -#  %td{style:'width:16px ! important'}
+                  -#    %input{id: "chk#{r}", name: 'selected[]', value: r, type: 'checkbox',checked:false}
+                  -#  %td.tt{colspan: 5}
+                  -#    %label{for: "chk#{r}", title: row[@idx[:geneID]], style: 'color: #393;'}
+                  -#      = row[@idx[:geneID]]
+                %tr.candidate_details
+                  %td{style:'width:16px ! important'} &nbsp;
+                  %td.tt
+                    %label{for: "chk#{r}"}= row[@idx[:COREscore]]
+                  %td.tt
+                    %label{for: "chk#{r}"}= row[@idx[:LLR]]
+                  %td.tt
+                    %label{for: "chk#{r}"}= row[@idx[:PAPAprd]]
+                  %td.tt
+                    %label{for: "chk#{r}"}= row[@idx[:PAPAfi]]
+                  %td
+                    - if row[@idx[:geneID]] =~ /[\s|](NP_[\d\.]+)[\s|]/
+                      - np_number = $1.to_s
+                      %a{target:'_blank',href:"http://www.ncbi.nlm.nih.gov/protein/#{np_number}"}
+                        %img{src:'/images/ncbi.png', border:0}
+                        = np_number
+
+              %img{src: "/visualize/#{@job.token}/images/#{r+1}.png", style:'border:1px solid #efefef'}
+
+-#Local Variables: 
+-#indent-tabs-mode: nil
+-#End:

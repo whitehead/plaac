@@ -1,0 +1,5377 @@
+/** /////////////////////////////////////////////////////////////////////////////
+    Original program copyright 2009 Whitehead Institute for Biomedial Research;
+    additions copyright 2011 BBRI and copyright 2013 University of Massachusetts Medical School.
+    Author: Oliver King (oliver.king@umassmed.edu) 
+    
+    See LICENSE.TXT for license information.  
+
+    Last updated September 20, 2013
+    
+    Compile with: javac plaac.java
+    To see usage details, run with: java plaac 
+   
+**/ ////////////////////////////////////////////////////////////////////////
+
+// java plaac -i hsap-hnrnpa1b2.faa -b human.protein.faa -c 60 -w 41 -W 41 -a 1 -p plotlist-hnrnp.txt 
+
+
+import java.io.*;
+import java.util.*;
+import java.net.*;
+import java.util.regex.*;
+
+class plaac {
+
+    static char [] aanames =   {'X','A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y','*'};
+    static String [] aanames2 = {"???","Ala","Cys","Asp","Glu","Phe","Gly","His","Ile","Lys","Leu","Met","Asn",
+				 "Pro","Gln","Arg","Ser","Thr","Val","Trp","Tyr","***"};
+
+    static double log2 = Math.log(2);
+
+    static double [] loglut;
+    static int loglutlength = 40*100;
+    
+    static double tol = 0.000001; // small number to avoid += Inf in logratios
+
+    static double [] aacharge = {
+	0, // 'X'
+	0, // 'A'
+	0, // 'C'
+	1, // 'D'
+	1, // 'E'
+	0, // 'F'
+	0, // 'G'
+	0, // 'H' -0.5?
+	0, // 'I'
+	-1, // 'K'
+	0, // 'L'
+	0, // 'M'
+	0, // 'N'
+	0, // 'P'
+	0, // 'Q'
+	-1, // 'R'
+	0, // 'S'
+	0, // 'T'
+	0, // 'V'
+	0, // 'W'
+	0, // 'Y'
+	0  // '*'
+    };
+
+
+    // K-D
+    static double [] aahydro = {
+	0.0, // 'X'
+	1.8, // 'A'
+	2.5, // 'C'
+	-3.5, // 'D'
+	-3.5, // 'E'
+	2.8, // 'F'
+	-0.4, // 'G'
+	-3.2, // 'H'
+	4.5, // 'I'
+	-3.9, // 'K'
+	3.8, // 'L'
+	1.9, // 'M'
+	-3.5, // 'N'
+	-1.6, // 'P'
+	-3.5, // 'Q'
+	-4.5, // 'R'
+	-0.8, // 'S'
+	-0.7, // 'T'
+	4.2, // 'V'
+	-0.9, // 'W'
+	-1.3, // 'Y'
+	0.0  // '*'
+    };
+
+    // From Toombs, McCarty and Ross, MCB 2009
+    static double [] fgpapa1 = {
+	0.0, // 'X'
+	0.042, // 'A'
+	0.033, // 'C'
+	0.014, // 'D'
+	0.009, // 'E'
+	0.075, // 'F'
+	0.038, // 'G'
+	0.059, // 'H'
+	0.102, // 'I'
+	0.009, // 'K'
+	0.059, // 'L'
+	0.038, // 'M'
+	0.096, // 'N'
+	0.038, // 'P'
+	0.024, // 'Q'
+	0.054, // 'R'
+	0.125, // 'S'
+	0.069, // 'T'
+	0.102, // 'V'
+	0.024, // 'W'
+	0.054, // 'Y'
+	0.0  // '*'
+    };
+
+    // From Toombs, McCarty and Ross, MCB 2009
+    static double [] bgpapa1 = {
+	0.0, // 'X'
+	0.072, // 'A'
+	0.022, // 'C'
+	0.051, // 'D'
+	0.017, // 'E'
+	0.032, // 'F'
+	0.040, // 'G'
+	0.078, // 'H'
+	0.045, // 'I'
+	0.045, // 'K'
+	0.061, // 'L'
+	0.020, // 'M'
+	0.089, // 'N'
+	0.127, // 'P'
+	0.022, // 'Q'
+	0.081, // 'R'
+	0.109, // 'S'
+	0.078, // 'T'
+	0.045, // 'V'
+	0.012, // 'W'
+	0.025, // 'Y'
+	0.0  // '*'
+    };
+
+
+    // From Toombs, McCarty and Ross, MCB 2009
+    static double [] fgpapa2 = {
+	0.0, // 'X'
+	0.057, // 'A'
+	0.015, // 'C'
+	0.045, // 'D'
+	0.023, // 'E'
+	0.064, // 'F'
+	0.057, // 'G'
+	0.080, // 'H'
+	0.038, // 'I'
+	0.004, // 'K'
+	0.045, // 'L'
+	0.030, // 'M'
+	0.068, // 'N'
+	0.072, // 'P'
+	0.030, // 'Q'
+	0.045, // 'R'
+	0.110, // 'S'
+	0.087, // 'T'
+	0.038, // 'V'
+	0.042, // 'W'
+	0.049, // 'Y'
+	0.0  // '*'
+    };
+
+    // From Toombs, McCarty and Ross, MCB 2009
+    // D 4% too high, E too low?  F 3% too high, R too low?
+    static double [] bgpapa2 = {
+	0.0, // 'X'
+	0.064, // 'A'
+	0.012, // 'C'
+	0.067, // 'D'
+	0.024, // 'E'
+	0.021, // 'F'
+	0.046, // 'G'
+	0.070, // 'H'
+	0.030, // 'I'
+	0.021, // 'K'
+	0.052, // 'L'
+	0.021, // 'M'
+	0.040, // 'N'
+	0.095, // 'P'
+	0.037, // 'Q'
+	0.076, // 'R'
+	0.119, // 'S'
+	0.095, // 'T'
+	0.037, // 'V'
+	0.009, // 'W'
+	0.064, // 'Y'
+	0.0  // '*'
+    };
+   
+
+    static double [] lodpapa1;
+    static double [] lodpapa2;
+   
+    static double [] odpapa1 ={
+	0.0,
+	0.67267686, // A
+	1.5146198,  // C
+	0.27887323, // D
+	0.5460614,  // E
+	2.313433,   // F
+	0.96153843, // G
+	0.75686276, // H
+	2.2562358,  // I
+	0.20664589, // K
+	0.9607843,  // L
+	1.9615384,  // M
+	1.0836071,  // N
+	0.30196398, // P
+	1.0716166,  // Q
+	0.6664044,  // R
+	1.1432927,  // S
+	0.8917492,  // T
+	2.2562358,  // V
+	1.9478673,  // W
+	2.1785367,  // Y
+	0.0         // *
+    };
+
+    static double [] odpapa2 ={
+	0.0,        // X
+	0.88066554, // A
+	1.2461538,  // C
+	0.72039115, // D ## 0.66?? [45 vs 67]
+	0.77220076, // E ## 0.93?? [23 vs 24]
+	3.6936572,  // F ## 3.16?? [64 vs 21] ct 17/264 vs 6/328
+	1.2570281,  // G
+	1.1460011,  // H
+	1.2519685,  // I
+	0.17436177, // K
+	0.87114847, // L
+	1.4330357,  // M
+	1.7729831,  // N
+	0.7429888,  // P
+	0.8229167,  // Q
+	0.5531136,  // R  ## 0.58?? [45 vs 76]
+	0.9144572,  // S
+	0.9143354,  // T
+	1.0367454,  // V
+	4.710145,   // W
+	0.75716186, // Y
+	0.0,        // *
+    };
+
+
+    //  static double [] gnq = {0,0,0,0,0,0,1.0,0,0,0,0,0,1.0,0,1.0,0,0,0,0,0,0,0};
+   
+    // global AA frequencies from S. Cerevisiae used in Alberti et al Cell 2009. 
+    static double [] bg_freq_scer = {0,0.0550,0.0126,0.0586,0.0655,0.0441,0.0498,0.0217,0.0655,0.0735,0.0950,0.0207,
+			     0.0615,0.0438,0.0396,0.0444,0.0899,0.0592,0.0556,0.0104,0.0337,0};
+    // values used in Alberti et al Cell 2009 based on prion domains from Sup3p5, Rnq1p, Ure2p, New1p
+    static double [] prd_freq_scer_04 = {0,0.0488,0.0032,0.0202,0.0234,0.0276,0.1157,0.0149,0.0191,0.0329,0.0456,
+				  0.0149,0.1444,0.0308,0.2208, 0.0202,0.1008,0.0297,0.0234,0.0064,0.0573,0};
+    
+    // values derived from 28 experimentally determined prion-like domains in Alberti et al Cell 2009
+    static double [] prd_freq_scer_28 = {0,0.04865,0.00219,0.01638,0.00783,0.02537,0.07603,0.0181,0.02018,0.01641,0.02639,
+				 0.02975,0.25885,0.05126,0.15178,0.025,0.10988,0.03841,0.01972,0.00157,0.05624,0};
+    
+    //static double [] newfginvitro = {0,0.05271,0.00091,0.01203,0.00944,0.02854,0.07964,0.01874,0.0219,0.01599,0.03269,
+    //				     0.02539,0.19047,0.07032,0.1889,0.02315,0.10565,0.04302,0.02279,0.0011,0.05662,0};
+    
+    //static double [] newfgsup35 = {0,0.03542,0.0024,0.01701,0.00815,0.02686,0.08151,0.01544,0.02067,0.01774,
+    //				   0.02421,0.02599,0.28863,0.047,0.1301,0.02655,0.11715,0.03943,0.01834,0.00191,0.05552,0};
+    
+    // uniform bg frequencies; not currently used. 
+    // static double [] unibg = {0.0,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.0};
+    
+
+
+
+    static double [][] aastats;
+
+    static boolean verbose = false;
+
+
+    plaac() {
+	
+        // used by HMM when doing using log values rather than scaling to prevent underflow
+	loglut = new double[loglutlength+1]; 
+	for (int i=0; i<=loglutlength; i++) loglut[i] = Math.log(1.0 + Math.exp(-i/100.0));
+
+       	lodpapa1 = new double[22];
+	lodpapa2 = new double[22];
+
+	for (int k=1; k<=20; k++) {
+	    lodpapa1[k] = Math.log(odpapa1[k]);
+	    lodpapa2[k] = Math.log(odpapa2[k]);
+	}
+
+       	// alternative: compute lods directly from frequencies in sequence files; 
+	// should agree for papa1, not for papa2, but these aren't currently used.
+        
+	// recompute_papa_parameters();
+        
+
+    }
+
+
+    public static void main (String args[]) {
+
+	// if (hss_tests()==1) return;
+     
+	plaac ms = new plaac(); 
+
+        // if (1==1) {print_aa_params(newfgred); return;}
+	// if (1==1) {print_aa_params(oldfgfreq); return;}
+
+	// double [] fgfreq = oldfgfreq;  // AA frequencies in PrDs, updated based on new hits
+	// double [] fgfreq = aastats[8]; // AA frequencies in PrDs, updated based on new hits
+
+        // store defaults in textfile to be read with -F?
+	double [] fgfreq = prd_freq_scer_28;
+
+	double [] bgscer = normalize(bg_freq_scer);     // overall AA frequencies in S.cer
+	String inputfile = "";
+	String bgfile = "";
+       	String bgfreqfile = "";
+        String fgfreqfile = "";
+	String plotlist = "";
+	int corelength = 60;
+	int ww = 41;
+	int ww2 = 41;
+	double alpha = 1;
+	int hmmtype = 1;
+       	boolean smushpp = true;
+
+        // should check for valid input here!
+	for (int i=0; i<args.length - 1; i++) {
+	    if (args[i].equals("-i")) {inputfile = args[i+1]; i++;}
+	    else if (args[i].equals("-b")) {bgfile = args[i+1]; i++;}
+	    else if (args[i].equals("-B")) {bgfreqfile = args[i+1]; i++;}
+            else if (args[i].equals("-F")) {fgfreqfile = args[i+1]; i++;}
+	    else if (args[i].equals("-c")) {corelength = Integer.parseInt(args[i+1]); i++;}
+	    else if (args[i].equals("-w")) {ww = Integer.parseInt(args[i+1]); i++;}
+	    else if (args[i].equals("-W")) {ww2 = Integer.parseInt(args[i+1]); i++;}
+	    else if (args[i].equals("-a")) {alpha = Double.parseDouble(args[i+1]); i++;}
+	    else if (args[i].equals("-m")) {hmmtype = Integer.parseInt(args[i+1]); i++;}
+	    else if (args[i].equals("-p")) {plotlist = args[i+1]; i++;}
+	    else {System.out.println("skipping unknown option" + args[i]);}
+	}
+
+	if (verbose) {
+	    System.out.println("## -i -->"+inputfile+"<---");
+	    System.out.println("## -b -->"+bgfile+"<---");
+	    System.out.println("## -B -->"+bgfreqfile+"<---");
+            System.out.println("## -F -->"+fgfreqfile+"<---");
+	    System.out.println("## -m -->"+hmmtype+"<---");
+	    System.out.println("## -p -->"+plotlist+"<---");
+	    System.out.println("## -c -->"+corelength+"<---");
+	    System.out.println("## -w -->"+ww+"<---");
+	    System.out.println("## -W -->"+ww2+"<---"); 
+	    System.out.println("## -a -->"+alpha+"<---");
+	} 
+
+	// compute global AA frequencies for sequences being scored   
+        double [] bgf = new double[22];
+	double [] bgthis = new double[22];
+
+	if (bgfreqfile.length() > 0) {
+            // catch exceptions?
+	    bgf = read_aa_params(bgfreqfile);
+	} else if (bgfile.length() > 0) {
+	    bgf = asdouble(computeaafreq(bgfile,false));
+	} else if (inputfile.length() > 0) {
+	    bgf = asdouble(computeaafreq(inputfile,false));
+	} 
+
+         
+        if (fgfreqfile.length() > 0) {
+            // catch exceptions?
+	    fgfreq = read_aa_params(bgfreqfile);
+	}
+	
+	// can be redirected to file to use later with -B option
+       	if ((bgfile.length() > 0) && (inputfile.length() == 0) ) {
+	    print_aa_params(bgf);
+	    return;
+	}
+	
+	// checks that bgfreqfile is being read correctly
+	if ((bgfreqfile.length() > 0) && (inputfile.length() == 0)) {
+	    print_aa_params(bgf);
+	    return;
+	}
+	
+	if ((inputfile.length() == 0) && (bgfile.length() == 0)) {
+	    System.out.println("------------------------------------------------------------");
+	    // FIXME: point to appropriate license file
+	    System.out.println("This program is offered with NO WARRANTY WHATSOEVER, and\n  may not be redistributed; see LICENSE.TXT for details.");
+	    System.out.println("------------------------------------------------------------");
+	    System.out.println("USAGE: Need to specify an input protein fasta file after the flag -i, e.g.\n   plaac -i input.fa > output.txt");
+	    System.out.println("Note that the example above redirects the output of the program to a tab-delimited text file output.txt");
+	    System.out.println(" that can be opened with a speadsheet program.");
+	    System.out.println("Optional arguments:");
+	    System.out.println("-c core_length, where the integer core_length is the minimal contiguous prion-like domain length\n  for the HMM parses. Default is 60.");
+	    System.out.println("-B bg_freqs.txt, specifying background AA freqs to use for the species, one per line, in the following order:");
+            System.out.println("  X, A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y, *");
+	    System.out.println(" (Values for X and * will be set to zero and other numbers normalized to add to 1)");
+	    // X and * get zeroed out -- could exclude from file spec. Add pseudocounts before normalization?
+	    System.out.println("-b background.fa, where background.fa is the name of a protein fasta file used to\n  compute background AA frequencies for the species.");
+            System.out.println("  This option is ignored if -B is used, but otherwise if -b is not specified it defaults to the input.fa file.");
+	    System.out.println("  If the sequences in input.fa have biased AA composition then a separate background.fa or bg_freqs.txt is recommended.");
+            System.out.println("  If -b is specified but -i is not, AA counts for background.fa will be written to standard output, and the program will exit.");
+	    System.out.println("  These counts can be redirected to a file (e.g. with > bg_freqs.txt), in a format that can be read by the -B option.");
+	    System.out.println("-a alpha, where alpha is a number between 0 and 1 (inclusive) that controls the degree to which the S. cerevisiae") ;
+	    System.out.println("  background AA frequencies are mixed with the background AA frequencies from -B, -b, or -i.");
+	    System.out.println("  If alpha = 0, just the AA frequencies from the -B, -b, or -i are used, and if alpha = 1 just the\n  S. Cerevisiae AA frequencies are used. Default is 0.5.");
+            System.out.println("-F fg_freqs.txt, specifying prion-like AA freqs in same format as -B above. Defaults to those used in [cite].");
+	    System.out.println("-w window_size, where window_size is the window size for FoldIndex disorder predictions. Default is 41.");
+	    System.out.println("-W Window_size, where Window_size is the window size for the PAPA algorithm. Default is 41.");
+	    System.out.println("-p print_list.txt, where print_list.txt has the name of one fasta on each line, and specifies\n  which fastas in input.fa will be plotted");
+	    System.out.println("  The names must exactly match those in input.fa, but do need need the > symbol before the name.");
+	    System.out.println("  If no print_list.txt is specified the output from the program will be a table of summaries for each protein (one per line) in input.fa;");
+	    System.out.println("  If a print_list.txt is specified the output from the program will be a table (one line per residue) that is used");
+	    System.out.println("  for making plots for each of the proteins listed in print_list.txt.");
+	    System.out.println("  If the option is given as -p all, then plots will be made for all of the proteins in input.fa, \n  which is not advised if input.fa is an entire proteome.");
+	    System.out.println("  To make the plots from output that has been redirected to output.txt, at the command-line type type\n  Rscript plaac_plot.r output.txt plotname.pdf.");
+	    System.out.println("  This requires that the program R be installed (see http://www.r-project.org/)\n  and will create a file named plotname.pdf, with one plot per page.");
+	    System.out.println("  Calling Rscript plaac_plot.r with no file specified will list other options for plotting."); // FIXME: need to add this to plaacplot!
+	    return;
+	}
+
+	if (alpha > 1 || alpha < 0) {
+	    System.out.println("# warning: invalid alpha; using alpha = 0.5");
+	    alpha = 0.5;
+	} 
+
+        fgfreq[0] = 0; fgfreq[21] = 0; 
+        // may want some other strategy for pseudocounts if fgfreq are based on very few seqs
+	fgfreq = normalize(axpb(1.0,fgfreq,0.0001));
+
+	bgf[0] = 0; bgf[21] = 0; 
+	bgthis = normalize(bgf);
+
+	// use weighted combination of bgscer and bgthis as bg freqs: alpha*(s.cer) + (1-alpha)*(this org)
+	double [] bgcombo = normalize(axpby(alpha, bgscer,(1-alpha), bgthis));
+
+	// read table of parameters from file: could do this for all fg and bg AA freqs, etc.
+	// double[][] mymat = readmatrix2("util/aa-biases-core.txt",1,1);
+	// aastats = transpose(mymat);
+	// double [] ogf = aastats[1]; // first row of matrix
+	// ogf[0] = 0; ogf[21] = 0; 
+	// ogf = normalize(axpb(1.0,ogf,0.0001));
+        // printmatrix(mymat);
+	// printmatrix(mymat[0]);
+        // printaausage(aastats[0]);
+	
+	if (verbose) {
+            System.out.println("## fg-freq");
+	    printaausage(bgscer); 
+	    System.out.println("## bg-scer");
+	    printaausage(bgscer); 
+	    System.out.println("## bg-this");
+	    printaausage(bgthis); 
+	    System.out.println("## bg-mixed");
+	    printaausage(bgcombo); 
+	    // System.out.println("## og");
+	    // printaausage(ogf); 
+	}  
+
+
+        if ((inputfile.length() > 0) && (plotlist.length() == 0)) {
+	    // can pass in any fg and bg frequencies here, if these are not suitable
+	    scorefastas(inputfile, corelength, ww, ww2, fgfreq, bgcombo, hmmtype, smushpp);
+	} else if ((inputfile.length() > 0) && (plotlist.length() > 0)) {
+	    plotsomefastas(inputfile, corelength, ww, ww2, fgfreq, bgcombo, hmmtype, plotlist, smushpp);
+	     // // attempt to call R plot routine; doesn't work in current state.
+	     //    try {
+	     //         String [] cmd = {"Rscript", "plaacwrap.r", "hnrnp-w41a.out"}; // make 3rd arg dynamic here! 
+	     // 	 // Runtime.getRuntime().exec("R CMD BATCH plaacplot.r");
+	     //         Process proc = Runtime.getRuntime().exec(cmd); 
+	     //         int exitVal = proc.waitFor(); // doesn't work without this!
+	     //         System.out.println("## Process exitValue: " + exitVal);
+	     //      } catch (Throwable e) {  
+	     // 	    e.printStackTrace();
+	     //      }
+	     // 	    
+	}
+    }
+
+   
+
+    static int hss_tests() {
+	// ack! looks like hss1 didn't use last index sometimes, and hss2 didn't use first index.
+	// Also, these don't grab anything after -Infinity! 
+	System.out.println((-1.0/0 > -10) + " " + (-1.0/0 < -10) + " " + (1.0/0 > 100));
+
+	double [] seq1 = {1,2,3,4,5,6,7,7,6,5,4,3,2,1};
+	double [] seq2 = {1,1,2,2,3,3,4,4,5,5,6,6,7,7};
+        double [] seq3 = {7,7,6,6,5,5,4,4,3,3,2,2,1,1};
+	double [] seq4 = {-1,-2,-3,-4,-5,-6,-7,-7,-6,-5,-4,-3,-2,-1};
+	double [] seq5 = {-1,-1,-2,-2,-3,-3,-4,-4,-5,-5,-6,-6,-7,-7};
+	double [] seq6 = {-7,-7,-6,-6,-5,-5,-4,-4,-3,-3,-2,-2,-1,-1};
+	double [] seq7 = {-7,-7,0,0,-5,-5,4,4,-3,-3,-2,-2,-1,-1};
+	double [] seq8 = {7,7,0,0,-5,-5,-4,-4,-3,-3,-2,-2,-1,-1};
+	double [] seq9 = {-7,-7,0,0,-5,-5,-4,-4,-3,-3,-2,-2,1,1};
+	double [] seq10 = {-1.0/0,2,3,4,5,6,7,7,6,5,4,3,2,1};
+	double [] seq11 = {1,2,3,4,5,6,-1.0/0,7,6,5,4,3,2,1};
+	double [] seq12 = {1,2,3,4,5,6,7,7,6,5,4,3,2,-1.0/0};
+	double [] seq13 = {1.0/0,2,3,4,5,6,7,7,6,5,4,3,2,1};
+	double [] seq14 = {1,2,3,4,5,6,1.0/0,7,6,5,4,3,2,1};
+	double [] seq15 = {1,2,3,4,5,6,7,7,6,5,4,3,2,1.0/0};
+
+	double [] myseq;
+	double [] myhss1; 
+	double [] myhss2;
+
+	int ub, lb;
+	
+	ub=1; lb=1;
+	myseq=seq1; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq2; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq3; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq4; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq5; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq6; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq7; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq8; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq9; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq10; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq11; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq12; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq13; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq14; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq15; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	System.out.println("-----------");
+
+
+	ub=3; lb=3;
+	myseq=seq1; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq2; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq3; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq4; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq5; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq6; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq7; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq8; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq9; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq9; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq10; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq11; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq12; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq13; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq14; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq15; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	System.out.println("-----------");
+	
+	ub=14; lb=14;
+	myseq=seq1; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq2; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq3; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq4; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq5; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq6; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq7; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq8; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq9; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq9; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq10; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq11; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq12; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq13; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq14; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq15; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	System.out.println("-----------");
+
+	ub=13; lb=13;
+	myseq=seq1; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq2; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq3; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq4; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq5; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq6; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq7; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq8; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq9; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq9; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq10; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq11; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq12; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq13; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq14; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq15; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	System.out.println("-----------");
+
+	// should throw error if seq len < 15?
+	ub=15; lb=15; 
+	myseq=seq1; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq2; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq3; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq4; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq5; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq6; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq7; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq8; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq9; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq9; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq10; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq11; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq12; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq13; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq14; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq15; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	System.out.println("-----------");
+
+	// should throw error since seq len < 15?
+	ub=20; lb=17; 
+	myseq=seq1; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq2; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq3; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq4; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq5; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq6; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq7; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq8; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq9; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq9; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq10; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq11; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq12; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq13; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq14; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq15; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	System.out.println("-----------");
+
+
+	ub=14; lb=0;
+	myseq=seq1; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq2; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq3; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq4; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq5; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq6; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq7; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq8; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq9; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq9; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq10; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq11; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq12; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq13; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq14; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	myseq=seq15; myhss1=hss(myseq,lb,ub); myhss2=hss2(myseq,lb,ub); printrowvec(myseq); printrowvec(myhss1); printrowvec(myhss2);
+	System.out.println("-----------");
+
+	return 1;
+
+    }
+
+    
+
+   static int recompute_papa_parameters() {
+	int [] aac; 
+	double [] aaf;
+
+	// The frequencies and odds for papa2 scores from MCB don't appear to be consistent. 
+	// Below we compute frequencies from the listed positive and negative sequences.
+       	// overwrites hard-coded defaults
+
+	aac = computeaafreq(new String("util/rosspsi1.txt"),false);
+	aac[0] = 0; aac[21] = 0;
+	aaf = normalize(aac);
+	fgpapa1 = aaf;
+
+	aac = computeaafreq(new String("util/rossnai1.txt"),false);
+	aac[0] = 0; aac[21] = 0; 
+	aaf = normalize(aac);
+	bgpapa1 = aaf;
+
+	aac = computeaafreq(new String("util/rosspsi2.txt"),false);
+	aac[0] = 0; aac[21] = 0; 
+	aaf = normalize(aac);
+	fgpapa2 = aaf;
+
+	aac = computeaafreq(new String("util/rossnai2.txt"),false);
+	aac[0] = 0; aac[21] = 0; 
+	aaf = normalize(aac);
+	bgpapa2 = aaf;
+
+	lodpapa1 = new double[22];
+	lodpapa2 = new double[22];
+	odpapa1 = new double[22];
+	odpapa2 = new double[22];
+
+	for (int k=1; k<=20; k++) {
+	    odpapa1[k]= ((fgpapa1[k]/(1-fgpapa1[k]))/(bgpapa1[k]/(1-bgpapa1[k])));
+	    odpapa2[k]= ((fgpapa2[k]/(1-fgpapa2[k]))/(bgpapa2[k]/(1-bgpapa2[k])));
+	    lodpapa1[k]= Math.log((fgpapa1[k]/(1-fgpapa1[k]))/(bgpapa1[k]/(1-bgpapa1[k])));
+	    lodpapa2[k]= Math.log((fgpapa2[k]/(1-fgpapa2[k]))/(bgpapa2[k]/(1-bgpapa2[k])));
+	}
+
+	if (verbose) {
+	    System.out.println("## od-papa1");
+	    printaausage(odpapa1);
+	    System.out.println("## lod-papa1");
+	    printaausage(lodpapa1);
+	    System.out.println("## od-papa2");
+	    printaausage(odpapa2);
+	}
+
+	return 1;
+   }
+
+
+    // pass HMM as argument? Pass papa lods? --- pulled out of global variable now
+    static void plotsomefastas(String filename,	 int corelength, int ww, int ww2, double [] fgfreq, 
+			       double [] bgfreq, int hmmtype, String genelist, boolean smushpp) {
+
+	HashMap<String,String> ht1 = new HashMap<String,String>(); // for synonym
+	HashMap<String,String> ht2 = new HashMap<String,String>(); // for order
+
+	boolean plotall = false; // plot all genes in fasta file
+	if (genelist.equals("all")) {
+	    plotall = true;
+	} else {
+	    ht1 = readhashtable(genelist, null); 
+	    ht2 = readhashtable(genelist,"incr");
+	}
+
+	double [] fg = normalize(fgfreq);
+	double [] bg = normalize(bgfreq);
+	double [] llr = new double[22];
+
+	for (int i=1; i<21; i++) llr[i] = Math.log(fg[i]/bg[i]);
+
+	if (verbose) {
+	    System.out.println("## fgfreqs");   
+	    printaausage(fg);
+	    System.out.println("## bgfreqs");  
+	    printaausage(bg);
+	    // System.out.println("## og freqs");  
+	    //  printaausage(og);
+	    System.out.println("## llratio");  
+	    printaausage(llr);
+	}
+
+	hmm myhmm = prionhmm1(fg,bg);	
+	// hmm myhmm = prionhmm3(fg,bg,og);
+
+	boolean reflect = false; 
+
+	fastareader fs = new fastareader(filename);
+
+	// print AA iteslf rather than index?
+	System.out.print("ORDER\tGENE\tAANUM\tAA\tVIT\tMAP\tCHARGE\tHYDRO\tFI\tPLAAC\tPAPA\tFIx2\tPLAACx2\tPAPAx2");
+	for (int i=0; i<myhmm.numclasses; i++) System.out.print("\tHMM." + myhmm.unames[i]);
+	System.out.println();
+
+	int genecount = 1;
+
+	char stopcodon = '*';
+	while (fs.hasmorefastas()) {
+	    String name = fs.nextname();
+	    String nm = name;
+	    String nm2 = ">" + nm;
+	    StringBuffer sb = fs.nextfasta();
+
+	    if (plotall || ht1.containsKey(nm) || ht1.containsKey(nm2)) {
+
+		String id = new String("" + genecount);
+
+		if  (ht1.containsKey(name)) nm = (String) (ht1.get(name));
+		if  (ht2.containsKey(name)) id = (String) (ht2.get(name));
+
+		if ((sb.charAt(sb.length()-1)) == stopcodon) sb.deleteCharAt(sb.length()-1); // kill terminal stop codon
+		int [] seq = string2aa(sb);
+		genecount++;
+
+		// make sure name has no spaces here!! {CHECK: why is this important?}
+		// name = name.replace(' ',  '-');
+		// name = name.replace('\t', '-');
+
+		myhmm.decodealls(seq);
+		// myhmm.printme(genecount + "\t" + name, seq);
+		// myhmm.sposteriorl(seq);
+		// myhmm.sviterbidecodel(seq);
+		disorderreport dr = new disorderreport(seq, ww, ww2, reflect, new double [] {2.78 , -1  ,-1.15}, llr, lodpapa1, smushpp);
+		//  dr.printme(genecount + "\t" + name);
+		for (int i=0; i<seq.length; i++) {
+		    System.out.print(id + "\t" + nm + "\t" + (i+1) + "\t" + aanames[seq[i]] + "\t" + myhmm.viterbipath[i] + "\t" + myhmm.mappath[i]+"\t");
+		    System.out.format("%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", dr.charge[i], dr.hydro[i], dr.fi[i], 
+				      dr.plaacllr[i], dr.papa[i], dr.fix2[i], dr.plaacllrx2[i], dr.papax2[i]);
+                    // use exp format here? not a big deal for plotting, but if we went to take logs later could be helpful
+		    for (int j=0; j<myhmm.postprob.length; j++) System.out.format("\t%.3f", myhmm.postprob[j][i]);
+		    System.out.println();
+		}
+
+		System.out.println("####### "+ myhmm.lmarginalprob + "\t" + myhmm.lviterbiprob);
+
+	    }
+	}
+    }
+
+
+    // pass HMM as argument? Pass papa lods? --- pulled out of global variable now
+    //	MW, HG, LLR, HMM, FI, PAPA  --- currently leaves out HG 
+    static void scorefastas(String filename,  int corelength, int ww, int ww2, double [] fgfreq, 
+			    double [] bgfreq, int hmmtype, boolean smushpp) {
+
+	// Random rg = new Random(7);
+	int chomp = 0;
+
+	double [] fg = normalize(fgfreq);
+	double [] bg = normalize(bgfreq);
+	double [] llr = new double[22];
+
+	for (int i=1; i<21; i++) llr[i] = Math.log(fg[i]/bg[i]);
+
+	if (verbose) {
+	    System.out.println("## fgfreqs");   
+	    printaausage(fg);
+	    System.out.println("## bgfreqs");  
+	    printaausage(bg);
+	    //System.out.println("## og freqs");  
+	    // printaausage(og);
+	    System.out.println("## llratio");  
+	    printaausage(llr);
+	}
+
+	System.out.print("geneID\tMW\tMWstart\tMWend\tMWlen\tLLR\tLLRstart\tLLRend\t");	
+	System.out.print("LLRlen\tNLLR\tVITmaxrun\tCOREscore\tCOREstart\tCOREend\tCORElen\tPRDstart\tPRDend\tPRDlen\tPROTlen\t");				
+	System.out.print("HMMmap\tHMMvit\tCOREaa\tSTARTaa\tENDaa\tPRDaa\tPRDscore\tFInumaa\tFImeanhydro\tFImeancharge\tFImeancombo\tFImaxrun\t");
+	System.out.print("PAPAcombo\tPAPAprd\tPAPAfi\tPAPAllr\tPAPAllr2\tPAPAcen\tPAPAaa");
+	System.out.println();
+
+
+	fastareader fs = new fastareader(filename);
+	// int maxlen = 500; // not currently used
+	// hgalg hg = new hgalg(maxlen,bg);
+	int genecount=0;
+        
+        //                 {X,A,C,D,E,F,G,H,I,K,L,M,N  ,P,Q,  R,S,T,V,W,Y,*}
+	double [] qnmask = {0,0,0,0,0,0,0,0,0,0,0,0,1.0,0,1.0,0,0,0,0,0,0,0};
+
+	double [][] lops;
+	double [] maa1;
+	double [] maa2;
+	double [] maa3;
+	double [] hs1;
+	double [] hs2;
+	double [] hs3;
+	
+	// test hss vs hss2
+	double [] hs1b;
+	double [] hs2b;
+	double [] hs3b;
+
+	int [] aa;
+	String flag;
+
+	int [] aacomp;
+
+	double hmmscore;
+	double hmmscorev;
+
+	// int hggood = 0;
+	// int hggood2 = 0;
+
+	int longestprd;
+	hmm fghmm = prionhmm1(fg, bg);	
+	hmm bghmm = prionhmm111(bg); 
+
+	// int ww = 51;
+	// int ww2 = 51;
+	boolean reflect = false;
+	char stopcodon = '*';
+
+	while (fs.hasmorefastas()) {
+	    String name = fs.nextname();
+	    StringBuffer sb = fs.nextfasta();
+	    if ((sb.charAt(sb.length()-1)) == stopcodon) sb.deleteCharAt(sb.length()-1); // kill stop codon
+	    aa = string2aa(sb);
+
+	    aacomp = aacomposition(aa);
+
+	    // something longer here? 41? 60? ww?
+	    if (aa.length < 12) continue; // print output anyway?
+
+	    // MW
+	    maa1 = mapseq(aa, qnmask);
+	    hs1 = hss2(maa1, 80, 80);
+	    hs1b = hss(maa1, 80, 80);
+	    if (hs1[2] != hs1b[2]) {System.out.println("## CHECKX1"); printrowvec(hs1); printrowvec(hs1b);} 
+
+	    // LLR
+	    maa2 = mapseq(aa, llr);
+	    hs2 = hss2(maa2, corelength, corelength); // max 500?
+	    hs2b = hss(maa2, corelength, corelength); // max 500?
+	    if (hs2[2] != hs2b[2]) {System.out.println("## CHECKX2"); printrowvec(hs2); printrowvec(hs2b);} 
+
+	    // HMM
+	    fghmm.decodeall(aa);
+	    bghmm.decodeall(aa);
+
+	    hmmscore = fghmm.lmarginalprob - bghmm.lmarginalprob;
+	    hmmscorev = fghmm.lviterbiprob - bghmm.lviterbiprob;
+
+	    disorderreport  dr = new disorderreport(aa, ww, ww2, reflect, new double [] {2.78 , -1, -1.15}, llr, lodpapa1, smushpp);
+	    // dr.printme();
+	    // disorderreport dr2 = new disorderreport(aa, ww, ww2, reflect, new double [] {2.78, -1, -1.15}, llr, lodpapa2, smushpp);
+
+	    // gets rid of leading ">" from fasta 
+	    String nm = name.substring(chomp);
+
+	    // int chopdex = nm.indexOf(" ",	nm.indexOf(" ")+1);
+	    // nm = nm.substring(0, chopdex);
+
+	    int [] seg;
+	    int [] ppp;
+
+	    int [] mp = fghmm.viterbipath;
+
+	    longestprd = longestrun(mp);
+
+	    // check each map segment for hss;
+	    maa3 = mapseq(aa, llr);
+	    double big_neg = -1000000.0;
+
+	    for (int i=0; i < maa3.length; i++) {
+		// A bit of a hack here. The idea is to mask off positions that aren't in the PrD parse when finding the hss, 
+		// by giving them a sufficiently strong penalty. The implementation of hss doesn't work with -Infinty since
+		// it uses differences in cumulative sums and the diff between -Inf and -Inf isn't well defined. But masking 
+		// elements by setting them to a large negative number, say -K where K > 2 * max(abs(maa3))*max(corelength) 
+		// should work, since then any segment with a masked residue would have score < -K/2; if the max scoring segment 
+                // has such a score then there is no PrD segmennt of width >= corelength; 
+		if (mp[i]==0) maa3[i] = big_neg;
+	    }
+	    hs3 = hss2(maa3,corelength,corelength);
+	    
+            // hs3b = hss(maa3,corelength,corelength);
+	    // could try core length at most 60 to soften cutoff... 
+	    // if (hs3[2] != hs3b[2]) {System.out.println("## CHECKX3"); printrowvec(hs3); printrowvec(hs3b);} 
+	    // if (longestprd >= 60 & hs3[2] < big_neg/2) {System.out.println("## CHECKX4 " + longestprd); printrowvec(hs3);} 
+	    // if (longestprd < 60 & hs3[2] > big_neg/2) {System.out.println("## CHECKX5 "  + longestprd); printrowvec(hs3);}
+
+	    // hs3[2] = Math.max(hs3[2], 0.0); //?
+	   
+	    int corestart = (int) hs3[0];
+	    int corestop = (int) hs3[1];
+	     
+	    int aastart = corestart;
+	    int aastop	= corestop;
+
+	    int [] prd = {};
+	    double prdscore = 0;
+	 
+	    // has prd of at least corelength
+	    if (hs3[2] > big_neg/2) { 
+		// expand core up and down within PrD parse;
+		while (aastart>=0 && mp[aastart]==1) aastart--; 
+		aastart++;
+		while (aastop<mp.length && mp[aastop]==1) aastop++;
+		aastop--;
+	
+		prd = submatrix(aa, aastart, aastop);
+		// score of whole prd?
+		for (int kk = 0; kk<prd.length; kk++) {
+		    prdscore = prdscore + llr[prd[kk]];
+		}
+	    }  else {
+		//  if (aastop - aastart + 1 < corelength) {
+		hs3[2] = 0; // NA instead?
+		aastart = -1;
+		aastop  = -2;
+		corestart = -1;
+		corestop = -2;
+	    }
+	    if (aastop - aastart + 1 > longestprd) {System.out.println("## CHECKX6 " + longestprd); printrowvec(hs3);}
+
+	    boolean fastaprds = false;
+	    if (fastaprds) {
+		if (prdscore > 0) {
+		    System.out.println(">" + nm + "-pprd");
+		    System.out.println(aa2string(prd));
+		    System.out.println(">" + nm + "-core");
+		    System.out.println(aa2string(submatrix(aa, (int) hs3[0], (int) (hs3[1])) ));
+		}
+	    } else {
+		if (true) { //(hs3[2] > -1) {	
+		    // should use System.out.format for rounding off!
+		    System.out.print(nm + 
+				     "\t" + (int) hs1[2]   + "\t" + (int) hs1[0] + "\t" + (int) hs1[1] + "\t" + (int) (hs1[1]-hs1[0]+1) + 
+				     "\t" + roundoff(hs2[2],3) + "\t" + (int) hs2[0] + "\t" + (int) hs2[1] + "\t" + (int) (hs2[1]-hs2[0]+1) + 
+				     "\t" + roundoff(hs2[2]/(hs2[1]-hs2[0]+1),3) + "\t" + longestprd +
+				     "\t" + roundoff(hs3[2],3) + "\t" + corestart + "\t" + corestop +
+				     "\t" + (corestop-corestart+1) + 
+				     "\t" + aastart + "\t" + aastop + "\t" + (aastop-aastart+1) + "\t" + aa.length +
+				     "\t" + roundoff(hmmscore,3) + "\t" + roundoff(hmmscorev,3) + "\t");
+		    if (aastop - aastart + 1 >= corelength) {
+			System.out.print(aa2string(submatrix(aa, corestart, corestop)));
+			System.out.print("\t");
+			System.out.print(aa2string(submatrix(aa, aastart, aastart+14)));
+			System.out.print("\t");
+			System.out.print(aa2string(submatrix(aa, aastop-14, aastop)));
+			System.out.print("\t");
+			System.out.print(aa2string(prd));
+			System.out.print("\t" + roundoff(prdscore,3));
+		    } else {
+			System.out.print("-");
+			System.out.print("\t");
+			System.out.print("-");
+			System.out.print("\t");
+			System.out.print("-");
+			System.out.print("\t");
+			System.out.print("-");
+			System.out.print("\t");
+			System.out.print("-");
+		    }
+		    //if ((fix2[k] < 0) && (papax2[k] > 0.05)) {
+		    //   papascore = Math.min(-1*fix2[k], (papax2[k] - 0.05));
+		    //} else {  
+		    //  papascore = -1*Math.sqrt((Math.min(0,-1.0*fix2[k])*Math.min(0,-1.0*fix2[k]) 
+		    //			      + Math.min(0,papax2[k]-0.05)*Math.min(0,papax2[k]-0.05)));
+	     	    // }
+		    System.out.print("\t" + dr.numdisorderedstrict2 + "\t" + roundoff(dr.meanhydro,3) +"\t" + roundoff(dr.meancharge,3) + 
+				     "\t" + roundoff(dr.meanfi,3) + "\t" + (int) (dr.maxlen) + "\t" + roundoff(dr.papascore,3) +
+				     "\t" + roundoff(dr.papamaxprd,3) + "\t" + roundoff(dr.papamaxdis,3) + "\t" + roundoff(dr.papamaxllr,3) + 
+				     "\t" + roundoff(dr.papamaxllr2,3) + "\t" + (int) (dr.papamaxcenter) + 
+				     "\t" + aa2string(submatrix(aa,  dr.papamaxcenter - ww2/2, dr.papamaxcenter + ww2/2))); // + ok for length < w? 
+		    System.out.println();
+		}
+	    }
+	}
+
+    }
+
+
+    //static String translate(HashMap<String,String> ht, String key) {
+    //	if (ht.containsKey(key)) {return (String) ht.get(key);}
+    //	else return key;
+    //}
+
+    static int [][] trimrows(int [][] mat, int r1, int r2) {
+	int [][] newmat = new int [r2-r1+1][];
+	for (int i=0; i<r2-r1+1; i++) newmat[i] = mat[i+r1];
+	return newmat;
+
+    }
+
+    // should just use System.out.format when printing instead.
+    static float roundoff(double number, int digits) {
+	return (float) (Math.round(Math.pow(10,digits)*number)/Math.pow(10,digits));
+
+    }	
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////	       hmms				/////////////////////////
+
+
+    static hmm prionhmm1(double [] fgfreq, double bgfreq []) {
+	// state 0 = normal; state 1 = prion
+	double [][] tmat = {{99.9/100, 0.1/100},{2.0/100, 98.0/100}};
+	double [] imat = {0.9524, 0.0476};
+	double [][] emat = new double[2][];
+	emat[0] = normalize(axpb(1,bgfreq,0.00001));
+	emat[1] = normalize(axpb(1,fgfreq,0.00001));
+	hmm h = new hmm(tmat,emat,imat);
+	h.subtrellis = new int [] {1,0};
+	h.states = new char[] {'-','+'};
+	h.setnames(new String [] {"background","PrD-like"});
+	return h;
+
+    }
+
+    static hmm prionhmm111(double bgfreq []) {
+	// state 0 = normal; state 1 = prion
+	double [][] tmat = {{1, 0},{0, 1}};
+	double [] imat = {1, 0};
+	double [][] emat = new double[2][];
+	emat[0] = normalize(axpb(1,bgfreq,0.00001));
+	emat[1] = normalize(axpb(1,bgfreq,0.00001));
+	hmm h = new hmm(tmat,emat,imat);
+	h.subtrellis = new int [] {1,0};
+	h.states = new char[] {'-','+'};
+	h.setnames(new String [] {"background","PrD-like"});
+	return h;
+    }
+
+    static hmm prionhmm0() {
+	// state 0 = normal; state 1 = prion
+	double [][] tmat = {{99.0/100, 1.0/100},{1.0/100, 99.0/100}};
+	double [] imat = {0.8, 0.2};
+	double [][] emat = new double[2][];
+	emat[0] = deltavec(22,12,1.0);
+	emat[1] = deltavec(22,14,1.0);
+	hmm h = new hmm(tmat,emat,imat);
+	h.subtrellis = new int [] {1,0};
+	h.states = new char[] {'.','+','-'};
+	return h;
+    }
+
+
+    // static hmm prionhmm3(double [] fgfreq, double bgfreq [], double otfreq []) {
+    // 	// state 0 = normal; state 1 = prion; state 2 = disordered;
+    // 	double [][] tmat = {{99990.0/100000, 5.0/100000, 50./100000},
+    // 			    {1.0/160,         159.0/160,      0},
+    // 			    {1.0/160,            0,       159.0/160}};
+
+    // 	double [] imat = {990.0/1000, 5.0/1000, 5.0/1000};
+    // 	imat[0] = tmat[0][1]; imat[1] = tmat[0][1]; imat[2] = tmat[0][2];
+	
+    // 	double [][] emat = new double[3][];
+    // 	emat[0] = normalize(axpb(1,bgfreq,0.00001));
+    // 	emat[1] = normalize(axpb(1,fgfreq,0.00001));
+    // 	emat[2] = normalize(axpb(1,otfreq,0.00001));
+    // 	hmm h = new hmm(tmat,emat,imat);
+    // 	//  h.subtrellis = new int [] {1,0,1};
+    // 	h.states = new char[] {'.','+','*','-'};
+    // 	h.setnames(new String [] {"background","PrD.a","PrD.b"});
+    // 	return h;
+    // }
+
+
+    // static hmm prionhmm3NQ(double [] fgfreq, double bgfreq [] , double otfreq []) {
+    // 	// state 0 = normal; state 1 = prion; state 2 = disordered; state3 = polyQ; state4 = polyN;
+    // 	// double [][] tmat = {{99800.0/100000,  1.0/100000,   197.0/100000,  1.0/100000,   1.0/100000},
+    // 	//                     {1.0/160,         159.0/160,        0,           0,                0},
+    // 	//                     {1.0/160,             0 ,       157.0/160,    1.0/160,        1.0/160},
+    // 	//                     {1.0/30,              0 ,          1.0/30,      9.0/10,        1.0/30},
+    // 	//                     {1.0/30 ,             0 ,          1.0/30,      1.0/30,        9.0/10 }};
+
+    // 	double [] imat = {900.0/1000, 0.01/1000, 97.99/1000, 1.0/1000, 1.0/1000};
+    // 	double [][] emat = new double[5][];
+    // 	emat[0] = normalize(axpb(1,bgfreq,0.00001));
+    // 	emat[1] = normalize(axpb(1,fgfreq,0.00001));
+    // 	emat[2] = normalize(axpb(1,otfreq,0.00001));
+    // 	emat[3] = deltavec(22,12,1.0);
+    // 	emat[4] = deltavec(22,14,1.0);
+
+    // 	double [] dur = {400,160,160,10,10};
+    // 	double [][] tmat = hmm.autotransmat(imat,dur);
+
+    // 	hmm h = new hmm(tmat,emat,imat);
+    // 	h.subtrellis = new int [] {1,0,1,1,1};
+    // 	h.states = new char[] {'.','+','*','n','q','-'};
+    // 	h.setnames(new String [] {"background","PrD","disordered","polyN","polyQ"});
+    // 	return h;
+    // }
+
+
+    // static hmm prionhmm4(double [] fgfreq, double bgfreq [] , double otfreq []) {
+    // 	// state 0 = normal; state 1 = prion; state 2 = disordered; state3 = polyQ; state4 = polyN; polyQ in prion; polyN in prion;
+    // 	double [][] tmat = {{99800.0/100000,    1.0/100000,   197.0/100000,  1.0/100000,   1.0/100000,        0,              0},
+    // 			    {1.0/50,            47.0/50,        0,            0,            0,              1.0/50,        1.0/50},
+    // 			    {1.0/50,              0,        47.0/50,       1.0/50,       1.0/50,            0,               0},
+    // 			    {1.0/30,              0,         1.0/30,        9.0/10,       1.0/30,            0,               0},
+    // 			    {1.0/30,              0,         1.0/30,        1.0/30,       9.0/10,            0,               0},
+    // 			    {0,                   1.0/20,       0,            0,            0,             9.0/10,        1.0/20},
+    // 			    {0,                   1.0/20,       0,            0,            0,             1.0/20,        9.0/10}};
+
+    // 	double [] imat = {900.0/1000, 0.5/1000, 97.0/1000, 1.0/1000, 1.0/1000, 0.25/1000, 0.25/1000};
+    // 	double [][] emat = new double[7][];
+    // 	emat[0] = normalize(axpb(1,bgfreq,0.00001));
+    // 	emat[1] = normalize(axpb(1,fgfreq,0.00001));
+    // 	emat[2] = normalize(axpb(1,otfreq,0.00001));
+    // 	emat[3] = deltavec(22,12,1.0);
+    // 	emat[4] = deltavec(22,14,1.0);
+    // 	emat[5] = deltavec(22,12,1.0);
+    // 	emat[6] = deltavec(22,14,1.0);
+    // 	hmm h = new hmm(tmat,emat,imat);
+    // 	h.subtrellis = new int [] {1,0,1,1,1,0,0};
+    // 	h.states = new char[] {'.','+','*','n','q','N','Q','-'};
+    // 	h.setnames(new String [] {"background","PrD","disordered","polyN","polyQ", "polyN-in-PrD", "polyQ-in-PrD"});
+    // 	return h;
+    // }
+
+
+
+    // static hmm prionhmm5(double [] fgfreq, double bgfreq [], double otfreq []) {
+    // 	// state 0 = normal; state 1 = prion; state 2 = disordered; state3 = polyQ; state4 = polyN;
+    // 	double [][] tmat = {{99800.0/100000,  1.0/100000,   197.0/100000,  1.0/100000,   1.0/100000},
+    // 			    {1.0/160,         159.0/160,        0,           0,                0},
+    // 			    {1.0/160,             0 ,       157.0/160,    1.0/160,        1.0/160},
+    // 			    {1.0/30,              0 ,          1.0/30,      9.0/10,        1.0/30},
+    // 			    {1.0/30 ,             0 ,          1.0/30,      1.0/30,        9.0/10 }};
+
+    // 	double [] imat = {900.0/1000, 1.0/1000, 97.0/1000, 1.0/1000, 1.0/1000};
+    // 	double [][] emat = new double[5][];
+    // 	emat[0] = normalize(axpb(1,bgfreq,0.00001));
+    // 	emat[1] = normalize(axpb(1,fgfreq,0.00001));
+    // 	emat[2] = normalize(axpb(1,otfreq,0.00001));
+    // 	emat[3] = deltavec(22,12,1.0);
+    // 	emat[4] = deltavec(22,14,1.0);
+    // 	hmm h = new hmm(tmat,emat,imat);
+    // 	h.subtrellis = new int [] {1,0,1,1,1};
+    // 	h.states = new char[] {'.','+','*','n','q','-'};
+    // 	h.setnames(new String [] {"background","PrD","disordered","polyN","polyQ"});
+    // 	return h;
+    // }
+
+
+    // static hmm prionhmm6(double [] fgfreq, double bgfreq [], double otfreq []) {
+    // 	// state 0 = normal; state 1 = prion; state 2 = disordered; state3 = polyQ; state4 = polyN; state5=Het-s
+    // 	// double [][] tmat = {{99800.0/100000,  1.0/100000,   197.0/100000,  1.0/100000,   1.0/100000},
+    // 	//                     {1.0/160,         159.0/160,        0,           0,                0},
+    // 	//                     {1.0/160,             0 ,       157.0/160,    1.0/160,        1.0/160},
+    // 	//                     {1.0/30,              0 ,          1.0/30,      9.0/10,        1.0/30},
+    // 	//                     {1.0/30 ,             0 ,          1.0/30,      1.0/30,        9.0/10 }};
+
+    // 	double [] imat = {900.0/1000, 0.01/1000, 97.98/1000, 1.0/1000, 1.0/1000, 0.01/1000};
+    // 	double [][] emat = new double[6][];
+    // 	emat[0] = normalize(axpb(1,bgfreq,0.00001));
+    // 	emat[1] = normalize(axpb(1,fgfreq,0.00001));
+    // 	emat[2] = normalize(axpb(1,otfreq,0.00001));
+    // 	emat[3] = deltavec(22,12,1.0);
+    // 	emat[4] = deltavec(22,14,1.0);
+    // 	emat[5] = deltavec(22,13,1.0);
+
+    // 	double [] dur = {400,160,160,10,10,160};
+    // 	double [][] tmat = hmm.autotransmat(imat,dur);
+
+    // 	hmm h = new hmm(tmat,emat,imat);
+    // 	h.subtrellis = new int [] {1,0,1,1,1,0};
+    // 	h.states = new char[] {'.','+','*','n','q','p','-'};
+    // 	h.setnames(new String [] {"background","PrD","disordered","polyN","polyQ","polyP"});
+    // 	return h;
+    // }
+
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    // computes log(exp(a) + exp(b));
+    // okay if a or b is -Infinity, or both
+    // a bit slow --- precompute lookup table?
+    static double logeapeb2(double a, double b) {
+	if (a > b) return (a + Math.log(1+Math.exp(b-a)));
+	else if (b > a) return (b + Math.log(1+Math.exp(a-b)));
+	else return (a + log2); // takes care of a = b = -Infinity
+
+    }
+
+    // computes log(exp(a) + exp(b)) with lookup-table
+    static double logeapeb(double a, double b) {
+	if (a > b) {
+	    double c = a - b;
+	    if (!(c < 40)) return a; // takes care of  b = -Inf
+	    else {
+	    	int dex = (int) Math.floor(100*c);
+		//System.out.print("A " + a + "\t" + "\t" + b + "\t" + c + "\t" + dex + "\t"  + loglut[dex+1] + "\t" +	loglut[dex] + "\t");
+	    	return (a + ((100*c - dex)*loglut[dex + 1] + (dex + 1 - 100*c)*loglut[dex]));
+
+	    }
+	    
+	}
+	else if (b > a) {
+	    double c = b - a;
+	    if (!(c < 40)) return b; // takes care of  a = -Inf
+	    else {
+	    	int dex = (int) Math.floor(100*c);
+		// System.out.print("B " + a + "\t" + "\t" + b + "\t" + c + "\t" + dex + "\t"  + loglut[dex+1] + "\t" +	 loglut[dex] + "\t");
+	    	return (b + ((100*c - dex)*loglut[dex + 1] + (dex + 1 - 100*c)*loglut[dex]));
+	    }
+	}
+	else return (a + log2); // takes care of a = b = -Infinity
+
+    }
+
+
+    static double [] asdouble(int [] arr) {
+	int n = arr.length;
+	// System.out.println(n);
+	double [] narr = new double[n];
+	for (int i=0; i<n; i++) narr[i] = arr[i] + 0.0;
+	return narr;
+    }
+
+    static double [][] asdouble(int [][] arr) {
+	int n = arr.length;
+	int m = arr[0].length;
+	// System.out.println(n);
+	double [][] narr = new double[n][m];
+	for (int i=0; i<n; i++) {
+	    for (int j=0; j<m; j++) {
+		narr[i][j] = arr[i][j] + 0.0;
+	    }
+	}
+	return narr;
+    }
+
+    // highest-scoring-subsequence -- brute force, order n^2
+    static double [] hss_old(double [] seq, int minlength, int maxlength) {
+	int n = seq.length;
+	if (minlength > n) minlength = n; 
+	if (maxlength > n) maxlength = n;
+	double [] score = new double[3]; // start, end, score
+	double bestscore;
+	double tempscore;
+	double [] psum = new double[n+1];
+	int beststart = 0;
+	int beststop = minlength; 
+	psum[0] = 0;
+	for (int i=0; i<n; i++) {
+	    psum[i+1] = psum[i] + seq[i];
+	}
+
+	bestscore = psum[minlength]-psum[0];
+
+	for (int i=0; i<n-minlength; i++) {
+	    for (int j=i+minlength; j<=Math.min(i+maxlength,n); j++) {
+		tempscore = psum[j] - psum[i];
+		if (tempscore > bestscore) {
+		    bestscore = tempscore;
+		    beststart = i;
+		    beststop = j-1;
+		}
+	    }
+	}
+	score[0] = beststart;
+	score[1] = beststop;
+	score[2] = bestscore;
+	return score;
+    }
+
+
+     // highest-scoring-subsequence -- brute force, order n^2
+    static double [] hss_new(double [] seq, int minlength, int maxlength) {
+	int n = seq.length;
+	if (minlength > n) minlength = n;  //ODK return NA instead????
+	if (maxlength > n) maxlength = n;
+	double [] score = new double[3]; // start, end, score
+	double bestscore;
+	double tempscore;
+	double [] psum = new double[n+1];
+	int beststart = 0;
+	int beststop = minlength-1; // ODK: changed to minlength-1? 
+	psum[0] = 0;
+	// ODK: -Inf will cause probs here; cumsum with initial 0; {1,1,1,2} -> {0,1,2,3,5};
+	for (int i=0; i<n; i++) {
+	    psum[i+1] = psum[i] + seq[i];
+	}
+
+	bestscore = psum[minlength] - psum[0]; // (psum[0]=0, so same as psum[minlength])
+	// say n=100, minlength=10; then last valid start index (base 0) would be 90 = 100-10, last segment 90:99
+	for (int i=0; i<=n-minlength; i++) { // ODK changed to < to <=; i is start index in seq
+	    for (int j=i+minlength; j<=Math.min(i+maxlength,n); j++) { //  j is end index in psum; so j-1 is end index in seq 
+		tempscore = psum[j] - psum[i];
+		if (tempscore > bestscore) {
+		    bestscore = tempscore;
+		    beststart = i;
+		    beststop = j-1;
+		}
+	    }
+	}
+	score[0] = beststart;
+	score[1] = beststop;
+	score[2] = bestscore;
+	return score;
+    }
+
+
+    static double [] hss(double [] seq, int minlength, int maxlength){
+	return hss_new(seq, minlength, maxlength);
+    } 
+
+    // highest-scoring-subsequence
+    // assumes at least one element is positive?
+    static double [] hss2(double [] seq) {
+	int n = seq.length;
+
+	double [] score = new double[3]; // start, end, score
+	double bestscore;
+	int beststart = 0;
+	int beststop = 0;
+	int curstart = 0;
+
+	double d = Math.max(seq[0], 0);
+	bestscore = d;
+
+	for (int i=1; i<n; i++) {
+	    if (d+seq[i] > 0) {
+		d = d + seq[i];
+	    }
+	    else {
+		d = 0;
+		curstart = i + 1;
+	    }
+	    if (d > bestscore) {
+		bestscore = d;
+		beststop = i;
+		beststart = curstart;
+	    }
+	}
+
+	score[0] = beststart;
+	score[1] = beststop;
+	score[2] = bestscore;
+	return score;
+    }
+
+
+
+    // highest-scoring-subsequence
+    // assumes at least one element is positive?
+    static double [] hss2(double [] seq, int minlen) {
+	int minlength = minlen-1;
+	int n = seq.length;
+	if (minlength >= n) minlength = n-1;
+	double [] score = new double[3]; // start, end, score
+	double bestscore;
+	int beststart = 0;
+	int beststop = minlength;
+	int curstart = 0;
+	int newstart = 0;
+
+	double [] psum = new double[n+1];
+
+	psum[0] = 0;
+	for (int i=0; i<n; i++) {
+	    psum[i+1] = psum[i] + seq[i];
+	}
+
+	double d = psum[minlength+1];
+	bestscore = d;
+
+	for (int i = minlength+1; i<n; i++) {
+	    d = psum[i+1] - psum[curstart];
+	    newstart = curstart;
+	    for (int j=curstart+1; j<i-minlength+1; j++) {
+		if (psum[i+1]-psum[j] >= d) {
+		    d = psum[i+1] - psum[j];
+		    newstart = j;
+		}
+		curstart = newstart;
+	    }
+	    if (d > bestscore) {
+		bestscore = d;
+		beststop = i;
+		beststart = curstart;
+	    }
+	}
+
+	score[0] = beststart;
+	score[1] = beststop;
+	score[2] = bestscore;
+	return score;
+    }
+
+
+    // highest-scoring-subsequence
+    // assumes at least one element is positive?
+    static double [] hss2(double [] seq, int minlen, int maxlength) {
+	int minlength = minlen-1;
+	int n = seq.length;
+	if (minlength >= n) minlength = n-1;  //
+	if (maxlength > n) maxlength = n;  //  +1?
+	double [] score = new double[3];   // start, end, score
+	double bestscore;
+	int beststart = 0;
+	int beststop = minlength;
+	int curstart = 0;
+	int newstart = 0;
+
+	double [] psum = new double[n+1];
+
+	psum[0] = 0;
+	for (int i=0; i<n; i++) {
+	    psum[i+1] = psum[i] + seq[i];
+	}
+
+	double d = psum[minlength+1];
+	bestscore = d;
+
+	for (int i = minlength+1; i<n; i++) {
+	    if ((i-curstart) >= maxlength) curstart++;
+	    d = psum[i+1] - psum[curstart];
+	    newstart = curstart;
+	    for (int j=curstart+1; j<i-minlength+1; j++) {
+		if (psum[i+1] - psum[j] >= d) {
+		    d = psum[i+1] - psum[j];
+		    newstart = j;
+		}
+		curstart = newstart;
+	    }
+	    if (d > bestscore) {
+		bestscore = d;
+		beststop = i;
+		beststart = curstart;
+	    }
+	}
+
+	score[0] = beststart;
+	score[1] = beststop;
+	score[2] = bestscore;
+	return score;
+    }
+
+
+
+    // static int [] firstandlast(int p1, int p2, int [] vec, int skipme) {
+    // 	int [] fal = new int[2];
+    // 	int dex = 0;
+    // 	int hits = 0;
+    // 	while ((dex <vec.length) && (hits <= p1)) {
+    // 	    if (vec[dex] != skipme) hits++;
+    // 	    dex++;
+    // 	}
+    // 	fal[0] = dex-1;
+
+    // 	while ((dex <vec.length) && (hits <= p2)) {
+    // 	    if (vec[dex] != skipme) hits++;
+    // 	    dex++;
+    // 	}
+    // 	fal[1] = dex-1;
+    // 	return fal;
+    // }
+
+
+
+    static double [][] transpose(double [][] mat) {
+	int r = mat.length;
+	int c = mat[0].length;
+	double [][] tmat = new double[c][r];
+	for (int i=0; i<r; i++) {
+	    for (int j=0; j<c; j++) {
+		tmat[j][i] = mat[i][j];
+	    }
+	}
+	return tmat;
+    }
+
+
+    static int [][] transpose(int [][] mat) {
+	int r = mat.length;
+	int c = mat[0].length;
+	int [][] tmat = new int[c][r];
+	for (int i=0; i<r; i++) {
+	    for (int j=0; j<c; j++) {
+		tmat[j][i] = mat[i][j];
+	    }
+	}
+	return tmat;
+    }
+
+
+    // static void charcount(String filename) {
+    // 	try {
+    // 	    BufferedReader in = new BufferedReader(new FileReader(filename));
+    // 	    String line;
+    // 	    int [] counts = new int[256];
+
+    // 	    while ((line = in.readLine()) != null) {
+    // 		line.trim();
+    // 		if (line != null) {
+    // 		    for (int i=0; i<line.length(); i++) counts[line.charAt(i)]++;
+    // 		}
+    // 	    }
+    // 	    for (int j=65; j<91; j++) System.out.println((char) j + "\t" + counts[j] + "\t\t" + (char) (j+32) + "\t" + counts[j+32]);
+    // 	    System.out.println(intsum(submatrix(counts,65,90)));
+    // 	    System.out.println(intsum(submatrix(counts,65+32,90+32)));
+
+    // 	}
+    // 	catch (IOException e) {
+    // 	    System.out.println("# Couldn't open");
+    // 	}
+    // }
+
+
+    static int [] findindices(int [] vec, int target) {
+	int n = vec.length;
+	int hits = 0;
+	for (int i=0; i<n; i++) if (vec[i] == target) hits++;
+	int [] dexvec = new int[hits];
+	hits = 0;
+	for (int i=0; i<n; i++) {
+	    if (vec[i] == target) {
+		dexvec[hits]=i;
+		hits++;
+	    }
+	}
+	return dexvec;
+    }
+
+    // e.g. "QN.GY" makes three groups, one with QN, one with GY, one with everything else
+    static int [] string2mask(String clumps) {
+	int [] mask = new int[22];
+	int seg = 1;
+	for (int i=0; i<clumps.length(); i++) {
+	    char c = clumps.charAt(i);
+	    if (c=='.') seg++;
+	    else {
+		for (int k=0; k<22; k++) {
+		    if (aanames[k]==c) {
+			mask[k] = seg; 
+			break;
+		    }
+		}
+	    }
+	}
+	return mask;
+    }
+
+
+    // partial sums of rows
+    static double [][] cumsum(double [][] mat, boolean byrow) {
+	int r = mat.length;
+	int c = mat[0].length;
+	double [][] cmat = new double[r][c];
+	if (byrow) {
+	    for (int i=0; i<r; i++) {
+		double rs = 0;
+		for (int j=0; j<c; j++) {
+		    rs = rs + mat[i][j];
+		    cmat[i][j] = rs;
+		}
+	    }
+	}
+	else {
+	    for (int i=0; i<c; i++) {
+		double rs = 0;
+		for (int j=0; j<r; j++) {
+		    rs = rs + mat[j][i];
+		    cmat[j][i] = rs;
+		}
+	    }
+
+	}
+	return cmat;
+    }
+
+
+    // partial sums of rows
+    static int [][] cumsum(int [][] mat, boolean byrow) {
+	int r = mat.length;
+	int c = mat[0].length;
+	int [][] cmat = new int[r][c];
+	if (byrow) {
+	    for (int i=0; i<r; i++) {
+		int rs = 0;
+		for (int j=0; j<c; j++) {
+		    rs = rs + mat[i][j];
+		    cmat[i][j] = rs;
+		}
+	    }
+	}
+	else {
+	    for (int i=0; i<c; i++) {
+		int rs = 0;
+		for (int j=0; j<r; j++) {
+		    rs = rs + mat[j][i];
+		    cmat[j][i] = rs;
+		}
+	    }
+
+	}
+	return cmat;
+    }
+
+
+    static int [][] fliplr (int [][] mat) {
+	int m = mat.length;
+	int n = mat[0].length;
+	int [][] mat2 = new int[m][n];
+	for (int i=0; i<m; i++) {
+	    for (int j=0; j<n; j++) { 
+		mat2[i][j] = mat[i][n-j-1];
+	    }
+	}
+	return mat2;
+
+
+    }
+
+
+    // partial sum
+    static double [] cumsum(double [] arr) {
+	int r = arr.length;
+	double [] carr = new double[r];
+	double cs = 0;
+	for (int i=0; i<r; i++) {
+	    cs = cs + arr[i];
+	    carr[i] = cs;
+	}
+	return carr;
+    }
+
+
+
+    static int [][] submatrix(int [][] matrix, int r1, int r2, int c1, int c2) {
+    	int m = matrix.length;
+    	int n = matrix[0].length;
+    	if (r1<0) r1 = 0;
+    	if (r2<r1) r2 = r1;
+    	if (c1<0) c1 = 0;
+    	if (c2<c1) c2 = c1;
+    	if (r1>=m) r1 = m-1;
+    	if (r2>=m) r2 = m-1;
+    	if (c1>=n) c1 = n-1;
+    	if (c2>=n) c2 = n-1;
+    	int [][] newmat = new int[r2-r1+1][c2-c1+1];
+    	for (int i=0; i<r2-r1+1; i++) {
+	    for (int j=0; j<c2-c1+1;j++) {
+		newmat[i][j] = matrix[r1+i][c1+j];
+	    }
+	}
+	return newmat;
+    }
+
+
+    static double  [][] submatrix(double [][] matrix, int r1, int r2, int c1, int c2) {
+	int m = matrix.length;
+	int n = matrix[0].length;
+	if (r1<0) r1 = 0;
+	if (r2<r1) r2 = r1;
+	if (c1<0) c1 = 0;
+	if (c2<c1) c2 = c1;
+	if (r1>=m) r1 = m-1;
+	if (r2>=m) r2 = m-1;
+	if (c1>=n) c1 = n-1;
+	if (c2>=n) c2 = n-1;
+	double [][] newmat = new double[r2-r1+1][c2-c1+1];
+	for (int i=0; i<r2-r1+1; i++) {
+	    for (int j=0; j<c2-c1+1;j++) {
+		newmat[i][j] = matrix[r1+i][c1+j];
+	    }
+	}
+	return newmat;
+    }
+
+    static int [] submatrix(int [] matrix, int r1, int r2) {
+	int m = matrix.length;
+
+	if (r1<0) r1 = 0;
+	if (r2<r1) r2 = r1;
+	if (r1>=m) r1 = m-1;
+	if (r2>=m) r2 = m-1;
+
+	int [] newmat = new int[r2-r1+1];
+	for (int i=0; i<r2-r1+1; i++) newmat[i] = matrix[r1+i];
+	return newmat;
+    }
+
+
+    static double [] submatrix(double [] matrix, int r1, int r2) {
+	int m = matrix.length;
+
+	if (r1<0) r1 = 0;
+	if (r2<r1) r2 = r1;
+	if (r1>=m) r1 = m-1;
+	if (r2>=m) r2 = m-1;
+
+	double [] newmat = new double[r2-r1+1];
+	for (int i=0; i<r2-r1+1; i++) newmat[i] = matrix[r1+i];
+	return newmat;
+    }
+
+   
+
+    // p*log(p)
+    static double plogp(double p) {
+	if (p == 0) {
+	    return 0; 
+	} else {
+	    return p*Math.log(p); // change to base 2?
+	}
+    }
+
+
+    static void killlowercase(StringBuffer sb) {
+	for (int j=0; j<sb.length(); j++) {
+	    if (Character.isLowerCase(sb.charAt(j))) {
+		sb.setCharAt(j,'-');
+	    }
+	}
+
+    }
+
+    static void printmatrix(double [] mat) {
+	for (int i=0; i<mat.length; i++) {
+	    System.out.println((float) (mat[i]));
+	}
+	System.out.println();
+    }
+
+    static void printrowvec(double [] mat) {
+	for (int i=0; i<mat.length; i++) {
+	    System.out.print((float) (mat[i]) + " ");
+	}
+	System.out.println();
+    }
+
+
+    static int aatoint(char c) {
+      	if (c=='A' || c=='a')  return 1;
+      	else if (c=='C' || c=='c') return 2;
+      	else if (c=='D' || c=='d') return 3;
+      	else if (c=='E' || c=='e') return 4;
+      	else if (c=='F' || c=='f') return 5;
+      	else if (c=='G' || c=='g') return 6;
+      	else if (c=='H' || c=='h') return 7;
+      	else if (c=='I' || c=='i') return 8;
+      	else if (c=='K' || c=='k') return 9;
+      	else if (c=='L' || c=='l') return 10;
+      	else if (c=='M' || c=='m') return 11;
+      	else if (c=='N' || c=='n') return 12;
+      	else if (c=='P' || c=='p') return 13;
+      	else if (c=='Q' || c=='q') return 14;
+      	else if (c=='R' || c=='r') return 15;
+      	else if (c=='S' || c=='s') return 16;
+      	else if (c=='T' || c=='t') return 17;
+      	else if (c=='V' || c=='v') return 18;
+      	else if (c=='W' || c=='w') return 19;
+      	else if (c=='Y' || c=='y') return 20;
+	else if (c=='*') return 21; // no longer includes X
+	else {
+	    //System.out.println("bogus base " + c);
+	    return 0;
+	}
+    }
+
+
+
+    //  use binary search instead?
+    static int char2int(char c, char [] arr) {
+	for (int i=0; i<arr[i]; i++) {
+	    if (arr[i]==c) return i;
+	}
+	return -1;
+
+    }
+
+
+    static int [] string2ints(StringBuffer sb, char [] chararr) {
+	int n = sb.length();
+	int [] arr = new int[n];
+	for (int i=0; i<n; i++) arr[i] = char2int(sb.charAt(i),chararr);
+	return arr;
+
+    }
+
+
+    static double sum(int [] vec) {
+      	double sm = 0;
+      	for (int i=0; i<vec.length; i++) sm = sm + vec[i];
+	return sm;
+    }
+
+    static int intsum(int [] vec) {
+      	int sm = 0;
+      	for (int i=0; i<vec.length; i++) sm = sm + vec[i];
+	return sm;
+    }
+
+
+    static double sum(double [] vec) {
+      	double sm = 0;
+      	for (int i=0; i<vec.length; i++) sm = sm + vec[i];
+	return sm;
+    }
+
+
+    static double mean(int [] vec) {
+      	double mn = 0;
+      	for (int i=0; i<vec.length; i++) mn = mn + vec[i];
+	return (1.0*mn)/vec.length;
+    }
+
+
+    static double mean(double [] vec) {
+      	double mn = 0;
+      	for (int i=0; i<vec.length; i++) mn = mn + vec[i];
+	return (1.0*mn)/vec.length;
+    }
+
+    // divides by n rather than n-1
+    static double variance(double [] vec) {
+      	double mn = mean(vec);
+      	double var = 0;
+      	for (int i=0; i<vec.length; i++) var = var + (vec[i]-mn)*(vec[i]-mn);
+	return (1.0*var)/vec.length;
+    }
+
+    // divides by n rather than n-1
+    static double variance(int [] vec) {
+      	double mn = mean(vec);
+      	double var = 0;
+      	for (int i=0; i<vec.length; i++) var = var + (vec[i]-mn)*(vec[i]-mn);
+	return (1.0*var)/vec.length;
+    }
+
+
+
+    // mean, var, median, alpha-trimmed-mean, alpha-trimmed-var
+    static double [] arraystats(double [] arr, double alpha) {
+      	int n = arr.length;
+      	double [] stats = new double[5];
+      	stats[0] = mean(arr);
+      	stats[1] = variance(arr);
+      	double [] newarr = new double[n];
+      	System.arraycopy(arr, 0, newarr, 0, n);
+      	Arrays.sort(newarr);
+	// median
+      	if (n%2 == 0) {
+	    stats[2] = (newarr[n/2] + newarr[n/2-1])/2.0;
+	} else { 
+	    stats[2] = newarr[(n-1)/2];
+	}
+      	int numtrim = (int) Math.round(alpha*n);
+	newarr = submatrix(newarr, numtrim , n-numtrim-1); // +-1?
+	stats[3] = mean(newarr);
+	stats[4] = variance(newarr);
+	return stats;
+
+    }
+
+    static double std(double [] vec) {
+	return Math.sqrt(variance(vec));
+    }
+
+    static double std(int [] vec) {
+	return Math.sqrt(variance(vec));
+    }
+
+
+    static double median(int [] vec) {
+	double mn = 0;
+	int n = vec.length;
+	double [] svec = new double[n];
+	for (int i=0; i<n; i++) svec[i] = vec[i];
+	java.util.Arrays.sort(svec);
+	if (n%2 == 0) {
+	    return((0.0 + svec[n/2] + svec[n/2-1])/2);
+	} else {
+	    return (svec[(n-1)/2]);
+	}
+    }
+
+    // do this with logs?
+    static double binomial(int n, int k) {
+	double mul = 1.0;
+	int top = n;
+	for (int i=1; i<=k; i++) {
+	    mul = (mul*top)/k; 
+	    top--;
+	}
+	return mul;
+    }
+
+
+
+    static int [] computeaafreq(String filename, boolean killlc) {
+	int [] aacounts = new int[22];
+	fastareader fs = new fastareader(filename);
+	while (fs.hasmorefastas()) {
+	    String geneid = fs.nextname();
+	    StringBuffer sb = fs.nextfasta();
+	    if (killlc) killlowercase(sb);
+	    countaas(sb, aacounts);
+	}
+	// printmatrix(aacounts);
+	return aacounts;
+    }
+
+    static int [][] computeaafreq2(String filename, boolean killlc) {
+	int [][] aacounts = new int[22][22];
+	fastareader fs = new fastareader(filename);
+	while (fs.hasmorefastas()) {
+	    String geneid = fs.nextname();
+	    StringBuffer sb = fs.nextfasta();
+	    if (killlc) killlowercase(sb);
+	    countaas2(sb, aacounts);
+	}
+	// printmatrix(aacounts);
+	return aacounts;
+    }
+
+    static int [][][] computeaafreq3(String filename, boolean killlc) {
+	int [][][] aacounts = new int[22][22][22];
+	fastareader fs = new fastareader(filename);
+	while (fs.hasmorefastas()) {
+	    String geneid = fs.nextname();
+	    StringBuffer sb = fs.nextfasta();
+	    if (killlc) killlowercase(sb);
+	    countaas3(sb, aacounts);
+	}
+	// printmatrix(aacounts);
+	return aacounts;
+    }
+
+    // // orphan?
+    // static int [] computeaafreq(int [][] aas) {
+    // 	int [] aacounts = new int[22];
+    // 	for (int i=0; i<aas.length; i++) {
+    // 	    //
+    // 	}
+    // 	// printmatrix(aacounts);
+    // 	return aacounts;
+    // }
+
+
+    static void countaas(StringBuffer buffer, int [] aacounts) {
+	int [] aa;
+	aa = string2aa(buffer);
+	if (isvalidprotein(aa)) {
+	    for (int i=0; i<aa.length; i++) {
+		aacounts[aa[i]]++;
+	    }
+	}
+    }
+
+    static void countaas2(StringBuffer buffer, int [][] aacounts) {
+	int [] aa;
+	aa = string2aa(buffer);
+	if (isvalidprotein(aa)) {
+	    for (int i=0; i<aa.length-1; i++) {
+		aacounts[aa[i]][aa[i+1]]++;
+	    }
+	}
+    }
+
+
+    static void countaas3(StringBuffer buffer, int [][][] aacounts) {
+	int [] aa;
+	aa = string2aa(buffer);
+	if (isvalidprotein(aa)) {
+	    for (int i=0; i<aa.length-2; i++) {
+		aacounts[aa[i]][aa[i+1]][aa[i+2]]++;
+	    }
+	}
+    }
+
+
+    // no premature stop codons or unknown residues. terminal stop okay.
+    static boolean isvalidprotein(int [] aa) {
+	int m = aa.length;
+	for (int i=1; i<m-1; i++) {
+	    if ((aa[i] == 0) || (aa[i] == 21)) return false;
+	}
+	if (aa[m-1] == 0) return false;
+	return true;
+    }
+
+
+    static int [] deltavec(int len, int i, int ival) {
+	int [] dv = new int[len];
+	dv[i] = ival;
+	return dv;
+    }
+
+    static double [] deltavec(int len, int i, double ival) {
+	double [] dv = new double[len];
+	dv[i] = ival;
+	return dv;
+    }
+
+
+    static int [][] string2aa(StringBuffer [] buffer) {
+      	int m = buffer.length;
+      	int [][] aa = new int [m][];
+      	for (int i=0; i<m; i++) aa[i] = string2aa(buffer[i]);
+	return aa;
+    }
+
+
+    static int [] string2aa(StringBuffer buffer) {
+      	int m = buffer.length();
+      	int [] aa = new int[m];
+      	for (int i=0; i<m; i++) aa[i] = aatoint(buffer.charAt(i));
+      	return aa;
+    }
+
+
+    // 1 if upper-case; 0 otherwise
+    static int [] buffer2bits(StringBuffer sb) {
+      	int m = sb.length();
+      	int [] bv = new int[m];
+      	for (int i = 0; i<m; i++) {
+	    if (Character.isUpperCase(sb.charAt(i))) {
+		bv[i] = 1;
+	    } else {
+		bv[i] = 0;
+	    }
+      	}
+      	return bv;
+    }
+
+    // longest run of 1 in 0-1 vec
+    static int longestrun(int [] bitvec) {
+      	int maxlen = 0;
+      	int n = bitvec.length;
+      	int i = 0; 
+      	while (i < n) {
+	    if (bitvec[i] > 0) {
+		int startdex = i;
+		i++;
+		while (i < n && bitvec[i] > 0) i++;
+		int stopdex = i-1;
+		int len = stopdex-startdex+1;		
+		if (len >= maxlen) maxlen=len;
+	    } else { 
+		i++;
+	    }
+      	}
+      	return maxlen;
+    }
+
+    // longest run of 1 in 0-1 vec
+    static int longestrun(double [] bitvec) {
+      	int maxlen = 0;
+      	int n = bitvec.length;
+      	int i = 0; 
+      	while (i < n) {
+	    if (bitvec[i] > 0) {
+		int startdex = i;
+		i++;
+		while (i < n && bitvec[i] > 0) i++;
+		int stopdex = i-1;
+		int len = stopdex - startdex + 1;		
+		if (len >= maxlen) maxlen = len;
+	    } else {
+		i++;
+	    }
+      	}
+      	return maxlen;
+    }
+
+
+    static StringBuffer aa2string(int [] aa) {
+       	int m = aa.length;
+       	StringBuffer buffer = new StringBuffer(m);
+       	buffer.setLength(m);
+       	for (int i=0; i<m; i++) buffer.setCharAt(i,aanames[aa[i]]);
+       	return buffer;
+    }
+
+
+    static StringBuffer [] aa2string(int [][] aa) {
+       	int n = aa.length;
+       	StringBuffer [] buffer = new StringBuffer[n];
+       	for (int j=0; j<n; j++) {
+	    int m = aa[j].length;
+	    buffer[j] = new StringBuffer(m);
+	    buffer[j].setLength(m);
+	    for (int i=0; i<m; i++) buffer[j].setCharAt(i, aanames[aa[j][i]]);   
+       	}
+       	return buffer;
+    }
+
+
+    static StringBuffer int2string(int [] arr, String [] names) {
+       	int n = arr.length;
+       	StringBuffer buffer = new StringBuffer(n);
+	// buffer.setLength(n);
+       	for (int i=0; i<n; i++) buffer.append(names[arr[i]]);
+       	return buffer;
+    }
+
+    static StringBuffer int2string(int [] arr, char [] names) {
+       	int n = arr.length;
+       	StringBuffer buffer = new StringBuffer(n);
+       	buffer.setLength(n);
+       	for (int i=0; i<n; i++) buffer.setCharAt(i, names[arr[i]]);	
+       	return buffer;
+    }
+
+
+    static double logbinomial(int n, int k, double p){
+	// log C(n,k) p^k (1-p)^(n-k)
+       	double lb = k*Math.log(p) + (n - k)*Math.log(1 - p);
+       	double nn = 1.0*n;
+       	for (int i=0; i<k; i++) lb = lb + Math.log((nn - i)/(k - i));
+	return lb;
+    }
+
+    static double [][] logbinomiallut(int maxn, double p) {
+       	double [][] lut = new double[maxn][maxn];
+       	for (int i=0; i<maxn; i++) {
+	    for (int j=0; j<=i; j++) {
+		lut[i][j] = logbinomial(i, j, p);
+	    }
+       	}
+       	return lut;
+    }
+
+    // quicker version
+    static double [][] logbinomiallut2(int maxn, double p) {
+       	double q = 1 - p;
+       	double [][] lut = new double[maxn+1][maxn+1];
+       	for (int k=0; k<=maxn; k++) {
+	    lut[k][k] = k*Math.log(p);
+	    for (int n=k+1; n<=maxn; n++) {
+		lut[n][k] = lut[n-1][k] + Math.log((n + 1.0)/(n + 1.0 - k)*q);
+	    }
+       	}
+       	return lut;
+    }
+
+
+    // /**
+    //
+    // // brute force
+    // static double [] lps(int [] seq, double p) {
+    // 	// printmatrix(seq);
+    //
+    // 	double [] sss = {0, 0, 0, 0.0}; // start index, end index, count, logprob
+    //
+    // 	int besti = 0;
+    // 	int bestj = 0;
+    // 	double bestscore = 0.0;
+    // 	int bestcount = 0;
+    //
+    // 	double score;
+    //
+    // 	int n = seq.length;
+    //
+    // 	for (int i=0; i<n; i++) {
+    // 	    int ct = 0;
+    // 	    int len = 0;
+    // 	    for (int j=i; j<n; j++) {
+    // 		len++;
+    // 		ct = ct + seq[j];
+    // 		score = logbinomial(len, ct, p);
+    // 		// System.out.println(i + " " + j + " " + len + " " + ct + " " + (float) score);
+    // 		if (score < bestscore) {
+    // 		    bestscore = score;
+    // 		    besti = i; 
+    // 		    bestj = j; 
+    // 		    bestcount = ct;
+    // 		}
+    // 	    }
+    // 	}
+    // 	sss[0] = 1.0*besti;
+    // 	sss[1] = 1.0*bestj;
+    // 	sss[2] = 1.0*bestcount;
+    // 	sss[3] = bestscore;
+    // 	return sss;
+    // }
+    //
+    //
+    //
+    // // brute force, but with look-up-table.
+    // static double [] lps(int [] seq, double p, double [][] lut, int maxlen) {
+    //
+    // 	double [] sss = {0, 0, 0, 0.0}; // start index, end index, count, logprob
+    //
+    // 	// int maxl = lut.length;
+    //
+    // 	int besti = 0;
+    // 	int bestj = 0;
+    // 	double bestscore = 0.0;
+    // 	int bestcount = 0;
+    //
+    // 	double score;
+    //
+    // 	int n = seq.length;
+    //
+    // 	for (int i=0; i<n; i++) {
+    // 	    int ct = 0;
+    // 	    int len = 0;
+    // 	    for (int j=i; j<Math.min(i+maxlen,n); j++) {
+    // 		len++;
+    // 		ct = ct + seq[j];
+    // 		score = lut[len][ct];
+    // 		if (score < bestscore) {
+    // 		    bestscore = score; 
+    // 		    besti = i; 
+    // 		    bestj = j; 
+    // 		    bestcount = ct;
+    // 		}
+    //
+    // 	    }
+    // 	}
+    // 	sss[0] = 1.0*besti;
+    // 	sss[1] = 1.0*bestj;
+    // 	sss[2] = 1.0*bestcount;
+    // 	sss[3] = bestscore;
+    // 	return sss;
+    // }
+    //
+    //
+    // // brute force, but with look-up-table. tail=0 both ways; tail=1 overrep; tail=-1 underrep
+    // static double [] lps(int [] seq, double p, double [][] lut, int minlen, int maxlen, int tail) {
+    //
+    // 	double [] sss = {0, 0, 0, 0.0}; // start index, end index, count, logprob
+    //
+    // 	// int maxl = lut.length;
+    //
+    // 	int besti = 0;
+    // 	int bestj = 0;
+    // 	double bestscore = 0.0;
+    // 	int bestcount = 0;
+    //
+    // 	double score;
+    //
+    // 	int n = seq.length;
+    //
+    // 	boolean legal = true;
+    //
+    // 	for (int i=0; i<n; i++) {
+    // 	    int ct = 0;
+    // 	    int len = 0;
+    // 	    for (int j=i; j<Math.min(i+maxlen,n); j++) {
+    // 		len++;
+    // 		ct = ct + seq[j];
+    // 		legal = true;
+    // 		if (len<minlen) legal = false;
+    // 		else if (tail==1 && (ct+0.0)/(len+0.0) < p) legal = false;
+    // 		else if (tail==-1 && (ct+0.0)/(len+0.0) > p) legal = false;
+
+    // 		if (legal) {
+    // 		    score = lut[len][ct];
+    // 		    if (score < bestscore) {
+    // 			bestscore = score; 
+    // 			besti = i; 
+    // 			bestj = j; 
+    // 			bestcount = ct;
+    // 		    }
+    // 		}
+    //
+    // 	    }
+    // 	}
+    // 	sss[0] = 1.0*besti;
+    // 	sss[1] = 1.0*bestj;
+    // 	sss[2] = 1.0*bestcount;
+    // 	sss[3] = bestscore;
+    // 	return sss;
+    // }
+    //
+    //
+    // //sparse and one-tailed, but with look-up-table
+    // static double [] slps(int [] seq, double p, double [][] lut, int maxlen) {
+    //
+    // 	double [] sss = {0, 0, 0, 0.0}; // start index, end index, count, logprob
+    //
+    // 	// int maxl = lut.length;
+    //
+    // 	int besti = 0;
+    // 	int bestj = 0;
+    // 	double bestscore = 0.0;
+    // 	int bestcount = 0;
+    //
+    // 	double score;
+    //
+    // 	int n = seq.length;
+    //
+    //
+    // 	int [] nzdex = sparsesupport(seq,1);
+    //
+    // 	int m = nzdex.length;
+    //
+    // 	int len;
+    // 	int ct;
+    //
+    // 	for (int i=0; i<m; i++) {
+    // 	    for (int j=i; j<m; j++) {
+    // 		len = nzdex[j]-nzdex[i]+1;
+    // 		if (len >= maxlen) continue;
+    // 		ct = j-i + 1;
+    // 		score = lut[len][ct];
+    // 		if (score < bestscore) {
+    // 		    bestscore = score; 
+    // 		    besti = nzdex[i];
+    // 		    bestj = nzdex[j]; 
+    // 		    bestcount = ct;
+    // 		}
+    // 	    }
+    // 	}
+    // 	sss[0] = 1.0*besti;
+    // 	sss[1] = 1.0*bestj;
+    // 	sss[2] = 1.0*bestcount;
+    // 	sss[3] = bestscore;
+    // 	return sss;
+    // }
+    //
+    // */
+
+    ////////////////////
+
+    static HashMap<String, String> readhashtable(String filename, String defaultvalue) {
+	HashMap<String,String> ht = new HashMap<String,String>();
+
+	try {
+	    BufferedReader in = new BufferedReader(new FileReader(filename));
+	    String line;
+	    int i = 1;
+	    while ((line = in.readLine()) != null) {
+		line.trim();
+		if (line != null) {
+		    String [] chunks = line.split("\\t");
+		    if (defaultvalue == "incr") ht.put(chunks[0], new String(""+i));
+		    else if (chunks.length > 1) ht.put(chunks[0], chunks[1]);
+		    else if (defaultvalue == null) ht.put(chunks[0], chunks[0]);
+		    else ht.put(chunks[0], defaultvalue);
+		    i++;
+		    // System.out.println("#"+chunks[0] + "aaa" + ht.get(chunks[0]) + "bbb");
+		}
+
+	    }
+	}
+	catch (IOException e) {
+	    System.out.println("# Couldn't open " + filename);
+	}
+	// System.out.println(ht.size());
+
+	return ht;
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////
+
+
+    static void fastaprint(String name, StringBuffer seq, int w) {
+	System.out.println(">" + name);
+	int n = seq.length();
+	for (int i=0; i<n/w; i++) System.out.println(seq.substring(i*w, i*w + w));
+	if (n%w > 0) System.out.println(seq.substring((n/w)*w)); //CHECKME priority
+    }
+
+    static int [] composition(int [] vec, int max) {
+	int [] comp = new int[max+1];
+	for (int i=0; i<vec.length; i++) comp[vec[i]]++;
+	return comp;
+    }
+
+    static int [] composition(int [] vec) {
+	return composition(vec, maxint(vec));
+    }
+
+
+    static int [] aacomposition(int [] vec) {
+	return composition(vec, 22);
+    }
+
+  
+    static double [] normalize(int [] arr) {
+	int n = arr.length;
+	double [] narr = new double [n];
+	double sm = 1.0*sum(arr);
+	for (int i=0; i<n; i++) narr[i] = arr[i]/sm;
+	return narr;
+    }
+
+    // FIXME eps
+    static double [] normalize(double [] arr) {
+	int n = arr.length;
+	double [] narr = new double [n];
+	double sm = 1.0*sum(arr);
+	if (sm < 0.000000000001) sm = 1;
+	for (int i=0; i<n; i++) narr[i] = arr[i]/sm;
+	return narr;
+    }
+
+    // makes each row sum 1
+    static double [][] normalizerows(double [][] mat) {
+	int n = mat.length;
+	double [][] nmat = new double[n][];
+	for (int i=0; i<n; i++) nmat[i] = normalize(mat[i]);
+	return nmat;
+    }
+
+    // FIXME eps
+    // makes total sum	1
+    static double [][] normalizemat(double [][] mat) {
+	int m = mat.length;
+	int n = mat[0].length;
+	double [][] nmat = new double[m][n];
+	double ts = 0.0;
+	for (int i=0; i<m; i++) {
+	    for (int j=0; j<n; j++) {
+		ts = ts+mat[i][j];
+	    }
+	}
+	if (ts < 0.00000000001) ts = 0.00000000001;
+
+
+	for (int i=0; i<m; i++) {
+	    for (int j=0; j<n; j++) {
+		nmat[i][j] = mat[i][j]/ts;
+	    }
+	}
+	return nmat;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    /////////////
+    /////////////	  matrix functions
+
+    // ax + by
+    static double [] axpby(double a, double [] x, double b, double [] y) {
+	int n = x.length;
+	int m = y.length;
+	if (m < n) n=m;
+	double [] arr = new double[n];
+	for (int i=0; i<n; i++) arr[i] = a*x[i] + b*y[i];
+	return arr;
+    }
+
+
+    // ax + by
+    static double [][] axpby(double a, double [][] x, double b, double [][] y) {
+	int m1 = x.length;
+	int m2 = y.length;
+	int n1 = x[0].length;
+	int n2 = y[0].length;
+	if (m1 > m2) m1 = m2;
+	if (n1 > n2) n1 = n2;
+	double [][] mat = new double[m1][n1];
+	for (int i=0; i<m1; i++) {
+	    for (int j=0; j<n1; j++) { 
+		mat[i][j] = a*x[i][j] + b*y[i][j];
+	    }
+	}
+	return mat;
+    }
+
+
+    static double [] flatten(double [][] mat) {
+	int m = mat.length;
+	int n = mat[0].length;
+	double [] arr = new double [m*n];
+	for (int i=0; i<m; i++) {
+	    for (int j=0; j<n; j++) {
+		arr[i*m + j] = mat[i][j];
+	    }
+	}
+	return arr;
+
+    }
+
+    static double [] rowsums(double [][] mat) {
+	int m = mat.length;
+	double [] rs = new double[m];
+	for (int i=0; i<m; i++) {
+	    double s = 0;
+	    for (int j=0; j<mat[i].length; j++) {
+		s = s + mat[i][j];
+	    }
+	    rs[i] = s;
+	}
+	return rs;
+    }
+
+    static double [] colsums(double [][] mat) {
+	int m = mat.length;
+	int n = mat[0].length;
+	double [] cs = new double[n];
+	for (int j=0; j<n; j++) {
+	    double s = 0;
+	    for (int i=0; i<m; i++) { 
+		s = s + mat[i][j];
+	    }
+	    cs[j] = s;
+	}
+	return cs;
+    }
+
+    // ax + by + c
+    static double [] axpbypc(double a, double [] x, double b, double [] y, double c) {
+	int n = x.length;
+	int m = y.length;
+	if (m < n) n = m;
+	double [] arr = new double[n];
+	for (int i=0; i<n; i++) arr[i] = a*x[i] + b*y[i] + c;
+	return arr;
+    }
+
+    // ax + b
+    static double [] axpb(double a, double [] x, double b) {
+	int n = x.length;
+	double [] arr = new double[n];
+	for (int i=0; i<n; i++) arr[i] = a*x[i] + b;
+	return arr;
+    }
+
+    static double [][] axpb(double a, double [][] x, double b) {
+	int m = x.length;
+	int n = x[0].length;
+	double [][] arr = new double[m][n];
+	for (int i=0; i<m; i++) {
+	    for (int j=0; j<n; j++) {
+		arr[i][j] = a*x[i][j] + b;
+	    }
+	}
+	return arr;
+    }
+
+
+    // |x|
+    static double [] absval(double [] x) {
+	int n = x.length;
+	double [] arr = new double[n];
+	for (int i=0; i<n; i++) arr[i] = Math.abs(x[i]);
+	return arr;
+    }
+
+
+    static double [][] matmult(double [][] mat1, double [][] mat2){
+	int a = mat1.length;
+	int b = mat1[0].length;
+	int c = mat2.length;
+	int d = mat2[0].length;
+	if (b !=c )  {
+	    System.out.println("inner dimensions don't match: "	  + a + " x " + b + ", " +  c + " x " + d);
+	    return (new double[1][1]);
+	}
+	double [][] mat3 = new double[a][d];
+	double t;
+	for (int i=0; i<a; i++) {
+	    for (int j=0; j<d; j++) {
+		t = 0;
+		for (int k=0; k<b; k++) {
+		    t = t + mat1[i][k]*mat2[k][j];
+		}
+		mat3[i][j] = t;
+	    }
+	}
+	return mat3;
+    }
+
+
+    static double [] matmult(double [][] mat1, double [] vec){
+	int a = mat1.length;
+	int b = mat1[0].length;
+	int c = vec.length;
+	if (b!=c)  {
+	    System.out.println("inner dimensions don't match: "	  + a + " x " + b + ", " +  c);
+	    return (new double[1]);
+	}
+	double [] vec2 = new double[a];
+	double t;
+	for (int i=0; i<a; i++) {
+	    t = 0;
+	    for (int k=0; k<b; k++) {
+		t = t + mat1[i][k]*vec[k];
+	    }
+	    vec2[i] = t;
+	}
+	return vec2;
+    }
+
+
+    static double [][] outerproduct(double [] vec1, double [] vec2) {
+	int m = vec1.length;
+	int n = vec2.length;
+	double [][] op = new double[m][n];
+	for (int i=0; i<m; i++) {
+	    for (int j=0; j<n; j++) {
+		op[i][j] = vec1[i]*vec2[j];
+	    }
+	}
+	return op;
+    }
+
+
+    static double innerproduct(double [] vec1, double [] vec2) {
+	int m = vec1.length;
+	double ip = 0.0;
+	for (int i=0; i<m; i++)	ip = ip + vec1[i]*vec2[i];
+	return ip;
+    }
+
+
+    static double [][] diagonal(double [] vec) {
+	int n = vec.length;
+	double [][] mat = new double[n][n];
+	for (int i=0; i<n; i++) mat[i][i] = vec[i];
+	return mat;
+    }
+
+
+    static double [] diagonal(double [][] mat) {
+	int n = Math.min(mat.length, mat[0].length);
+	double [] vec = new double[n];
+	for (int i=0; i<n; i++) vec[i] = mat[i][i];
+	return vec;
+    }
+
+
+    // pointwise division: vec1./vec2
+    static double [] divp(double [] vec1, double [] vec2) {
+	int n = vec1.length;
+	double [] nvec = new double[n];
+	for (int i=0; i<n; i++) nvec[i] = vec1[i]/vec2[i]; // change if both 0?
+	return nvec;
+    }
+
+
+    // pointwise division: vec1./vec2
+    static double [][] divp(double [][] vec1, double [][] vec2) {
+	int m = vec1.length;
+	int n = vec1[0].length;
+	double [][] nvec = new double[m][n];
+	for (int j=0; j<m; j++) {
+	    for (int i=0; i<n; i++) {
+		nvec[j][i]=vec1[j][i]/vec2[j][i]; // change if both 0?
+	    }
+	}
+	return nvec;
+    }
+
+
+    static double [][] copymatrix(double [][] mat) {
+	int m = mat.length;
+	double [][] nmat = new double[m][];
+	for (int i=0; i<m; i++) {
+	    int n = mat[i].length;
+	    nmat[i] = new double[n];
+	    for (int j=0; j<n; j++) nmat[i][j]=mat[i][j];
+	}
+	return nmat;
+    }
+
+    static double [] copymatrix(double [] mat) {
+	int m = mat.length;
+	double [] nmat = new double[m];
+	for (int i=0; i<m; i++) {
+	    nmat[i]=mat[i];
+	}
+	return nmat;
+    }
+
+
+
+    static double factorial(int n) {
+	double fact = 1.0;
+	for (int i=1; i<=n; i++) fact = fact*i;
+	return fact;
+    }
+
+
+    static double [][] matsum(double [][] mat1, double [][] mat2){
+	int a = mat1.length;
+	int b = mat1[0].length;
+	int c = mat2.length;
+	int d = mat2[0].length;
+	if (a != c || b != d)  {
+	    System.out.println("matrix dimensions don't match: "   + a + " x " + b + ", " +  c + " x " + d);
+	    return (new double[1][1]);
+	}
+	double [][] mat3 = new double[a][b];
+	double t;
+	for (int i=0; i<a; i++) {
+	    for (int j=0; j<b; j++) {
+		mat3[i][j] = mat1[i][j] + mat2[i][j];
+	    }
+	}
+	return mat3;
+    }
+
+
+    static double [][] scalarmult(double [][] mat, double t) {
+	int a = mat.length;
+	int b = mat[0].length;
+	double [][] mat2 = new double[a][b];
+	for (int i=0; i<a; i++) {
+	    for (int j=0; j<b; j++) {
+		mat2[i][j] = t*mat[i][j];
+	    }
+	}
+	return mat2;
+    }
+
+
+
+    static int [][] sparsesupport(double [][] mat, double thresh) {
+	int m = mat.length;
+	int n = mat[0].length;
+	int [][] ss = new int[m][];
+	for (int i=0; i<m; i++) {
+	    int ct = 0;
+	    for (int j=0; j<n; j++) {
+		if (mat[i][j]>thresh) {
+		    ct++;
+		}
+	    }
+	    ss[i] = new int[ct];
+	    ct = 0;
+	    for (int j=0; j<n; j++) {
+		if (mat[i][j]>thresh) {
+		    ss[i][ct] = j;
+		    ct++;
+		}
+	    }
+	}
+	return ss;
+    }
+
+
+    static int [] sparsesupport(int [] vec, int target) {
+	int m = vec.length;
+	int ct = 0;
+	for (int i=0; i<m; i++) {
+	    if (vec[i]==target) {
+		ct++;
+	    }
+	}
+	int [] ss = new int[ct];
+	ct = 0;
+	for (int i=0; i<m; i++) {
+	    if (vec[i]==target) {
+		ss[ct] = i; 
+		ct++;
+	    }
+	}
+	return ss;
+    }
+
+    // elementwise log
+    static double [][] logmat(double [][] mat){
+	int n = mat.length;
+	int m = mat[0].length;
+	double [][] lmat = new double[n][m];
+	for (int i=0; i<n; i++) {
+	    for (int j=0; j<m; j++) {
+		lmat[i][j] = Math.log(mat[i][j]); // check for 0 or neg?
+	    }
+	}
+	return lmat;
+    }
+
+    // elementwise log
+    static double [] logmat(double [] mat){
+	int n = mat.length;
+	double [] lmat = new double[n];
+	for (int i=0; i<n; i++) {
+	    lmat[i] = Math.log(mat[i]);
+	}
+	return lmat;
+    }
+
+
+    static double [][] eyemat(int r, int c) {
+	double [][] mat = new double[r][c];
+	for (int i=0; i<Math.min(r,c); i++) {
+	    mat[i][i] = 1;
+	}
+	return mat;
+    }
+
+    static double [][] zeromat(int r, int c) {
+	double [][] mat = new double[r][c];
+	return mat;
+    }
+
+    static double [][] constantmat(int r, int c, double val) {
+	double [][] mat = new double[r][c];
+	for (int i=0; i<r; i++) {
+	    for (int j=0; j<c; j++) {
+		mat[i][j] = val;
+	    }
+	}
+	return mat;
+    }
+
+    static double [] constantmat(int r, double val) {
+	double [] mat = new double[r];
+	for (int i=0; i<r; i++)	 mat[i] = val;
+	return mat;
+    }
+
+
+    // elementwise inverse
+    static double [] inverse (double [] vec) {
+	int n =	 vec.length;
+	double [] iv = new double[n];
+	for (int i=0; i<n; i++) iv[i] = 1.0/vec[i];
+	return iv;
+    }
+
+
+    static double max(double [] arr){
+	int n = arr.length;
+	double mx = arr[0];
+	int dex = 0;
+	for (int i=1; i<n; i++) {
+	    if (arr[i] > mx) {
+		mx = arr[i];
+		dex = i;
+	    }
+	}
+	return mx;
+    }
+
+
+    static double min(double [] arr){
+	int n = arr.length;
+	double mx = arr[0];
+	int dex = 0;
+	for (int i=1; i<n; i++) {
+	    if (arr[i] < mx) {
+		mx = arr[i];
+		dex = i;
+	    }
+	}
+	return mx;
+    }
+
+    // returns val and index
+    static double [] max2(double [] arr){
+	int n = arr.length;
+	double mx = arr[0];
+	int dex = 0;
+	for (int i=1; i<n; i++) {
+	    if (arr[i] > mx) {
+		mx = arr[i];
+		dex = i;
+	    }
+	}
+	double [] md = new double[2];
+	md[0] = mx; md[1] = dex;
+	return md;
+    }
+
+
+    static int maxint(int [] arr){
+	int n = arr.length;
+	int mx = arr[0];
+	int dex = 0;
+	for (int i=1; i<n; i++) {
+	    if (arr[i] > mx) {
+		mx = arr[i];
+		dex = i;
+	    }
+	}
+	return mx;
+    }
+
+
+    // needs to be square here
+    static double [][] readmatrix(String filename) {
+	BufferedReader in;
+	String line;
+
+	double [][] mat = new double[1][1];
+
+	StringTokenizer toker;
+
+	try {
+	    in = new BufferedReader(new FileReader(filename));
+	    line = in.readLine();
+	    toker = new StringTokenizer(line);
+	    int n = toker.countTokens();
+	    mat = new double[n][n];
+	    for (int i=0; i<n; i++) {
+		if (i>0) { // first line is already read
+		    line = in.readLine();
+		    toker = new StringTokenizer(line);
+		}
+		for (int j=0; j<n; j++) {
+		    mat[i][j] = Double.parseDouble(toker.nextToken());
+		}
+	    }
+	    in.close();
+
+	}
+	catch (IOException e) {
+	    System.out.println("Couldn't open " + filename);
+	}
+
+	return mat;
+
+    }
+
+
+    // added 08/09/2011
+    // need not be square here --- allow row and column names???
+    static double [][] readmatrix2(String filename, int skiprow, int skipcol) {
+	BufferedReader in;
+	String line;
+	int n = 0; 
+	int m = 0; 
+
+	double [][] mat = new double[1][1];
+
+	StringTokenizer toker;
+
+	try {
+	    in = new BufferedReader(new FileReader(filename));
+	    for (int i=0; i<skiprow; i++) {
+		line = in.readLine();
+	    }
+	    line = in.readLine();
+	    toker = new StringTokenizer(line);
+	    n = toker.countTokens() - skipcol;
+	    m = 0;
+	    while((line != null) && (toker.countTokens() - skipcol == n)) { // make sure toker is non null?
+	    	m++;
+	    	line = in.readLine();
+	    	if (line != null) toker = new StringTokenizer(line);
+	    }
+	    in.close();
+	}
+	catch (IOException e) {
+	    System.out.println("Couldn't open " + filename);
+	}
+        // System.out.println("## dim " + m + " by " + n);
+
+
+	try {
+	    in = new BufferedReader(new FileReader(filename));
+	    for (int i=0; i<skiprow; i++) {
+		line = in.readLine();
+	    }
+	    line = in.readLine();
+	    toker = new StringTokenizer(line);
+	    mat = new double[m][n];
+	    for (int i=0; i<m; i++) {
+		if (i > 0) { // first line is already read
+		    line = in.readLine();
+		    toker = new StringTokenizer(line);
+		}
+		for (int j=0; j<skipcol; j++) {
+		    toker.nextToken();
+		}
+		for (int j=0; j<n; j++) {
+		    mat[i][j] = Double.parseDouble(toker.nextToken());
+		}
+	    }
+	    in.close();
+
+	}
+	catch (IOException e) {
+	    System.out.println("Couldn't open " + filename);
+	}
+
+	return mat;
+
+    }
+
+
+
+
+    static void printmatrix(int [][] mat) {
+	for (int i=0; i<mat.length; i++) {
+	    for (int j=0; j<mat[i].length; j++) {
+		System.out.print(mat[i][j] + "\t");
+	    }
+	    System.out.println();
+	}
+    }
+
+
+    static void printmatrix(double [][] mat) {
+	for (int i=0; i<mat.length; i++) {
+	    for (int j=0; j<mat[i].length; j++) {
+		System.out.print((float) (mat[i][j]) + "\t");
+	    }
+	    System.out.println();
+	}
+    }
+
+
+    static void printmatrix(int [] mat) {
+	for (int i=0; i<mat.length; i++) {
+	    System.out.println(mat[i]);
+	}
+	System.out.println();
+    }
+
+
+
+    static double [] mapfreq(double [] freq, int [] map) {
+	int n = maxint(map) + 1;
+	double [] newfreq = new double[n];
+	for (int i=0; i<freq.length; i++) {
+	    newfreq[map[i]] = newfreq[map[i]]+freq[i];
+	}
+	return newfreq;
+    }
+
+
+    static int [] mapseq(int [] arr, int [] map) {
+	int n = arr.length;
+	int [] newarr = new int[n];
+	for (int i=0; i<n; i++) {
+	    newarr[i] = map[arr[i]];
+	}
+	return newarr;
+    }
+
+
+    static double [] mapseq(int [] arr, double [] map) {
+	int n = arr.length;
+	double [] newarr = new double[n];
+	for (int i=0; i<n; i++) {
+	    newarr[i] = map[arr[i]];
+	}
+	return newarr;
+    }
+
+    // no longer used
+    // static double [] slidingaverage(double [] arr, int ww, boolean reflect) {
+    // 	int n = arr.length;
+    // 	// System.out.println(n);
+    // 	if (n==0) return arr;
+    // 	int w = ww/2;
+    // 	if (w >= n) w = n-1;
+    // 	double [] padarr = new double[n + 2*w];
+    // 	System.arraycopy(arr, 0, padarr, w, n);
+    // 	// printmatrix(padarr);
+    // 	if (reflect) {
+    // 	    for (int i=0; i<=w; i++) {
+    // 		padarr[i] = arr[w - i];
+    // 		padarr[n + 2*w - 1 - i] = arr[n - w - 1 + i];
+    // 	    }
+    // 	}
+    // 	// printmatrix(padarr);
+    // 	double [] sa = new double[n];
+    // 	double score;
+    // 	for (int i=0; i<n; i++) {
+    // 	    score = 0;
+    // 	    for (int j=-w; j<=w; j++) {
+    // 		score = score+padarr[i + w + j];
+    // 	    }
+    // 	    sa[i] = score/(2.0*w + 1);
+    // 	}
+
+    // 	return sa;
+    // }
+
+
+    // if  reflect==F, average over smaller windows
+    static double [] slidingaverage2(double [] arr, int ww, boolean reflect) {
+	int n = arr.length;
+	// System.out.println(n);
+	if (n == 0) return arr;
+	int w = ww/2;
+	if ( w>= n) w=n-1;
+	double [] padarr = new double[n + 2*w];
+	System.arraycopy(arr, 0, padarr, w, n);
+	// printmatrix(padarr);
+	if (reflect) {
+	    for (int i=0; i<=w; i++) {
+		padarr[i] = arr[w - i];
+		padarr[n + 2*w - 1 - i] = arr[n - w - 1 + i];
+	    }
+	}
+	// printmatrix(padarr);
+	double [] sa = new double[n];
+	double score;
+	int inrange;
+	for (int i=0; i<n; i++) {
+	    score = 0;
+	    inrange = 0;
+	    for (int j=-w; j<=w; j++) {
+		score = score + padarr[i + w + j];
+		if ((i+j >= 0) & (i+j < n)) inrange++;
+	    }
+	    if (reflect) {
+		sa[i] = score/(2.0*w + 1);
+	    } else {
+		sa[i] = score/(1.0*inrange);
+	    }
+	}
+
+	return sa;
+    }
+
+
+    // could speed this up by re-using common portion of overlapping windows!
+    // if  reflect==F, average over smaller windows, scores only first in consecutive run of mergeme
+    static double [] slidingaverage2(double [] arr, int ww, boolean reflect, int mergeme, int [] seq) {
+	int n = arr.length;
+	// System.out.println(n);
+	if (n == 0) return arr;
+	int w = ww/2;
+	if (w >= n) w = n-1;
+	double [] padarr = new double[n + 2*w];
+	int [] padseq = new int[n + 2*w];
+	System.arraycopy(arr, 0, padarr, w, n);
+	System.arraycopy(seq, 0, padseq, w, n);
+	// printmatrix(padarr);
+	if (reflect) {
+	    for (int i=0; i<=w; i++) {
+		padarr[i] = arr[w - i];
+		padarr[n + 2*w - 1 - i] = arr[n - w - 1 + i];
+	    }
+	}
+	// printmatrix(padarr);
+	double [] sa = new double[n];
+	double score;
+	int inrange;
+	for (int i=0; i<n; i++) {
+	    score = 0;
+	    inrange = 0;
+	    for (int j=-w; j<=w; j++) {
+                if ((padseq[i + w + j] != mergeme) // could do this without padding seq
+		    || ((i + j >= 1) && (padseq[i + w + j - 1] != mergeme))
+                    || ((i + j >= 2) && (padseq[i + w + j - 2] != mergeme))) {
+		    score = score + padarr[i + w + j];
+		} // else add zero but increment denominator anyway...
+		if ((i + j >= 0) & (i + j < n)) inrange++;
+	    }
+	    if (reflect) {
+		sa[i] = score/(2.0*w + 1);
+	    } else {
+		sa[i] = score/(1.0*inrange);
+	    }
+	}
+
+	return sa;
+    }
+
+    // downweighted PP but not PXP
+    // // if  reflect==F, average over smaller windows, scores only first in consecutive run of mergeme, allowing one gap
+    // static double [] slidingaverage2_old(double [] arr, int ww, boolean reflect, int mergeme, int [] seq) {
+    // 	int n = arr.length;
+    // 	// System.out.println(n);
+    // 	if (n == 0) return arr;
+    // 	int w = ww/2;
+    // 	if (w >= n) w = n-1;
+    // 	double [] padarr = new double[n + 2*w];
+    // 	int [] padseq = new int[n + 2*w];
+    // 	System.arraycopy(arr, 0, padarr, w, n);
+    // 	System.arraycopy(seq, 0, padseq, w, n);
+    // 	// printmatrix(padarr);
+    // 	if (reflect) {
+    // 	    for (int i=0; i<=w; i++) {
+    // 		padarr[i] = arr[w - i];
+    // 		padarr[n + 2*w - 1 - i] = arr[n - w - 1 + i];
+    // 	    }
+    // 	}
+    // 	// printmatrix(padarr);
+    // 	double [] sa = new double[n];
+    // 	double score;
+    // 	int inrange;
+    // 	for (int i=0; i<n; i++) {
+    // 	    score = 0;
+    // 	    inrange = 0;
+    // 	    for (int j=-w; j<=w; j++) {
+    //             if ((padseq[i + w + j] != mergeme) // could do this without padding seq
+    // 		    || ((i + j >= 1) && (padseq[i + w + j - 1] != mergeme))) {
+    // 		    score = score + padarr[i + w + j];
+    // 		} // else add zero but increment denominator anyway...
+    // 		if ((i + j >= 0) & (i + j < n)) inrange++;
+    // 	    }
+    // 	    if (reflect) {
+    // 		sa[i] = score/(2.0*w + 1);
+    // 	    } else {
+    // 		sa[i] = score/(1.0*inrange);
+    // 	    }
+    // 	}
+
+    // 	return sa;
+    // }
+
+
+   
+
+    // companion to read_aa_params
+    static void print_aa_params(double [] aaparams) {
+	for (int i=0; i<22; i++) {
+	    System.out.println((float) aaparams[i] + " # " + aanames[i]);
+	}
+    }
+
+    static void print_aa_params(int [] aaparams) {
+	for (int i=0; i<22; i++) {
+	    System.out.println(aaparams[i] + " # " + aanames[i]);
+	}
+    }
+    
+    
+    // companion to print_aa_params.
+    // file should be 22 numbers, one per line, in order of string array aanames. 
+    // {'X','A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y','*'};
+    // optionally each line can be: param # name, where if present the first letter of the name 
+    // on the ith line will be checked for agreement with aanames[i] (counting lines from index zero). 
+    static double [] read_aa_params(String filename) {
+	BufferedReader in;
+	String line;
+	double [] vec = new double[22];
+	StringTokenizer toker;
+	String name; 
+
+	try {
+	    in = new BufferedReader(new FileReader(filename));
+	    for (int i=0; i<22; i++) {
+	       line = in.readLine();
+	       toker = new StringTokenizer(line);
+	       int n = toker.countTokens();
+	       vec[i] = Double.parseDouble(toker.nextToken());
+	       if (n > 2) {
+		   toker.nextToken(); // should be #
+		   name = toker.nextToken();
+		   if (name.charAt(0) != aanames[i]) {
+		       System.out.println("warning: " + filename + " does not have expected name in line" + (i+1));
+		   }
+	       }
+	    }
+	    in.close();
+	}
+	catch (IOException e) {
+	    System.out.println("Couldn't open " + filename);
+	}
+	// FIXME: catch other sorts of exceptions for invalid formats, not enough lines, ...
+	return vec;
+    }
+
+
+
+     // starts with comment char so can be ignored by R
+    static void printaausage(double [] aafreq) {
+	for (int i=0; i<22; i++) {
+	    System.out.println("# " + aanames[i] + " " + (float) aafreq[i]);
+	}
+    }
+
+
+    static void printaausage(double [][] aafreq) {
+	for (int i=0; i<22; i++) {
+	    System.out.print("# " + aanames[i]);
+	    for (int j=0; j<aafreq.length; j++) {
+		System.out.print("\t" + (float) aafreq[j][i]);
+	    }
+	    System.out.println();
+	}
+    }
+
+    static void printaausage(double [][] aafreq, int sd) {
+	for (int i=0; i<22; i++) {
+	    System.out.print("# " + aanames[i]);
+	    for (int j=0; j<aafreq.length; j++) {
+		System.out.print("\t" + (float) (Math.round(sd*aafreq[j][i])/(1.0*sd)));
+	    }
+	    System.out.println();
+	}
+    }
+
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+
+class hmm {
+
+
+    int [] data;  // entries in {0,1,2,..., no-1}
+    int ns; // number of states
+    int no; // number of output symbols
+    double [][] tprob; // (ns x ns) transition probs
+    double [][] eprob; // (ns x no) emmision probs
+    double []	iprob; // (ns)	    initial probs
+    double [][] ctprob;
+    double [][] ceprob;
+    double []   ciprob;
+    double [][] ltprob; // (ns x ns) log transition probs
+    double [][] leprob; // (ns x no) log emmision probs
+    double []	liprob; // (ns)	     log initial probs
+
+
+    double [] fprob;	// (ns) prob of transitioning to end state
+    double [] lfprob;	// (ns)
+
+    char [] states; // symbols for printing
+    String [] names;
+
+    char [] ustates; // unique
+    String [] unames;
+
+    double lviterbiprob = -1.0/0;
+    double lmarginalprob = -1.0/0;
+
+    int [] subtrellis; // (ns)	bitmask
+
+    int [] classes; // for merging states
+    int numclasses;
+
+    double etst = 0.0; // expected time on subtrellis
+    double lpst = 0.0; // log prob of never visiting subtrellis
+
+    double lmp = 0.0; // log of marginal prob of output
+
+    double [][] postprob;
+    double [] margcollapse;
+
+    int [] viterbipath;
+    int [] mappath;
+
+    boolean sparse = false;
+
+    // read from file
+    hmm(String filename) {
+
+    	tprob = new double[2][2];
+    	eprob = new double[2][2];
+    	iprob = new double[2];
+
+    	BufferedReader in;
+    	String line;
+
+    	StringTokenizer toker;
+
+    	try {
+	    in = new BufferedReader(new FileReader(filename));
+	    line = in.readLine();
+	    toker = new StringTokenizer(line);
+	    ns = Integer.parseInt(toker.nextToken());
+	    line = in.readLine();
+	    toker = new StringTokenizer(line);
+	    no = Integer.parseInt(toker.nextToken());
+	    tprob = new double[ns][ns];
+	    eprob = new double[ns][no];
+	    iprob = new double[ns];
+	    line = in.readLine(); // blank
+	    for (int i=0; i<ns; i++) {
+	    	line = in.readLine();
+	    	toker = new StringTokenizer(line);
+	    	for (int j=0; j<ns; j++) {
+		    tprob[i][j] = Double.parseDouble(toker.nextToken());
+	    	}
+	    }
+	    line = in.readLine(); // blank
+	    line = in.readLine();
+	    toker = new StringTokenizer(line);
+	    for (int i=0; i<ns; i++) {
+		iprob[i] = Double.parseDouble(toker.nextToken());
+	    }
+	    line = in.readLine(); // blank
+	    for (int j=0; j<no; j++) {
+	    	line = in.readLine();
+	    	toker = new StringTokenizer(line);
+	    	for (int i=0; i<ns; i++) {
+		    eprob[i][j] = Double.parseDouble(toker.nextToken());
+	    	}
+	    }
+	    in.close();
+
+	}
+	catch (IOException e) {
+	    System.out.println("Couldn't open " + filename);
+	}
+
+	initialize();
+
+    }
+
+
+    hmm(double [][] tprob, double [][] eprob, double [] iprob) {
+	this.tprob = tprob;
+	this.eprob = eprob;
+	this.iprob = iprob;
+	initialize();
+    }
+
+
+    public void initialize() {
+	ctprob = plaac.cumsum(tprob,true);
+	ceprob = plaac.cumsum(eprob,true);
+	ciprob = plaac.cumsum(iprob);
+
+	ltprob = plaac.logmat(tprob);
+	leprob = plaac.logmat(eprob);
+	liprob = plaac.logmat(iprob);
+	ns = iprob.length;
+	no = eprob[0].length;
+
+	double [] rs = plaac.rowsums(tprob);
+	fprob = new double[ns];
+
+	// CHECKME: what's this?
+	boolean freeend = true;
+
+	for (int i=0; i<ns; i++) {
+	    fprob[i] = Math.max(0.0, 1.0 - rs[i]);
+	    if (fprob[i] > 0.0001) freeend = false;
+	}
+	if (freeend) {
+	    for (int i=0; i<ns; i++) {
+		fprob[i] = 1.0;
+	    }
+	}
+	lfprob = plaac.logmat(fprob);
+
+	subtrellis = new int[ns];
+	for (int i=0; i<ns; i++) subtrellis[i] = 1;
+	states = new char[ns];
+	for (int i=0; i<ns; i++) states[i] = (char) i;
+	names = new String[ns];
+	for (int i=0; i<ns; i++) names[i] = new String("s"+i);
+	classes = new int[ns];
+	for (int i=0; i<ns; i++) classes[i] = i;
+	numclasses = ns;
+	ustates = states;
+	unames = names;
+    }
+
+
+    public void setclasses(int [] classes) {
+	this.classes = classes;
+	int nc = 0;
+	numclasses = 0;
+	for (int i=0; i<classes.length; i++) {
+	    if (classes[i]>nc) nc = classes[i];
+	}
+	numclasses = nc+1;
+	// System.out.println("nc " + numclasses);
+	// plaac.printmatrix(classes);
+	// System.out.println(numclasses)
+	unames = new String[numclasses];
+	ustates = new char[numclasses];
+	for (int i=classes.length-1; i>=0; i--) {
+	    unames[classes[i]] = names[i];
+	    ustates[classes[i]] = states[i];
+	}
+
+    }
+
+    public void setnames(String [] names) {
+	this.names = names;
+	this.unames = names;
+
+    }
+
+
+    public void print() {
+	System.out.println(ns + " \t ## num states");
+	System.out.println(no + " \t ## num symbols");
+	System.out.println();
+	for (int i=0; i<ns; i++) {
+	    for (int j=0; j<ns; j++) {
+		System.out.print((float) tprob[i][j] + "\t");
+	    }
+	    System.out.println();
+	}
+	System.out.println();
+
+	for (int j=0; j<ns; j++) {
+	    System.out.print((float) iprob[j] + "\t");
+	}
+	System.out.println();
+	System.out.println();
+
+	for (int j=0; j<no; j++) {
+	    for (int i=0; i<ns; i++) {
+		System.out.print((float) eprob[i][j] + "\t");
+	    }
+	    System.out.println();
+	}
+	System.out.println();
+
+    }
+
+
+    public void write(String filename) {
+	try {
+	    BufferedWriter out = new BufferedWriter(new FileWriter(filename));
+
+	    out.write(ns + " \t ## num states");  out.newLine();
+	    out.write(no + " \t ## num symbols"); out.newLine();
+	    out.newLine();
+	    for (int i=0; i<ns; i++) {
+		for (int j=0; j<ns; j++) {
+		    out.write((float) tprob[i][j] + "\t");
+		}
+		out.newLine();
+	    }
+	    out.newLine();
+
+	    for (int j=0; j<ns; j++) {
+		out.write((float) iprob[j] + "\t");
+	    }
+	    out.newLine();
+	    out.newLine();
+
+	    for (int j=0; j<no; j++) {
+		for (int i=0; i<ns; i++) {
+		    out.write((float) eprob[i][j] + "\t");
+		}
+		out.newLine();
+	    }
+	    out.newLine();
+	    out.close();
+	}
+	catch (IOException e) {
+	    // do something
+	}
+
+    }
+
+
+    public int [] viterbidecode(int [] seq) {
+	int n = seq.length;
+	int [] vit = new int[n];
+
+	double [][] s = new double[ns][n];
+	int [][] tb = new int[ns][n]; // traceback
+
+	for (int i=0; i<ns; i++) {
+	    s[i][0] = iprob[i]*eprob[i][seq[0]];
+	}
+	for (int t=1; t<n; t++) {
+	    for (int i=0; i<ns; i++) {
+		int bestdex = 0;
+		double bestscore = tprob[0][i]*s[0][t-1];
+		for (int k=1; k<ns; k++) {
+		    if (tprob[k][i]*s[k][t-1] > bestscore) {
+			bestscore =  tprob[k][i]*s[k][t-1];
+			bestdex = k;
+		    }
+		}
+		s[i][t] = bestscore*eprob[i][seq[t]];
+		tb[i][t] = bestdex;
+	    }
+	}
+	int bestdex = 0;
+	double bestscore = s[0][n-1];
+	for (int k=1; k<ns; k++) {
+	    if (s[k][n-1] > bestscore) {
+		bestscore = s[k][n-1]; 
+		bestdex = k;
+	    }
+	}
+	vit[n-1] = bestdex;
+	for (int t=n-2; t>=0; t--) {
+	    vit[t] = tb[vit[t+1]][t+1];
+	}
+
+	plaac.printmatrix(plaac.transpose(s)); 
+	System.out.println();
+
+	viterbipath = vit;
+	return vit;
+    }
+
+
+    public int [] viterbidecodel(int [] seq) {
+	int n = seq.length;
+	int [] vit = new int[n];
+
+	double [][] s = new double[ns][n];
+	int [][] tb = new int[ns][n];	    // traceback
+
+	for (int i=0; i<ns; i++) {
+	    s[i][0] = liprob[i]+leprob[i][seq[0]];
+	} // initial probs
+	for (int t=1; t<n; t++) {
+	    for (int i=0; i<ns; i++) {
+		int bestdex = 0;
+		double bestscore = ltprob[0][i] + s[0][t-1];
+		for (int k=1; k<ns; k++) {
+		    if (ltprob[k][i] + s[k][t-1]  > bestscore) {
+			bestscore =  ltprob[k][i] + s[k][t-1];
+			bestdex = k;
+		    }
+		}
+		s[i][t] = bestscore + leprob[i][seq[t]];
+		tb[i][t] = bestdex;
+	    }
+	}
+	int bestdex = 0;
+	double bestscore = s[0][n-1] + lfprob[0];
+	for (int k=1; k<ns; k++) {
+	    if (s[k][n-1] + lfprob[k] > bestscore) {
+		bestscore = s[k][n-1] + lfprob[k];
+		bestdex = k;
+	    }
+	}
+	vit[n-1] = bestdex;
+
+	for (int t=n-2; t>=0; t--) {
+	    vit[t] = tb[vit[t+1]][t+1];
+	}
+
+	// plaac.printmatrix(plaac.transpose(s)); System.out.println();
+
+	lviterbiprob = bestscore;
+	if (numclasses < ns) vit = plaac.mapseq(vit, classes);
+	viterbipath = vit;
+	return vit;
+    }
+
+    //FIXME eps
+    // sparse transmat
+    public int [] sviterbidecodel(int [] seq) {
+	int n = seq.length;
+	int [] vit = new int[n];
+
+	double [][] s = new double[ns][n];
+	int [][] tb = new int[ns][n];	    // traceback
+
+	int [][] sps = plaac.sparsesupport(plaac.transpose(tprob), 0.000000001);
+
+
+	for (int i=0; i<ns; i++) {
+	    s[i][0] = liprob[i]+leprob[i][seq[0]];
+	} // initial probs
+	for (int t=1; t<n; t++) {
+	    for (int i=0; i<ns; i++) {
+		int bestdex = 0;
+		double bestscore = ltprob[0][i] + s[0][t-1];
+		for (int sk=0; sk < sps[i].length; sk++) {
+		    int k =sps[i][sk];
+		    // for (int k=1; k<ns; k++) {
+		    if (ltprob[k][i] + s[k][t-1]  > bestscore) {
+			bestscore =  ltprob[k][i] + s[k][t-1];
+			bestdex = k;
+		    }
+		}
+		s[i][t] = bestscore + leprob[i][seq[t]];
+		tb[i][t] = bestdex;
+	    }
+	}
+	int bestdex = 0;
+	double bestscore = s[0][n-1] + lfprob[0];
+	for (int k=1; k<ns; k++) {
+	    if (s[k][n-1] + lfprob[k] > bestscore) {
+		bestscore = s[k][n-1] + lfprob[k]; 
+		bestdex = k;
+	    }
+	}
+	vit[n-1] = bestdex;
+
+	for (int t=n-2; t>=0; t--) {
+	    vit[t] = tb[vit[t+1]][t+1];
+	}
+
+	// plaac.printmatrix(plaac.transpose(s)); System.out.println();
+
+	lviterbiprob = bestscore;
+
+	if (numclasses < ns) vit = plaac.mapseq(vit, classes);
+	viterbipath = vit;
+	return vit;
+    }
+
+
+    // some labels can be known
+    public int [] viterbidecodel(int [] seq, int [] lab) {
+	int n = seq.length;
+	int [] vit = new int[n];
+
+	double [][] s = new double[ns][n];
+	int [][] tb = new int[ns][n]; // traceback
+
+	double badscore = -1.0/0;
+
+	if (lab[0] < 0) {
+	    for (int i=0; i<ns; i++) {
+		s[i][0] = liprob[i]+leprob[i][seq[0]];
+	    }
+	} else {
+	    for (int i=0; i<ns; i++) {
+		s[i][0] = badscore;
+	    }
+	    s[lab[0]][0] = liprob[lab[0]]+leprob[lab[0]][seq[0]];
+	}
+
+	for (int t=1; t<n; t++) {
+	    if (lab[t] < 0) {
+		for (int i=0; i<ns; i++) {
+		    int bestdex = 0;
+		    double bestscore = ltprob[0][i] + s[0][t-1];
+		    for (int k=1; k<ns; k++) {
+			if (ltprob[k][i] + s[k][t-1]  > bestscore) {
+			    bestscore =	 ltprob[k][i] + s[k][t-1];
+			    bestdex = k;
+			}
+		    }
+		    s[i][t] = bestscore + leprob[i][seq[t]];
+		    tb[i][t] = bestdex;
+		}
+	    }
+	    else {
+		for (int i=0; i<ns; i++) s[i][t] = badscore;
+		int bestdex = 0;
+		double bestscore = ltprob[0][lab[t]] + s[0][t-1];
+		for (int k=1; k<ns; k++) {
+		    if (ltprob[k][lab[t]] + s[k][t-1]  > bestscore) {
+			bestscore =  ltprob[k][lab[t]] + s[k][t-1];
+			bestdex = k;
+		    }
+		}
+		s[lab[t]][t] = bestscore + leprob[lab[t]][seq[t]];
+		tb[lab[t]][t] = bestdex;
+	    }
+	}
+	int bestdex = 0;
+	double bestscore = s[0][n-1];
+	for (int k=1; k<ns; k++) {
+	    if (s[k][n-1] > bestscore) {
+		bestscore = s[k][n-1]; 
+		bestdex = k;
+	    }
+	}
+	vit[n-1] = bestdex;
+	for (int t=n-2; t>=0; t--) {
+	    vit[t] = tb[vit[t+1]][t+1];
+	}
+
+	// plaac.printmatrix(plaac.transpose(s)); System.out.println();
+
+	viterbipath = vit;
+	return vit;
+    }
+
+
+    public void decodealls(int [] seq) {
+	if (sparse)  {
+	    sviterbidecodel(seq);
+	    smapdecodel(seq);
+	}
+	else {
+	    viterbidecodel(seq);
+	    mapdecodel(seq);
+	}
+    }
+
+
+    public void decodeall(int [] seq) {
+	viterbidecodel(seq);
+	mapdecodel(seq);
+	margcollapse = new double[seq.length];
+	etst = 0.0; // expected time in subtrellis
+
+	if (ns == numclasses) {
+	    for (int j=0; j<seq.length; j++) {
+		for (int i=0; i<ns; i++) {
+		    if (subtrellis[i]==0) margcollapse[j] = margcollapse[j] + postprob[i][j];
+		}
+	    }
+	    for (int i=0; i<ns; i++) {
+		if (subtrellis[i]==0) etst = etst + plaac.sum(postprob[i]);
+	    }
+	}
+	else {
+	    margcollapse = postprob[0];
+	    etst = plaac.sum(postprob[0]);
+	}
+
+	lpst = logprobsubtrellis(seq, subtrellis);
+
+    }
+
+
+    public double [][] posterior(int [] seq) {
+	int n = seq.length;
+	double [][] pp = new double[ns][n];
+
+	// forward algorithm
+	double [][] a = new double[ns][n];
+
+	for (int i=0; i<ns; i++) {
+	    a[i][0] = iprob[i]*eprob[i][seq[0]];
+	}
+	for (int t=1; t<n; t++) {
+	    for (int i=0; i<ns; i++) {
+		double score = 0;
+		for (int k=0; k<ns; k++) {
+		    score = score + tprob[k][i]*a[k][t-1];
+		}
+		a[i][t] = score*eprob[i][seq[t]];
+	    }
+	}
+
+	// backward algorithm
+	double [][] b = new double[ns][n];
+
+	for (int i=0; i<ns; i++) {
+	    b[i][n-1] = 1;
+	} // iprob[i];
+	for (int t=n-2; t>=0; t--) {
+	    for (int i=0; i<ns; i++) {
+		double score = 0;
+		for (int k=0; k<ns; k++) {
+		    score = score + tprob[i][k]*b[k][t+1]*eprob[k][seq[t+1]];
+		}
+		b[i][t] = score;
+	    }
+	}
+
+	double pseq = 0;
+	for (int i=0; i<ns; i++) {
+	    pseq = pseq + a[i][n-1]*b[i][n-1];
+	}
+
+	// System.out.println("> " + pseq + " " + (a[0][n-1] + a[1][n-1]));
+
+
+	for (int t=0; t<n; t++) {
+	    for (int i=0; i<ns; i++) {
+		pp[i][t] = a[i][t]*b[i][t]/pseq;
+	    }
+	}
+
+	// System.out.println();System.out.println("a"); plaac.printmatrix(plaac.transpose(a));
+	// System.out.println();System.out.println("b"); plaac.printmatrix(plaac.transpose(b));
+	// System.out.println();
+
+
+	if (numclasses<ns) pp = collapseposteriors(pp, classes, numclasses);
+	postprob = pp;
+	return pp;
+
+    }
+
+    // in log-space
+    public double [][] posteriorl(int [] seq) {
+	int n = seq.length;
+	double [][] pp = new double[ns][n];
+
+	// forward algorithm
+	double [][] a = new double[ns][n];
+	a = plaac.logmat(a);
+
+	for (int i=0; i<ns; i++) {
+	    a[i][0] = liprob[i] + leprob[i][seq[0]];
+	}
+	for (int t=1; t<n; t++) {
+	    for (int i=0; i<ns; i++) {
+		double score = -1.0/0.0;
+		for (int k=0; k<ns; k++) {
+		    score = plaac.logeapeb(score, ltprob[k][i] + a[k][t-1]);
+		}
+		a[i][t] = score + leprob[i][seq[t]];
+	    }
+	}
+	double ltotprob = -1.0/0.0;
+	for (int i=0; i<ns; i++) {
+	    // a[i][n-1] = a[i][n-1] + lfprob[i];
+	    ltotprob = plaac.logeapeb(ltotprob,a[i][n-1] + lfprob[i]);
+	}
+
+	lmarginalprob = ltotprob;
+
+	// backward algorithm
+	double [][] b = new double[ns][n];
+
+	for (int i=0; i<ns; i++) {
+	    b[i][n-1] = lfprob[i];
+	} // accounts for termination
+	for (int t=n-2; t>=0; t--) {
+	    for (int i=0; i<ns; i++) {
+		double score = -1.0/0.0;
+		for (int k=0; k<ns; k++) {
+		    score = plaac.logeapeb(score, ltprob[i][k] + b[k][t+1] + leprob[k][seq[t+1]]);
+		}
+		b[i][t] = score;
+	    }
+	}
+
+	double lpseq = -1.0/0.0;
+	for (int i=0; i<ns; i++) {
+	    lpseq = plaac.logeapeb(lpseq, a[i][0] + b[i][0]);
+	}
+
+	// lmarginalprob = lpseq;
+
+	//CHECKME
+	for (int t=0; t<n; t++) {
+	    for (int i=0; i<ns; i++) {
+		pp[i][t] = Math.exp((a[i][t] + b[i][t]) - lpseq);
+	    }
+	}
+
+	if (numclasses<ns) pp = collapseposteriors(pp, classes, numclasses);
+	postprob = pp;
+	return pp;
+
+    }
+
+    //FIXME eps
+    // in log-space, sparse transmat
+    public double [][] sposteriorl(int [] seq) {
+	int n = seq.length;
+	double [][] pp = new double[ns][n];
+
+	// forward algorithm
+	double [][] a = new double[ns][n];
+	a = plaac.logmat(a);
+
+	int [][] sps = plaac.sparsesupport(plaac.transpose(tprob),0.000000001);
+	int [][] sps2 = plaac.sparsesupport(tprob,0.000000001);
+
+	for (int i=0; i<ns; i++) {
+	    a[i][0] = liprob[i] + leprob[i][seq[0]];
+	}
+	for (int t=1; t<n; t++) {
+	    for (int i=0; i<ns; i++) {
+		double score = -1.0/0.0;
+		for (int sk=0; sk < sps[i].length; sk++) {
+		    int k =sps[i][sk];
+		    // for (int k=0; k<ns; k++) {
+		    score = plaac.logeapeb(score, ltprob[k][i] + a[k][t-1]);
+		}
+		a[i][t] = score + leprob[i][seq[t]];
+	    }
+	}
+	double ltotprob = -1.0/0.0;
+	for (int i=0; i<ns; i++) {
+	    // a[i][n-1] = a[i][n-1] + lfprob[i];
+	    ltotprob = plaac.logeapeb(ltotprob,a[i][n-1] + lfprob[i]);
+	}
+
+	lmarginalprob = ltotprob;
+
+
+	// backward algorithm
+	double [][] b = new double[ns][n];
+
+	for (int i=0; i<ns; i++) {
+	    b[i][n-1] = lfprob[i];
+	} // accounts for termination
+	for (int t=n-2; t>=0; t--) {
+	    for (int i=0; i<ns; i++) {
+		double score = -1.0/0.0;
+		for (int sk=0; sk < sps2[i].length; sk++) {
+		    int k =sps2[i][sk];
+		    // for (int k=0; k<ns; k++) {
+		    score = plaac.logeapeb(score, ltprob[i][k] + b[k][t+1] + leprob[k][seq[t+1]]);
+		}
+		b[i][t] = score;
+	    }
+	}
+
+	double lpseq = -1.0/0.0;
+	for (int i=0; i<ns; i++) {
+	    lpseq = plaac.logeapeb(lpseq, a[i][0] + b[i][0]);
+	}
+
+	// lmarginalprob = lpseq;
+
+	// CHECKME
+	for (int t=0; t<n; t++) {
+	    for (int i=0; i<ns; i++) {
+		pp[i][t] = Math.exp((a[i][t] + b[i][t]) - lpseq);
+	    }
+	}
+
+	if (numclasses<ns) pp = collapseposteriors(pp,classes, numclasses);
+	postprob = pp;
+	return pp;
+
+    }
+
+
+    // wrapper
+    public double [][] sposteriors(int [] seq) {
+	return sposteriors(seq, tprob, eprob, iprob);
+    }
+
+
+    // wrapper
+    public double [][] posteriors(int [] seq) {
+	return posteriors(seq, tprob, eprob, iprob);
+    }
+
+
+    // use scaling to prevent underflow
+    public double [][] posteriors(int [] seq, double [][] tprob, double [][] eprob, double [] iprob) {
+
+	int n = seq.length;
+	double [][] pp = new double[ns][n];
+
+	// scaling factor
+	double [] sc = new double[n];
+	for (int i=0; i<n; i++) sc[i] = 1.0;
+
+	// forward algorithm
+	double [][] a = new double[ns][n];
+
+	for (int i=0; i<ns; i++) {
+	    a[i][0] = sc[0]*iprob[i]*eprob[i][seq[0]];
+	}
+	for (int t=1; t<n; t++) {
+	    double sf = 0.0;
+	    for (int i=0; i<ns; i++) {
+		double score = 0;
+		for (int k=0; k<ns; k++) {
+		    score = score + tprob[k][i]*a[k][t-1];
+		}
+		a[i][t] = score*eprob[i][seq[t]];
+		sf = sf + score*eprob[i][seq[t]];
+	    }
+	    sc[t] = 1/sf;
+	    for (int i=0; i<ns; i++) {
+		a[i][t] = a[i][t]*sc[t];
+	    }
+	}
+
+	// backward algorithm
+	double [][] b = new double[ns][n];
+
+	for (int i=0; i<ns; i++) {
+	    b[i][n-1] = sc[n-1];
+	} // 1; // iprob[i];
+	for (int t=n-2; t>=0; t--) {
+	    for (int i=0; i<ns; i++) {
+		double score = 0;
+		for (int k=0; k<ns; k++) {
+		    score = score + tprob[i][k]*b[k][t+1]*eprob[k][seq[t+1]];
+		}
+		b[i][t] = sc[t]*score;
+	    }
+	}
+
+	double pseq = 0;
+	for (int i=0; i<ns; i++) {
+	    pseq = pseq + a[i][n-1]*b[i][n-1];
+	}
+	double lpseq = Math.log(pseq);
+	for (int t=0; t<n; t++) {
+	    lpseq = lpseq - Math.log(sc[t]);
+	}
+
+	for (int t=0; t<n; t++) {
+	    double denom = 0;
+	    for (int i=0; i<ns; i++) {
+		denom = denom + a[i][t]*b[i][t];
+	    }
+	    for (int i=0; i<ns; i++) {
+		pp[i][t] = a[i][t]*b[i][t]/denom;
+	    }
+	}
+
+	System.out.println();
+	System.out.println("a"); 
+	plaac.printmatrix(plaac.transpose(a));
+	System.out.println();
+	System.out.println("b"); 
+	plaac.printmatrix(plaac.transpose(b));
+
+	lmarginalprob = lpseq;
+	lmp = lpseq;
+	if (numclasses<ns) pp = collapseposteriors(pp, classes, numclasses);
+	postprob = pp;
+	return pp;
+
+    }
+
+    // FIXME eps
+    // sparse transmat; use scaling to prevent underflow
+
+    public double [][] sposteriors(int [] seq, double [][] tprob, double [][] eprob, double [] iprob) {
+
+	int n = seq.length;
+	double [][] pp = new double[ns][n];
+
+	// scaling factor
+	double [] sc = new double[n];
+	for (int i=0; i<n; i++) sc[i] = 1.0;
+
+	// forward algorithm
+	double [][] a = new double[ns][n];
+
+	int [][] sps = plaac.sparsesupport(plaac.transpose(tprob),0.000000001);
+	int [][] sps2 = plaac.sparsesupport(tprob,0.000000001);
+
+	for (int i=0; i<ns; i++) {
+	    a[i][0] = sc[0]*iprob[i]*eprob[i][seq[0]];
+	}
+	for (int t=1; t<n; t++) {
+	    double sf = 0.0;
+	    for (int i=0; i<ns; i++) {
+		double score = 0;
+		for (int sk=0; sk < sps[i].length; sk++) {
+		    int k = sps[i][sk];
+		    // for (int k=0; k<ns; k++) {
+		    score = score + tprob[k][i]*a[k][t-1];
+		}
+		a[i][t] = score*eprob[i][seq[t]];
+		sf = sf + score*eprob[i][seq[t]];
+	    }
+	    sc[t] = 1/sf;
+	    for (int i=0; i<ns; i++) {
+		a[i][t] = a[i][t]*sc[t];
+	    }
+	}
+
+	double totprob = 0;
+
+	for (int i=0; i<ns; i++) {
+	    totprob = totprob + a[i][n-1]*fprob[i];
+	}
+
+	double ltotprob = Math.log(totprob);
+	for (int t=0; t<n; t++) {
+	    ltotprob = ltotprob - Math.log(sc[t]);
+	}
+
+	lmarginalprob = ltotprob;
+
+
+	// backward algorithm
+	double [][] b = new double[ns][n];
+
+	for (int i=0; i<ns; i++) {
+	    b[i][n-1] = sc[n-1];
+	} // 1; // iprob[i];
+	for (int t=n-2; t>=0; t--) {
+	    for (int i=0; i<ns; i++) {
+		double score = 0;
+		for (int sk=0; sk<sps2[i].length; sk++) {
+		    // for (int k=0; k<ns; k++) {
+		    int k = sps2[i][sk];
+		    score = score + tprob[i][k]*b[k][t+1]*eprob[k][seq[t+1]];
+		}
+		b[i][t] = sc[t]*score;
+	    }
+	}
+
+	double pseq = 0;
+	for (int i=0; i<ns; i++) {
+	    pseq = pseq + a[i][n-1]*b[i][n-1];
+	}
+	double lpseq = Math.log(pseq);
+	for (int t=0; t<n; t++) {
+	    lpseq = lpseq - Math.log(sc[t]);
+	}
+
+
+	for (int t=0; t<n; t++) {
+	    double denom = 0;
+	    for (int i=0; i<ns; i++) {
+		denom = denom + a[i][t]*b[i][t];
+	    }
+	    for (int i=0; i<ns; i++) {
+		pp[i][t] = a[i][t]*b[i][t]/denom;
+	    }
+	}
+
+	// System.out.println();System.out.println("a"); plaac.printmatrix(plaac.transpose(a));
+	// System.out.println();System.out.println("b"); plaac.printmatrix(plaac.transpose(b));
+	// System.out.println();
+
+	// lmarginalprob = lpseq;
+	lmp = lpseq;
+	if (numclasses<ns) pp = collapseposteriors(pp, classes, numclasses);
+	postprob = pp;
+	return pp;
+
+    }
+
+    // also returns forward and backward values
+    public double [][][] posteriorsfb(int [] seq, double [][] tprob, double [][] eprob, double [] iprob) {
+
+	int n = seq.length;
+	double [][] pp = new double[ns][n];
+
+	// scaling factor
+	double [] sc = new double[n];
+	for (int i=0; i<n; i++) sc[i] = 1.0;
+
+	// forward algorithm
+	double [][] a = new double[ns][n];
+
+	for (int i=0; i<ns; i++) {
+	    a[i][0] = sc[0]*iprob[i]*eprob[i][seq[0]];
+	}
+	for (int t=1; t<n; t++) {
+	    double sf = 0.0;
+	    for (int i=0; i<ns; i++) {
+		double score = 0;
+		for (int k=0; k<ns; k++) {
+		    score = score + tprob[k][i]*a[k][t-1];
+		}
+		a[i][t] = score*eprob[i][seq[t]];
+		sf = sf + score*eprob[i][seq[t]];
+	    }
+	    sc[t] = 1/sf;
+	    for (int i=0; i<ns; i++) { 
+		a[i][t] = a[i][t]*sc[t];}
+	}
+
+	// backward algorithm
+	double [][] b = new double[ns][n];
+
+	for (int i=0; i<ns; i++) {
+	    b[i][n-1] = sc[n-1];
+	} // 1; // iprob[i];
+	for (int t=n-2; t>=0; t--) {
+	    for (int i=0; i<ns; i++) {
+		double score = 0;
+		for (int k=0; k<ns; k++) {
+		    score = score + tprob[i][k]*b[k][t+1]*eprob[k][seq[t+1]];
+		}
+		b[i][t] = sc[t]*score;
+	    }
+	}
+
+	double pseq = 0;
+	for (int i=0; i<ns; i++) {
+	    pseq = pseq + a[i][n-1]*b[i][n-1];
+	}
+	double lpseq = Math.log(pseq);
+	for (int t=0; t<n; t++) {
+	    lpseq = lpseq - Math.log(sc[t]);
+	}
+
+
+	for (int t=0; t<n; t++) {
+	    double denom = 0;
+	    for (int i=0; i<ns; i++) {
+		denom = denom + a[i][t]*b[i][t];
+	    }
+	    for (int i=0; i<ns; i++) {
+		pp[i][t] = a[i][t]*b[i][t]/denom;
+	    }
+	}
+
+	// System.out.println();System.out.println("a"); plaac.printmatrix(plaac.transpose(a));
+	// System.out.println();System.out.println("b"); plaac.printmatrix(plaac.transpose(b));
+	// System.out.println();
+
+	lmarginalprob = lpseq;
+
+	lmp = lpseq;
+
+	postprob = pp;
+	// return pp;
+
+	double [][][] pfb = new double[3][ns][n];
+	pfb[0] = pp;
+	pfb[1] = a;
+	pfb[2] = b;
+	return pfb;
+
+    }
+
+
+    // allow partial labels
+    public double [][] posteriors(int [] seq, int [] lab, double [][] tprob, double [][] eprob, double [] iprob) {
+
+	int n = seq.length;
+	double [][] pp = new double[ns][n];
+
+	// scaling factor
+	double [] sc = new double[n];
+	for (int i=0; i<n; i++) sc[i] = 1.0;
+
+	// forward algorithm
+	double [][] a = new double[ns][n];
+
+	int lb, ub;
+
+	if (lab[0]<0) { 
+	    for (int i=0; i<ns; i++) {
+		a[i][0] = sc[0]*iprob[i]*eprob[i][seq[0]]; 
+	    }
+	} else {
+	    a[lab[0]][0] = sc[0]*eprob[lab[0]][seq[0]];
+	}
+
+	for (int t=1; t<n; t++) {
+	    double sf = 0.0;
+
+	    if (lab[t]<0) {
+		for (int i=0; i<ns; i++) {
+		    double score = 0;
+		    for (int k=0; k<ns; k++) {
+			score = score + tprob[k][i]*a[k][t-1];
+		    }
+		    a[i][t] = score*eprob[i][seq[t]];
+		    sf = sf + score*eprob[i][seq[t]];
+		}
+	    } else {
+		double score = 0;
+		for (int k=0; k<ns; k++) {
+		    score = score + tprob[k][lab[t]]*a[k][t-1];
+		}
+		a[lab[t]][t] = score*eprob[lab[t]][seq[t]];
+		sf = sf + score*eprob[lab[t]][seq[t]];
+	    }
+
+	    sc[t] = 1/sf;
+	    for (int i=0; i<ns; i++) {
+		a[i][t] = a[i][t]*sc[t];
+	    }
+	}
+
+	// backward algorithm
+	double [][] b = new double[ns][n];
+
+	for (int i=0; i<ns; i++) {
+	    b[i][n-1] = sc[n-1];
+	} // 1; // iprob[i];
+	for (int t=n-2; t>=0; t--) {
+
+	    if (lab[t+1]<0) {
+		for (int i=0; i<ns; i++) {
+		    double score = 0;
+		    for (int k=0; k<ns; k++) {
+			score = score + tprob[i][k]*b[k][t+1]*eprob[k][seq[t+1]];
+		    }
+		    b[i][t] = sc[t]*score;
+		}
+	    } else {
+		for (int i=0; i<ns; i++) {
+		    double score = 0;
+		    score = score + tprob[i][lab[t+1]]*b[lab[t+1]][t+1]*eprob[lab[t+1]][seq[t+1]];
+		    b[i][t] = sc[t]*score;
+		}
+	    }
+
+
+	}
+
+	double pseq = 0;
+	for (int i=0; i<ns; i++) {
+	    pseq = pseq + a[i][n-1]*b[i][n-1];
+	}
+	double lpseq = Math.log(pseq);
+	for (int t=0; t<n; t++) {
+	    lpseq = lpseq - Math.log(sc[t]);
+	}
+
+
+	for (int t=0; t<n; t++) {
+	    double denom = 0;
+	    for (int i=0; i<ns; i++) {
+		denom = denom + a[i][t]*b[i][t];
+	    }
+	    for (int i=0; i<ns; i++) {
+		pp[i][t] = a[i][t]*b[i][t]/denom;
+	    }
+	}
+
+	// System.out.println();System.out.println("a"); plaac.printmatrix(plaac.transpose(a));
+	// System.out.println();System.out.println("b"); plaac.printmatrix(plaac.transpose(b));
+	// System.out.println();
+
+	lmarginalprob = lpseq;
+	lmp = lpseq;
+
+	if (numclasses<ns) pp = collapseposteriors(pp, classes, numclasses);
+
+
+	postprob = pp;
+	return pp;
+
+    }
+
+
+    public double logprobsubtrellis(int [] seq, int [] st) {
+
+	int n = seq.length;
+	double [][] pp = new double[ns][n];
+
+	// scaling factor
+	double [] sc = new double[n];
+	for (int i=0; i<n; i++) sc[i] = 1.0;
+
+
+	double [][] a = new double[ns][n];
+
+	// forward algorithm on entire trellis
+	for (int i=0; i<ns; i++) {
+	    if (true) a[i][0] = sc[0]*iprob[i]*eprob[i][seq[0]];
+	}
+	for (int t=1; t<n; t++) {
+	    double sf = 0.0;
+	    for (int i=0; i<ns; i++) {
+		if (true) {
+		    double score = 0;
+		    for (int k=0; k<ns; k++) {
+			score = score + tprob[k][i]*a[k][t-1];
+		    }
+		    a[i][t] = score*eprob[i][seq[t]];
+		    sf = sf + score*eprob[i][seq[t]];
+		}
+	    }
+	    sc[t] = 1/sf;
+	    for (int i=0; i<ns; i++) {
+		a[i][t] = a[i][t]*sc[t];
+	    }
+	}
+
+	double lpd = 0; // pr(seq)
+	for (int t=0; t<n; t++) {
+	    lpd = lpd - Math.log(sc[t]);
+	}
+
+	a = new double[ns][n];
+
+	//  forward algorithm on subtrellis
+	for (int i=0; i<ns; i++) {
+	    if (st[i] == 1) a[i][0] = sc[0]*iprob[i]*eprob[i][seq[0]];
+	}
+	for (int t=1; t<n; t++) {
+	    double sf = 0.0;
+	    for (int i=0; i<ns; i++) {
+		if (st[i] == 1) {
+		    double score = 0;
+		    for (int k=0; k<ns; k++) {
+			score = score + tprob[k][i]*a[k][t-1];
+		    }
+		    a[i][t] = score*eprob[i][seq[t]];
+		    sf = sf + score*eprob[i][seq[t]];
+		}
+	    }
+	    sc[t] = 1/sf;
+	    for (int i=0; i<ns; i++) {
+		a[i][t] = a[i][t]*sc[t];
+	    }
+	}
+
+	double lpdas = 0; // pr(seq & subtrellis)
+	for (int t=0; t<n; t++) {
+	    lpdas = lpdas - Math.log(sc[t]);
+	}
+
+
+	// not needed
+	// prior probability of subtrellis
+
+	// /**
+
+	//    a = new double[ns][n];
+
+	//    for (int i=0; i<ns; i++) {
+	//    if (st[i] == 1) a[i][0] = sc[0]*iprob[i];
+	//    }
+	//    for (int t=1; t<n; t++) {
+	//    double sf = 0.0;
+	//    for (int i=0; i<ns; i++) {
+	//    if (st[i] == 1) {
+	//    double score = 0;
+	//    for (int k=0; k<ns; k++) {
+	//    score = score + tprob[k][i]*a[k][t-1];
+	//    }
+	//    a[i][t] = score;
+	//    sf = sf + score;
+	//    }
+	//    }
+	//    sc[t] = 1/sf;
+	//    for (int i=0; i<ns; i++) a[i][t] = a[i][t]*sc[t];
+	//    }
+
+	//    double lps = 0; // pr(subtrellis)
+	//    for (int t=0; t<n; t++) lps = lps - Math.log(sc[t]);
+	// */
+
+	// System.out.println((float) lpdas + "\t" + (float) lpd + " \t" + (float) Math.exp(lpdas - lpd));
+	
+	return (lpdas - lpd);
+    }
+
+
+    public int [] mapdecode(int [] seq) {
+	int n = seq.length;
+	int [] map = new int[n];
+	double [][] pp = posterior(seq);
+	postprob = pp;
+	for (int i=0; i<n; i++) {
+	    for (int j=0; j<pp.length; j++) {
+		if (pp[j][i] > pp[map[i]][i]) map[i] = j;
+	    }
+	}
+	// if (numclasses < ns) map = plaac.mapseq(map,classes);
+	mappath = map;
+	return map;
+    }
+
+    // pp is ns x n
+    public static int [] mapdecode(double [][] pp) {
+	int n = pp[0].length;
+	int ns = pp.length;
+	int [] map = new int[n];
+	for (int i=0; i<n; i++) {
+	    for (int j=0; j<pp.length; j++) {
+		if (pp[j][i] > pp[map[i]][i]) map[i] = j;
+	    }
+	}
+	return map;
+    }
+
+
+    public int [] smapdecodel(int [] seq) {
+	int n = seq.length;
+	int [] map = new int[n];
+	double [][] pp = sposteriorl(seq);
+	postprob = pp;
+	for (int i=0; i<n; i++) {
+	    for (int j=0; j<pp.length; j++) {
+		if (pp[j][i] > pp[map[i]][i]) map[i] = j;
+	    }
+	}
+	// if (numclasses < ns) map = plaac.mapseq(map,classes);
+	mappath = map;
+	return map;
+    }
+
+
+
+    public int [] mapdecodel(int [] seq) {
+	int n = seq.length;
+	int [] map = new int[n];
+	double [][] pp = posteriorl(seq);
+	postprob = pp;
+	for (int i=0; i<n; i++) {
+	    for (int j=0; j<pp.length; j++) {
+		if (pp[j][i] > pp[map[i]][i]) map[i] = j;
+	    }
+	}
+	// if (numclasses < ns) map = plaac.mapseq(map,classes);
+	mappath = map;
+	return map;
+    }
+
+
+    public int [] mapdecodes(int [] seq) {
+	int n = seq.length;
+	int [] map = new int[n];
+	double [][] pp = posteriors(seq);
+	postprob = pp;
+	for (int i=0; i<n; i++) {
+	    for (int j=0; j<pp.length; j++) {
+		if (pp[j][i] > pp[map[i]][i]) map[i] = j;
+	    }
+	}
+	// if (numclasses < ns) map = plaac.mapseq(map,classes);
+	mappath = map;
+	return map;
+    }
+
+
+    public double marginal(int [] seq) {
+	int n = seq.length;
+	double mp = 0;
+	return mp;
+    }
+
+    public static double [][] collapseposteriors(double [][] pp, int [] mask, int newns) {
+	double [][] npp = new double[newns][pp[0].length];
+	for (int i=0; i<pp.length; i++) {
+	    for (int j=0; j<pp[0].length; j++) {
+		npp[mask[i]][j]+=pp[i][j];
+	    }
+	}
+	return npp;
+
+
+    }
+
+    // /**
+    // public int [][] simulate(int n, Random rg) {
+    // 	int [] hseq = new int[n];
+    // 	int [] oseq = new int[n];
+    // 	double r = rg.nextDouble();
+    // 	int dex = 0;
+    // 	while (r < ciprob[dex]) dex++;
+    // 	hseq[0]=dex;
+    // 	for (int i=1; i<n; i++) {
+    // 	    r = rg.nextDouble();
+    // 	    dex = 0;
+    // 	    while (r < ctprob[hseq[i-1]][dex]) dex++;
+    // 	    hseq[i] = dex;
+    // 	}
+    // 	for (int i=0; i<n; i++) {
+    // 	    r = rg.nextDouble();
+    // 	    dex = 0;
+    // 	    while (r < ceprob[hseq[i]][dex]) dex++;
+    // 	    oseq[i] = dex;
+
+    // 	}
+    // 	int [][] smat = new int[2][n];
+    // 	smat[0] = hseq;
+    // 	smat[1] = oseq;
+    // 	return smat;
+
+    // }
+    // */
+
+    public void printme(String st) {
+	int nc = postprob.length;
+
+	for (int i=0; i<viterbipath.length; i++) {
+	    System.out.print(st + "\t" + viterbipath[i] + "\t" + mappath[i]);
+	    for (int j=0; j<nc; j++) System.out.print("\t" + (float) postprob[j][i]);
+	    System.out.println();
+	}
+	System.out.print("# " + (float) etst + "\t" + (float) lpst);
+	for (int i=0; i<nc; i++) System.out.print("\t" + subtrellis[i]);
+	System.out.println();
+	System.out.print("# " +( float) etst + "\t" + (float) lpst);
+	for (int i=0; i<nc; i++) System.out.print("\t" + (float) plaac.sum(postprob[i]));
+	System.out.println();
+    }
+
+    public void printme(String st, int [] seq) {
+	int nc = postprob.length;
+
+	for (int i=0; i<viterbipath.length; i++) {
+	    System.out.print(st + "\t" + seq[i] + "\t" + viterbipath[i] + "\t" + mappath[i]);
+	    for (int j=0; j<nc; j++) System.out.print("\t" + (float) postprob[j][i]);
+	    System.out.println();
+	}
+	System.out.print("# " + (float) etst + "\t" + (float) lpst);
+	for (int i=0; i<nc; i++) System.out.print("\t" + subtrellis[i]);
+	System.out.println();
+	System.out.print("# " + (float) etst + "\t" + (float) lpst);
+	for (int i=0; i<nc; i++) System.out.print("\t" + (float) plaac.sum(postprob[i]));
+	System.out.println();
+    }
+
+
+
+    public double [][][] scoreseqs(int [][] seqs, int [][] labels, double [][] tprob, double [][] eprob, double [] iprob) {
+	// double [][] tprob;
+	// double [][] eprob;
+	// double [] iprob;
+	int ns = iprob.length;
+
+	int n = seqs.length;
+	double [][][] scores = new double[n][ns][];
+	for (int i=0; i<n; i++) {
+	    scores[i] = posteriors(seqs[i], labels[i], tprob, eprob, iprob);
+	}
+
+	for (int i=0; i<n; i++) {
+	    plaac.printmatrix(plaac.transpose(scores[i]));
+	    System.out.println("-------------------------------------------------------------");
+	}
+	return scores;
+
+    }
+
+
+    public double [][][] scoreseqs(int [][] seqs, int [][] labels) {
+	// double [][] tprob;
+	// double [][] eprob;
+	// double [] iprob;
+	int ns = iprob.length;
+
+	int n = seqs.length;
+	double [][][] scores = new double[n][ns][];
+	for (int i=0; i<n; i++) {
+	    scores[i] = posteriors(seqs[i], labels[i], tprob, eprob, iprob);
+	}
+
+	for (int i=0; i<n; i++) {
+	    plaac.printmatrix(plaac.transpose(scores[i]));
+	    System.out.println("-------------------------------------------------------------");
+	}
+	return scores;
+
+    }
+
+
+    // dur = expected run length; ini = relative num of segments of each type
+    public static double [][] autotransmat(double [] ini, double [] dur) {
+	int n = ini.length;
+	double [][] tm = new double[n][n];
+	double rs = plaac.sum(ini);
+	for (int i=0; i<n; i++) {
+	    double lrs = rs - ini[i];
+	    for (int j=0; j<n; j++) {
+		tm[i][j] = (ini[j]/lrs)*(1.0/dur[i]);
+	    }
+	    tm[i][i] = 1.0 - 1.0/dur[i]; // fix diagonal
+	}
+	return tm;
+    }
+
+
+
+    // HMM representation suitable for graphing with graphviz/dot
+    public void dottify(boolean record) {
+	
+	int maxlab = 7; // truncate labels
+	
+	System.out.println("Digraph G {");
+	for (int i=0; i<ns; i++) {
+	    System.out.println("  n" + i + " [label=\"" + names[i] + "\", shape=ellipse];");
+	}
+	for (int i=0; i<ns; i++) {
+	    for (int j=0; j<ns; j++) {
+		if (tprob[i][j] > 0) {
+		    String lab = new String("" + (float) tprob[i][j]);
+		    if (lab.length() > maxlab) lab = lab.substring(0, maxlab-1);
+		    System.out.println("  n" + i + " -> n" + j + " [label=\"" + lab + "\", color=gray];");
+		}
+	    }
+	}
+
+	if (record) {
+
+	    System.out.print("rec [shape=record, label=\"");
+	    System.out.print("{	  " );
+
+	    for (int j=0; j<no; j++) {
+		String lab = new String("" + plaac.aanames[j]);
+		if (lab.length() > maxlab) lab = lab.substring(0, maxlab-1);
+		System.out.print("|" + lab);
+	    }
+	    System.out.print("}");
+
+	    for (int i=0; i<ns; i++) {
+		System.out.print("|{" + names[i]);
+		for (int j=0; j<no; j++) {
+		    String lab = new String("" + (float) eprob[i][j]);
+		    if (lab.length() > maxlab) lab = lab.substring(0, maxlab-1);
+		    System.out.print("|" + lab);
+		}
+		System.out.print("}");
+	    }
+	    System.out.println("\"];");
+	}
+	System.out.println("}");
+    }
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// clumsy, since need to call hasmorefastas() before nextname() before nextfasta()
+// use some sort of peek or lookahead instead? Or at least keep track of which of 
+// these has been called most recently. 
+
+class fastareader {
+
+    String name;
+    StringBuffer sb;
+    BufferedReader in;
+    String line;
+    boolean ondeck = false;
+    int numread = 0;
+
+    boolean goodfile;
+
+    fastareader(String filename) {
+	goodfile = true;
+	try {
+	    in = new BufferedReader(new FileReader(filename));
+	}
+	catch (IOException e) {
+	    System.out.println("# Couldn't open " + filename);
+	    goodfile = false;
+	}
+    }
+
+
+    public StringBuffer nextfasta() {
+	sb = new StringBuffer("");
+	try {
+	    while ((line = in.readLine()) != null) {
+		line.trim();
+		if (line.length() == 0) {
+		    ondeck = false;
+		    return sb;
+		}
+		else if (line.charAt(0) == '>') {
+		    ondeck = true;
+		    name = line.substring(1);
+		    name.trim();
+		    return sb;
+		}
+		else sb.append(line);
+	    }
+	    ondeck = false;
+	    return sb; 
+	}
+	catch (IOException e) {
+	    System.out.println("# Couldn't get next fasta");
+	    return sb;
+	}
+    }
+
+    public String nextname() {
+	numread++;
+	return name;
+    }
+
+    public boolean hasmorefastas() {
+	if (ondeck) return true;
+	try {
+	    while ((line = in.readLine()) != null) {
+		if (line.length() > 0 && line.charAt(0) == '>') {
+		    name = line.trim().substring(1);
+		    return true;
+		}
+	    }
+	    in.close();
+	    return false;
+	}
+	catch (IOException e) {
+	    System.out.println("# Couldn't read lines");
+	    return false;
+	}
+    }
+
+}
+
+
+
+// /**
+// ///////////////////////////////////////////////////
+// ///////////////////////////////// harrison gerstein lps
+
+// class hgalg {
+
+
+// int [][] masks = {
+// {0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0},	// QN
+// {0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0},	// Q
+// {0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0},	// N
+// {0,0,0,1,1,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0},	// DERK
+// {0,0,0,0,0,0,0,0,1,0,1,1,0,0,0,0,0,0,1,0,0,0},	// VILM
+// {0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},	// G
+// {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0},	// Y
+// {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0}	// S
+// };
+
+// double [] threshs  = {
+// Math.log(1.8e-14),
+// Math.log(1e-13),
+// Math.log(1e-13),
+// Math.log(6.5e-3),
+// Math.log(2e-2),
+// Math.log(5e-4),
+// Math.log(5e-4),
+// Math.log(5e-4)
+// };
+
+// double [] ps = {
+// 0.1,
+// 0.05,
+// 0.05,
+// 0.2,
+// 0.2,
+// 0.05,
+// 0.05,
+// 0.05
+// };
+
+
+// int [] tails = {
+// 1,
+// 1,
+// 1,
+// -1,
+// -1,
+// 1,
+// 1,
+// 1
+// };
+
+
+
+// double [][][] luts;
+
+
+// int maxlen;
+// int minlen = 25;
+
+
+
+// hgalg(int maxlen, double [] bgfreq) {
+
+// this.maxlen = maxlen;
+// if (bgfreq !=null) {
+// for (int i=0; i<masks.length; i++) {
+// ps[i]=0.0;
+// for (int j=0; j<22; j++) {
+// if (masks[i][j]==1) ps[i]+=bgfreq[j];
+// }
+// }
+// }
+
+
+// luts = new double[masks.length][][]; // need other dims?
+// for (int i=0; i<masks.length; i++) {
+// luts[i] = plaac.logbinomiallut2(maxlen, ps[i]);
+// }
+// }
+
+
+
+// public double [][] check(int [] seq) {
+// double [][] bias = new double [masks.length][4];
+// for (int i=0; i<masks.length; i++) {
+// bias[i] =  plaac.lps(plaac.mapseq(seq,masks[i]), ps[i],	luts[i], minlen, maxlen, tails[i]);
+// }
+// return bias;
+// }
+
+
+
+// public double [][] check2(int [] seq) {
+// double [][] bias = new double [masks.length][4];
+// double [] leng = new double[masks.length];
+// int lb = 0;
+// int ub = 0;
+// int minol = 15;
+// int longest = 0;
+// for (int i=0; i<=2; i++) {
+// bias[i] =  plaac.lps(plaac.mapseq(seq,masks[i]), ps[i], luts[i], minlen, maxlen, tails[i]);
+// leng[i] = bias[i][1]-bias[i][0]+1;
+// if (leng[i]>longest) {longest = (int) leng[i]; lb = (int) bias[i][0]; ub = (int) bias[i][1];}
+// }
+// // merge these if they overlap by at least 15?
+// for (int i=0; i<=2; i++) {
+// if (overlap(lb,ub,(int) bias[i][0], (int) bias[i][1]) > minol) {lb=Math.min(lb, (int) bias[i][0]); ub=Math.max(ub, (int) bias[i][1]);};
+// }
+// // bias[3][0] = lb;
+// // bias[3][1] = ub;
+// int [] subseq = plaac.submatrix(seq,lb,ub);
+
+// for (int i=3; i< masks.length; i++) {
+// bias[i] =  plaac.lps(plaac.mapseq(subseq,masks[i]), ps[i], luts[i], subseq.length, maxlen, tails[i]);
+// bias[i][0] += lb; bias[i][1] += lb;
+// leng[i] = bias[i][1]-bias[i][0]+1;
+// // if (leng[i]>longest) {longest = (int) leng[i]; lb = (int) bias[i][0]; ub = (int) bias[i][1];}
+// }
+
+// // System.out.println(plaac.aa2string(subseq));
+// return bias;
+
+// }
+
+
+
+
+// public boolean winner (int [] seq) {
+// double [][] bias = new double [masks.length][4];
+// double [] leng = new double[masks.length];
+// int slb = 0;
+// int sub = 0;
+// int minol = 15;
+// int longest = 0;
+// for (int i=0; i<=2; i++) {
+// bias[i] =  plaac.lps(plaac.mapseq(seq,masks[i]), ps[i],	luts[i], minlen, maxlen, tails[i]);
+// leng[i] = bias[i][1]-bias[i][0]+1;
+// if (bias[i][3] <= threshs[i] && leng[i]>longest) {longest = (int) leng[i]; slb = (int) bias[i][0]; sub = (int) bias[i][1];}
+// }
+
+
+// if (longest == 0) return false;
+
+
+// // merge these if they overlap by at least 15?
+// int lb = slb;
+// int ub = sub;
+// for (int i=0; i<=2; i++) {
+// if (overlap(lb,ub,(int) bias[i][0], (int) bias[i][1]) > minol) {lb=Math.min(lb, (int) bias[i][0]); ub=Math.max(ub, (int) bias[i][1]);};
+// }
+// // bias[3][0] = lb;
+// // bias[3][1] = ub;
+// int [] subseq = plaac.submatrix(seq,slb,sub);
+
+// for (int i=3; i< masks.length; i++) { // uses entire sequence here!!!
+// bias[i] =  plaac.lps(plaac.mapseq(subseq,masks[i]), ps[i], luts[i], subseq.length,  maxlen, tails[i]);
+// bias[i][0] += slb; bias[i][1] += slb;
+// leng[i] = bias[i][1]-bias[i][0]+1;
+// }
+
+// boolean good = true;
+
+// if (bias[3][3] >= threshs[3] || bias[4][3] >= threshs[4]) good = false;
+// if (bias[5][3] >= threshs[5] && bias[6][3] >= threshs[6] && bias[7][3] >= threshs[7] ) good = false;
+
+// if (good) {
+// // plaac.printmatrix(bias);
+// return true;
+// }
+
+// else {
+// int [] seq1 = plaac.submatrix(seq,0,lb-1);
+// int [] seq2 = plaac.submatrix(seq,ub+1,seq.length);
+// if (seq1.length >= minlen && seq2.length >= minlen) return (winner(seq1) || winner(seq2));
+// else if (seq1.length >= minlen) return (winner(seq1));
+// else if (seq2.length >= minlen) return (winner(seq2));
+// else return false;
+
+// }
+// }
+
+
+
+
+// public static int overlap(int l1, int u1, int l2, int u2) {
+// if (u2 < l1 || u1 <l2) return 0;
+// else if (l2 <= l1 && u2 >=u1) return u1-l1+1;
+// else if (l1 <= l2 && u1 >=u2) return u2-l2+1;
+// else if (l1 <= l2)  return u1-l2+1;
+// else if (l2 <= l1)  return u2-l1+1;
+// else return 1;
+// }
+
+
+// }
+// */
+
+
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+class disorderreport {
+
+    // double c1 = 2.785;
+    // double c2 = -1.0;
+    // double c3 = -1.151;
+    // FIXME: also passed as arg somewhere?
+    double [] ccdef = {2.785, -1.0, -1.151};
+    double [] cc;
+    double [] hydro;
+    double [] charge;
+    double [] fi;  
+    double [] plaacllr; 
+    double [] papa; 
+    double [] papax2; // x2 are twice-smoothed versions
+    double [] plaacllrx2;  // x2 are twice-smoothed versions  
+    double [] fix2;  // x2 are twice-smoothed versions
+    int [] aa;
+    int ww;
+    int ww2;
+    boolean reflect;
+    double meancharge;
+    double meanhydro;
+    double meanfi;
+    int n;
+    int numseg;
+    int numdisordered;
+    int numdisorderedstrict;  // only windows completely contained in seq 
+    int numdisorderedstrict2; // only windows completely contained in seq and of min length
+    int [] startaa;
+    int [] stopaa;
+    int [] lenaa;
+    double [] localmean;
+    double [] localsd;
+    double [] localhydro;
+    double [] localcharge;
+    int maxlen;		// for fi
+    int minlen = 5;	// for fi
+    int minlen2 = 40;	// for fi
+    int bestdex;
+    double maxlong;
+    int targetlen = 40;
+    double botl = 0.0; // bestoftargetlength;
+    double [] hssr;
+    double [] hssr2;
+    
+    double [] maa3;
+    double [] maa4;
+    
+    int minlength = 80; // for hssr2
+    int maxlength = 240; // for hssr2
+    
+    double [] plaacweights;   
+    double [] papaweights;  
+    
+    // change meanings of these to get better tradeoff between papa score and FI!
+    double papamaxprd;	  // maximum papa score
+    double papascore;   // tradeoff
+    double papamaxdis;	  // corresponding FI
+    double papamaxllr;	  // corresponding LLR
+    double papamaxllr2;	  // corresponding LLR2
+    int papamaxcenter;	  // index of max above
+   
+
+    disorderreport(int [] aa, int ww, int ww2, boolean reflect, double [] cc, 
+		   double [] plaacweights, double [] papaweights, boolean smushpp) {
+    	this.ww = ww;
+    	this.ww2 = ww2;
+    	this.cc = cc;
+    	this.reflect = reflect;
+    	this.aa = aa;
+	// check previous version: other and other2 
+    	this.plaacweights = plaacweights;
+    	this.papaweights = papaweights;
+    	n = aa.length;
+    	double [] maa1 = plaac.mapseq(aa,plaac.axpb(1.0/9,plaac.aahydro,0.5));
+    	meanhydro = plaac.mean(maa1);
+    	hydro = plaac.slidingaverage2(maa1,ww,reflect);
+    	double [] maa2 = plaac.mapseq(aa,plaac.aacharge);
+    	meancharge = plaac.mean(maa2);
+	charge = plaac.slidingaverage2(maa2,ww,false); // don't reflect charges
+	meanfi  = cc[2] + cc[1]*Math.abs(meancharge) + cc[0]*meanhydro;
+	fi = plaac.axpbypc(cc[0],hydro,cc[1],plaac.absval(charge),cc[2]);
+	maa3 = plaac.mapseq(aa,plaacweights);
+	plaacllr = plaac.slidingaverage2(maa3,ww,reflect);
+	maa4 = plaac.mapseq(aa,papaweights);
+	if (smushpp) {
+	    papa = plaac.slidingaverage2(maa4,ww2,false,13,aa);
+	} else { 
+	    papa = plaac.slidingaverage2(maa4,ww2,false);
+	}
+
+	// average of averages
+	papax2 = plaac.slidingaverage2(papa,ww2,false);
+	plaacllrx2 = plaac.slidingaverage2(plaacllr,ww2,false);
+	fix2 = plaac.slidingaverage2(fi,ww,false);
+
+	// FIXME: -1/0 instead of -1000?
+	numdisordered = 0;
+	papamaxprd = -1000; 
+	papamaxdis = -1000;  
+        papamaxllr = -1000;  
+        papamaxllr2 = -1000;  
+        papamaxcenter = -1;
+        for (int k=0; k<n; k++) {
+	    if (fi[k]<0) { 
+		numdisordered++;
+	    }
+        } 
+
+        numdisorderedstrict = 0;
+	int halfw = (ww-1)/2; // or 0
+	if (halfw > n/2) halfw = n/2;
+	// System.out.println("halfww " + halfw);
+	if (fi[halfw]<0) { 
+	    numdisorderedstrict =  numdisorderedstrict + halfw + 1;
+	}
+	if (fi[n-halfw-1]<0) { 
+	    numdisorderedstrict =  numdisorderedstrict + halfw + 1;
+	}
+	for (int k = halfw + 1; k < n-halfw - 1; k++) {
+	    if (fi[k]<0) { 
+		numdisorderedstrict++;
+	    }
+	} 
+
+	// restrict to MAP parse?
+	double papamaxscore = -1000; // -Inf or NA instead
+	
+	int papamode = 1; // 1: maximum PAPA score with FI < 0 
+                          // 2: maximum PAPA score, even if FI > 0
+                          // 3: tradeoff between PAPA score and FI: maximum of min(PAPA - 0.05, -FI) 
+                          // 4: tradeoff between PAPA score, FI, and LLR: maximum of min(PAPA - 0.05, -FI, LLR) 
+	
+	if (papamode == 1) {
+	    for (int k=(ww2-1)/2; k<n-(ww2-1)/2; k++) {
+		papascore = papax2[k];
+		if ((papascore > papamaxscore) & (fix2[k] < 0)) { /// what should score be if no disorder? -Inf? NA?
+		    papamaxcenter = k;
+		    papamaxscore = papascore; 	   
+		} 
+	    } 
+	} else if (papamode == 2) {
+	    for (int k=(ww2-1)/2; k<n-(ww2-1)/2; k++) {
+		papascore = papax2[k];
+		if (papascore > papamaxscore) { 
+		    papamaxcenter = k;
+		    papamaxscore = papascore;
+		} 
+	    } 
+	} else if (papamode == 3) {
+	    for (int k=(ww2-1)/2; k<n-(ww2-1)/2; k++) {
+                // if both positive, find distance to decision boundary
+		if ((fix2[k] < 0) && (papax2[k] > 0.05)) {
+		    papascore = Math.min(-1*fix2[k], (papax2[k] - 0.05));
+		} else {  
+		    papascore = -1*Math.sqrt((Math.min(0,-1.0*fix2[k])*Math.min(0,-1.0*fix2[k]) 
+					      + Math.min(0,papax2[k]-0.05)*Math.min(0,papax2[k]-0.05)));
+		    // papascore = Math.min(0,-1.0*fix2[k]) + Math.min(0,papax2[k]-0.05);
+		}
+		if ((papascore > papamaxscore)) { 
+		    // || ((papascore == papamaxscore) 
+		    //  && ((papax2[k] > papax2[papamaxcenter]) || (fix2[k] < fix2[papamaxcenter])))) { 
+		    papamaxcenter = k;
+		    papamaxscore = papascore;	    
+		} 
+	    } 
+	} else if (papamode == 4) {
+	    for (int k=(ww2-1)/2; k<n-(ww2-1)/2; k++) {
+	        papascore = Math.min(-1.0*fix2[k]-0.0,papax2[k]-0.05); // weight these two differently? 
+                papascore = Math.min(papascore, plaacllrx2[k]-0.0); // use singly-smoothed LLR instead?
+                if ((papascore > papamaxscore)
+		    || ((papascore == papamaxscore)                      
+			&& ((papax2[k] > papax2[papamaxcenter]) || (fix2[k] < fix2[papamaxcenter]) 
+			    || (plaacllrx2[k] > plaacllrx2[papamaxcenter])))) { 
+		    papamaxcenter = k;
+		    papamaxscore = papascore;
+		} 
+	    } 
+	}
+
+	if (papamaxcenter >= 0) {
+	    papamaxprd = papax2[papamaxcenter];
+	    papamaxdis = fix2[papamaxcenter];
+	    papamaxllr2 = plaacllrx2[papamaxcenter];
+	    papamaxllr = plaacllr[papamaxcenter];
+	}
+
+	/////////////////////////////
+
+	hssr = plaac.hss2(maa3);
+	if (hssr[1]-hssr[0]+1 < minlength || hssr[1]-hssr[0]+1 > maxlength) {
+	    hssr2 = plaac.hss2(maa3, minlength, maxlength);
+	} else {
+	    hssr2 = hssr;
+	}
+
+	/////////////////////////////
+	int i = 0 + halfw; // +1?
+	startaa = new int[n/minlen];
+	stopaa = new int[n/minlen];
+	lenaa = new int[n/minlen];
+	localmean = new double[n/minlen];
+	localsd = new double[n/minlen];
+	localhydro = new double[n/minlen];
+	localcharge = new double[n/minlen];
+	if (localhydro.length > 0) localhydro[0] = 0.5; //?
+	numseg = 0;
+	numdisorderedstrict2 = 0;
+	while (i < n - halfw) {
+	    if (fi[i] < 0) {
+		double sc = fi[i];
+		double lc = Math.abs(charge[i]);
+		double lh = hydro[i];
+		double scsc = fi[i]*fi[i];
+		int startdex = i;
+		i++;
+		while (i < n - halfw && fi[i] <0) {
+		    sc = sc + fi[i];
+		    lh = lh + hydro[i];
+		    lc = lc + Math.abs(charge[i]);
+		    scsc = scsc + fi[i]*fi[i];
+		    i++;
+		}
+		int stopdex = i - 1;
+		int len = stopdex - startdex + 1;
+		double msc = sc/len;
+		double sdsc = Math.sqrt(scsc/len - msc*msc);
+		if (startdex == halfw) startdex = 0;
+		if (stopdex == n - halfw -1 ) stopdex = n-1;
+		len = stopdex-startdex+1;
+		// adjust length if startdex == halfw or stopdex == n - halfww - 1 
+		if (len >= minlen) {
+		    startaa[numseg] = startdex;
+		    stopaa[numseg] = stopdex;
+		    lenaa[numseg] = len;
+		    localmean[numseg] = msc;
+		    localsd[numseg] = sdsc;
+		    localhydro[numseg] = lh/len;
+		    localcharge[numseg] = lc/len;
+		    numseg++;
+		    numdisorderedstrict2 = numdisorderedstrict2 + len;
+		}
+		// now trim arrays to length numseg?
+	    }
+	    else i++;
+	}
+	if (lenaa.length>0) maxlen = plaac.maxint(lenaa);
+	maxlong = 1;
+	bestdex = 0;
+	for (i=0; i<numseg; i++) {
+	    if (lenaa[i] >= minlen2 && localmean[i] < maxlong) {
+		maxlong = localmean[i]; 
+		bestdex = i;
+	    }
+	}
+    }
+
+   
+    public void printme() {
+	printme("");
+    }
+
+    // feed this to R.
+    public void printme(String id){
+	System.out.println("### protein length:	   " + n);
+	System.out.println("### num disordered(1): " + numdisordered);
+	System.out.println("### num disordered(2): " + numdisorderedstrict);
+	System.out.println("### num disordered(3): " + numdisorderedstrict2);
+	for (int i=0; i<numseg; i++)  {
+	    System.out.println("### " + startaa[i] + "-" + stopaa[i] + ": " + (float) localmean[i] 
+			       + " +- " + (float) localsd[i]);
+	}
+	System.out.println("### " + maxlen + " " + (float) localmean[bestdex] + " " + lenaa[bestdex]);
+	System.out.println("# " + n + "\t" + (float) meancharge + "\t" + (float) meanhydro + "\t" 
+			   + (float) meanfi + "\t" + (float) maxlong);
+	System.out.println("# " + (float) hssr[0] + "\t" + (float) hssr[1] + "\t" + (float) hssr[2] + "\t"
+			   + (float) hssr2[0] + "\t" + (float) hssr2[1] + "\t" + (float) hssr2[2]);
+	for (int i=0; i<n; i++) {
+	    System.out.println(id + "\t" + aa[i] + "\t" + (float) charge[i] + "	 \t"
+			       + (float) hydro[i] + "  \t" + (float) fi[i] + "\t" + (float) plaacllr[i] 
+			       + " \t"	 + (float) papa[i]
+			       + "\t # ["+(i+1-ww/2)+"-"+(i+1 + ww/2)+"]");
+	}
+    }
+}
+
+
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+

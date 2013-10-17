@@ -1,0 +1,13 @@
+uniprot_version	id_name	species_name	fasta_url	download_date	aa_freq_filename	
+2013_09	BOVIN	Bos taurus	ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/proteomes/BOVIN.fasta.gz	2013-10-11	bg_freqs_BOVIN.txt	
+2013_09	HUMAN	Homo sapiens	ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/proteomes/HUMAN.fasta.gz	2013-10-11	bg_freqs_HUMAN.txt	
+2013_09	YEAST	Saccharomyces cerevisiae	ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/proteomes/YEAST.fasta.gz	2013-10-11	bg_freqs_YEAST.txt	
+2013_09	CANFA	Canis familiaris	ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/proteomes/CANFA.fasta.gz	2013-10-11	bg_freqs_CANFA.txt	
+2013_09	ARATH	Arabidopsis thaliana	ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/proteomes/ARATH.fasta.gz	2013-10-11	bg_freqs_ARATH.txt	
+2013_09	PIG	Sus scrofa	ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/proteomes/PIG.fasta.gz	2013-10-11	bg_freqs_PIG.txt	
+2013_09	RAT	Rattus norvegicus	ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/proteomes/RAT.fasta.gz	2013-10-11	bg_freqs_RAT.txt	
+2013_09	DROME	Drosophila melanogaster	ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/proteomes/DROME.fasta.gz	2013-10-11	bg_freqs_DROME.txt	
+2013_09	CHICK	Gallus gallus	ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/proteomes/CHICK.fasta.gz	2013-10-11	bg_freqs_CHICK.txt	
+2013_09	DANRE	Danio rerio	ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/proteomes/DANRE.fasta.gz	2013-10-11	bg_freqs_DANRE.txt	
+2013_09	MOUSE	Mus musculus	ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/proteomes/MOUSE.fasta.gz	2013-10-11	bg_freqs_MOUSE.txt	
+2013_09	CAEEL	Caenorhabditis elegans	ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/proteomes/CAEEL.fasta.gz	2013-10-11	bg_freqs_CAEEL.txt	

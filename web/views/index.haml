@@ -1,0 +1,140 @@
+
+.container
+  .hero-unit{style: 'padding-top: 5px; padding-bottom: 5px'}
+    -#%h1 PLAAC
+    %p
+      %strong PLAAC 
+      (Prion-Like Amino Acid Composition) searches protein sequences to identify probable prion subsequences using a
+      hidden-Markov model (HMM) algorithm.
+      %a{href: '#details'} more details
+      -#.muted (Note that the foreground probabilities for the HMM have been updated based on the hits from [1])
+
+.container
+%form{action: "#{$config[:apppath]}/find", method:'post', enctype:'multipart/form-data'}
+  .container
+    .row
+      .span12
+        - unless @success.nil?
+          .alert.alert-success= @success
+        - unless @error.nil?
+          .alert.alert-error= @error
+
+    .row
+      .span12
+        %h4 Paste or Upload Protein Sequence*
+    .row
+      .span10.offset1
+        %textarea{id: 'sequence', name:'sequence', size:20, style:'width: 95%;font-family:"Courier New", Courier, monospace'}
+        .pull-right
+          .help-block.mute.footnote
+            *Note that all sequences must contain only valid amino acid identifiers.  Uploaded files
+            need to be in
+            %a{target:'_blank',href:"http://zhanglab.ccmb.med.umich.edu/FASTA/"}
+              FASTA format.
+        %input{name:'file', type:'file'}
+
+    .row
+      .span12
+        %h4 Options
+        %hr{style:'margin-top: 0'}
+
+    .row
+      .span10.offset1
+        %label
+          %b Core&nbsp;Length
+          .pull-right
+            %input.input-mini{id:'len', type:'text', name:'len', value:60, size: 6, style:'display: inline-block'}
+        %hr.clear
+
+    .row
+      .span10.offset1
+        %label
+          %b
+            Background probabilities
+          .pull-right
+            %select#organisms.input-medium{ name: 'bg' }
+              - @bg_freqs.each do |id, name|
+                %option{ value: id, title: name }
+                  %em= name
+        %hr.clear
+    .row
+      .span10.offset1
+        .background-section.hide
+          .pull-right
+            %input.input-mini{id:'alpha',name:'alpha', type:'text', value:'100', style:'display: inline-block'}
+          %label
+            %b
+              Relative weighting of background probabilities (
+              %em alpha
+              )
+            .help-block.mute.footnote
+              0 meaning all from the FASTA Sequence. 100 meaning all from the selected organism's background frequencies.
+
+            %table{width: '100%'}
+              %tr
+                %td{colspan:2}
+                  %div{id:'alphaSlider'}
+              %tr
+                %td#file_background{width: '50%'}
+                  Proteome-wide background frequencies 
+                  %br
+                  from FASTA Sequence*
+                %td#organism_background{style: 'text-align:right; border-left: 1px solid #ccc;'}
+                  Proteome-wide background frequencies 
+                  %br
+                  from selected organism
+
+          .help-block.mute.footnote *Only appropriate when running across an entire proteome.
+
+    .row
+      .span8
+      .span4.text-right
+        %input#run_analysis.btn.btn-large.btn-primary{type:'submit', value:'Run Analysis'}
+    .row
+      .span12
+        %hr{style: 'border-top: 5px solid #eee'}
+    .row
+      .span8
+        %a{name: 'details'}
+
+        %h4{style:'margin-top:0; padding-top:0'} Algorithm Details
+        %p 
+          The details of the PLAAC algorithm are described in Albert et al. (2009).  If you use this
+          this website, or the underlying code, in any publication, please also cite Lancaster et al. (2013),
+          which also describes additional extensions and implementation details of the algorithm.  Code for
+          the algorithm, as well as for powering this website is available at
+          %a{href:"http://github.com/whitehead/plaac"}
+            GitHub
+          under the open-source MIT license.
+        %blockquote
+          Alberti, S., Halfmann, R., King, O., Kapila, A. &amp; Lindquist, S. (2009)
+          %br
+          %a{target:'_blank',href:"http://www.sciencedirect.com/science/article/pii/S0092867409002669"}
+            A systematic survey identifies prions and illuminates sequence features of prionogenic proteins.
+          %em Cell
+          137, 146–58.
+        %blockquote
+          Lancaster, A.K., Nutter-Upham, A., Lindquist, S. &amp; King, O.D. (2013)
+          %br
+          PLAAC: a web and command-line application to identify proteins with Prion-Like Amino Acid Composition
+          %em in preparation
+          %br
+
+      .span4
+        %h4{style:'margin-top:0; padding-top:0'} Precomputed Proteomes
+        %ul.unstyled
+          %li
+            %a{href:"#{$config[:apppath]}/Scer-all-proteins-2012-07-20.xls"}
+              %i.icon-download
+              Yeast
+              %em (S. cerevisiae)
+              (XLS file)
+            .muted (most recent: 2012-07-20)
+
+
+%br.clear
+
+
+-#Local Variables:
+-#indent-tabs-mode: nil
+-#End:

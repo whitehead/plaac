@@ -1,0 +1,4 @@
+#!/bin/bash
+dir=`dirname $0`
+ruby "$dir/../lib/server.rb" "$@"
+
