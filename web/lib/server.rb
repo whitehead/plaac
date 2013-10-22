@@ -39,7 +39,7 @@ class Server < Sinatra::Base
 
   @@base = File.expand_path('../..',__FILE__)
 
-  @@log = Logger.new(@@base+"/logs/spewey.log")
+  @@log = Logger.new(@@base+"/logs/plaac.log")
 
   @@input_fasta="input_sequence.fasta"
   @@prion_candidates="prion_candidates.tsv"
@@ -117,8 +117,6 @@ class Server < Sinatra::Base
 
     @@log.info "gene_count: #{gene_count}"
 
-    # AKL, FIXME: placeholder, will get from UI dropdown list of
-    # pre-generated FASTA files
     bg_freqs = read_bg_freqs() # ignore warning, bg_freqs used by filename lambdas
     bgfreq_filename = bg_freq_filename[params[:bg]]
     session[:bgfreq_filename] = bgfreq_filename
