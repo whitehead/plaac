@@ -117,16 +117,12 @@ class Server < Sinatra::Base
 
     @@log.info "gene_count: #{gene_count}"
 
-    # AKL, FIXME: placeholder, will get from UI dropdown list of
-    # pre-generated FASTA files
     bg_freqs = read_bg_freqs() # ignore warning, bg_freqs used by filename lambdas
     bgfreq_filename = bg_freq_filename[params[:bg]]
     session[:bgfreq_filename] = bgfreq_filename
 
     job.add_file(path(bg_freq_local_filename[params[:bg]]), working_directory)
-   
-    # java -jar #{working_directory}/spewey.jar #{filename} #{core_len} #{alpha} > #{output_filename};
-    # -B #{bgfreq_filename}
+
     job.command = <<-COMMAND.gsub(/\n/,'').squeeze(" ")
       java -jar #{working_directory}/plaac.jar -i #{filename} -c #{core_len} -a #{alpha} -B #{bgfreq_filename} > #{output_filename};
       touch #{working_directory}/results_ready
@@ -430,8 +426,6 @@ class Server < Sinatra::Base
     output_filename = @@prion_candidates_details
 
     # generate details
-    # java -jar ./spewey.jar #{input_fasta} #{core_len} #{alpha} #{candidates_filename} > #{output_filename} &&
-    # -B #{bgfreq_filename} 
     job = Job.new(@job.token)
     job.command = <<-COMMAND
     sh -c "cd #{@job.working_directory} && 
