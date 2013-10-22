@@ -7,11 +7,11 @@ rm -rf target
 mkdir target
 
 echo build
-javac -d target plaac/*.java
+javac -d target src/*.java
 
 echo package
-cp plaac/mainClass target/.
-cp -r plaac/util target/.
+cp src/mainClass target/.
+cp -r src/util target/.
 cd target
 jar cmf mainClass plaac.jar *
 chmod +x plaac.jar
