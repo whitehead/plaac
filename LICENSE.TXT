@@ -1,12 +1,6 @@
 Copyright (c) 2009-2013 Whitehead Institute for Biomedical Research
 Copyright (c) 2011 Boston Biomedical Research Institute
-copyright (c) 2013 University of Massachusetts Medical School
-
-PLAAC cli application:
-Author: Oliver King (oliver.king@umassmed.edu) 
-
-Web component:
-Authors: Andy Nutter-Upham, Alex Lancaster and Scott Macullum
+Copyright (c) 2013 University of Massachusetts Medical School
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
