@@ -48,8 +48,8 @@ class Server < Sinatra::Base
 
   @@background_meta = "bg_freqs/background_metadata.txt"
 
-  bg_freq_filename = ->(id){ "bg_freqs_#{id}.txt" }
-  bg_freq_local_filename = ->(id){ "bg_freqs/#{bg_freq_filename[id]}" }
+  bg_freq_filename = ->(id){ id.nil? ? nil : "bg_freqs_#{id}.txt" }
+  bg_freq_local_filename = ->(id){ id.nil? ? nil : "bg_freqs/#{bg_freq_filename[id]}" }
 
   before do
     # Strip the last / from the path
@@ -123,12 +123,13 @@ class Server < Sinatra::Base
     bgfreq_filename = bg_freq_filename[params[:bg]]
     session[:bgfreq_filename] = bgfreq_filename
 
-    job.add_file(path(bg_freq_local_filename[params[:bg]]), working_directory)
-   
-    # java -jar #{working_directory}/spewey.jar #{filename} #{core_len} #{alpha} > #{output_filename};
-    # -B #{bgfreq_filename}
+    unless bgfreq_filename.nil?
+      job.add_file(path(bg_freq_local_filename[params[:bg]]), working_directory)
+      bgfreq_opt = " -B #{bgfreq_filename} "
+    end
+
     job.command = <<-COMMAND.gsub(/\n/,'').squeeze(" ")
-      java -jar #{working_directory}/plaac.jar -i #{filename} -c #{core_len} -a #{alpha} -B #{bgfreq_filename} > #{output_filename};
+      java -jar #{working_directory}/plaac.jar -i #{filename} -c #{core_len} -a #{alpha} #{bgfreq_opt} > #{output_filename};
       touch #{working_directory}/results_ready
     COMMAND
 
@@ -430,12 +431,15 @@ class Server < Sinatra::Base
     output_filename = @@prion_candidates_details
 
     # generate details
-    # java -jar ./spewey.jar #{input_fasta} #{core_len} #{alpha} #{candidates_filename} > #{output_filename} &&
-    # -B #{bgfreq_filename} 
+    unless bgfreq_filename.nil?
+      job.add_file(path(bg_freq_local_filename[params[:bg]]), working_directory)
+      bgfreq_opt = " -B #{bgfreq_filename} "
+    end
+
     job = Job.new(@job.token)
     job.command = <<-COMMAND
     sh -c "cd #{@job.working_directory} && 
-      java -jar ./plaac.jar -i #{input_fasta} -c #{core_len} -a #{alpha} -p #{candidates_filename} -B #{bgfreq_filename} > #{output_filename} && 
+      java -jar ./plaac.jar -i #{input_fasta} -c #{core_len} -a #{alpha} -p #{candidates_filename} #{bgfreq_opt} > #{output_filename} && 
       ./plaac_plot.r prion_candidates_details.tsv prion_details.pdf &&
       ./plaac_plot.r prion_candidates_details.tsv prion_details.png ;
       touch details_ready
