@@ -1,14 +1,4 @@
 #!/usr/bin/env Rscript
-source("../speweyplot.r")
-
-plotgenes(infile="output.tsv",
-          outfile="output.pdf",
-          seq=TRUE,
-          use_pdf=TRUE
-          )
-
-plotgenes(infile="output.tsv",
-          outfile="output.png",
-          seq=TRUE,
-          use_pdf=FALSE
-          )
+source("../R/plaac_plot_util.r")
+plot_genes("output.tsv", "output.pdf", showSeq=TRUE)
+plot_genes("output.tsv", "output.png", showSeq=TRUE)

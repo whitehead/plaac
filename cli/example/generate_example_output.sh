@@ -2,12 +2,12 @@
 SCRIPT_DIR=`dirname $0`
 
 #
-# Build spewey.jar
+# Build plaac.jar
 #
-$SCRIPT_DIR/../build.sh
+$SCRIPT_DIR/../build_plaac.sh
 
 #
-# Run spewey.jar
+# Run plaac.jar
 #
 
 # params
@@ -16,4 +16,4 @@ core_length=60
 alpha=1
 output_file=output.tsv
 
-java -jar $SCRIPT_DIR/../target/spewey.jar $fasta $core_length $alpha > $output_file
+java -jar $SCRIPT_DIR/../target/plaac.jar -i $fasta -c $core_length -a $alpha > $output_file
