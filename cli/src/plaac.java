@@ -323,7 +323,7 @@ class plaac {
 	int corelength = 60;
 	int ww = 41;
 	int ww2 = 41;
-	double alpha = 1;
+	double alpha = 0.5;
 	int hmmtype = 1;
        	boolean smushpp = true;
 
@@ -393,7 +393,7 @@ class plaac {
 	    System.out.println("------------------------------------------------------------");
 	    System.out.println("USAGE: Need to specify an input protein fasta file after the flag -i, e.g.\n   plaac -i input.fa > output.txt");
 	    System.out.println("Note that the example above redirects the output of the program to a tab-delimited text file output.txt");
-	    System.out.println(" that can be opened with a speadsheet program.");
+	    System.out.println(" that can be opened with a spreadsheet program.");
 	    System.out.println("Optional arguments:");
 	    System.out.println("-c core_length, where the integer core_length is the minimal contiguous prion-like domain length\n  for the HMM parses. Default is 60.");
 	    System.out.println("-B bg_freqs.txt, specifying background AA freqs to use for the species, one per line, in the following order:");
@@ -407,7 +407,7 @@ class plaac {
 	    System.out.println("  These counts can be redirected to a file (e.g. with > bg_freqs.txt), in a format that can be read by the -B option.");
 	    System.out.println("-a alpha, where alpha is a number between 0 and 1 (inclusive) that controls the degree to which the S. cerevisiae") ;
 	    System.out.println("  background AA frequencies are mixed with the background AA frequencies from -B, -b, or -i.");
-	    System.out.println("  If alpha = 0, just the AA frequencies from the -B, -b, or -i are used, and if alpha = 1 just the\n  S. Cerevisiae AA frequencies are used. Default is 0.5.");
+	    System.out.println("  If alpha = 0, just the AA frequencies from the -B, -b, or -i are used, and if alpha = 1 just the\n  S. cerevisiae AA frequencies are used. Default is 0.5.");
             System.out.println("-F fg_freqs.txt, specifying prion-like AA freqs in same format as -B above. Defaults to those used in [cite].");
 	    System.out.println("-w window_size, where window_size is the window size for FoldIndex disorder predictions. Default is 41.");
 	    System.out.println("-W Window_size, where Window_size is the window size for the PAPA algorithm. Default is 41.");
