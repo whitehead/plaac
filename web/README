@@ -30,18 +30,18 @@ Infrastructure
 
 Application
 
-  Designed to handle the submission of fasta files
-  to a sequence analysis application called spewey-ross.
+  Designed to handle the submission of FASTA files
+  to a sequence analysis application called plaac
 
 
   flow:
   / - input form
   /run - handles post from the input form
-         runs spewey with given options
+         runs plaac with given options
   /sequence(.*).fasta - the format of the results files
 
   Thoughts:
-  since there is multi step processing, and spewey is slow
+  since there is multi step processing, and plaac is slow
   we probably need to produce tickets and have background
   processing and progress checking.
 
