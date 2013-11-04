@@ -121,7 +121,7 @@ class Server < Sinatra::Base
     bgfreq_filename = bg_freq_filename[params[:bg]]
     session[:bgfreq_filename] = bgfreq_filename
 
-    unless bgfreq_filename.nil? && params[:bg] != "input_sequence"
+    if !bgfreq_filename.nil? && params[:bg] != "input_sequence"
       job.add_file(path(bg_freq_local_filename[params[:bg]]), working_directory)
       bgfreq_opt = " -B #{bgfreq_filename} "
     end
@@ -429,7 +429,7 @@ class Server < Sinatra::Base
     output_filename = @@prion_candidates_details
 
     # generate details
-    unless bgfreq_filename.nil? && params[:bg] != "input_sequence"
+    if !bgfreq_filename.nil? && params[:bg] != "input_sequence"
       job.add_file(path(bg_freq_local_filename[params[:bg]]), working_directory)
       bgfreq_opt = " -B #{bgfreq_filename} "
     end
