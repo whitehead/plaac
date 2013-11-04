@@ -46,18 +46,13 @@
             %input.input-mini{id:'len', type:'text', name:'len', value:60, size: 6, style:'display: inline-block'}
         %hr.clear
 
-    .row
-      .span10.offset1
-        %label.background_probabilities_label
-          %b
-            Organism Background Probabilities
-          .pull-right
-            %select#organisms.input-medium{ name: 'bg' }
-              %option{ value: 'input_sequence'} From input sequence
-              - @bg_freqs.each do |id, name|
-                %option{ value: id, title: name }
-                  %em= name
-        %hr.clear
+    /*.row
+    /*  .span10.offset1
+    /*    %label.background_probabilities_label
+    /*      %b
+    /*        Organism Background Probabilities
+    /*      .pull-right
+    /*    %hr.clear
     .row
       .span10.offset1
         .background-section
@@ -77,9 +72,14 @@
                   %div{id:'alphaSlider'}
               %tr
                 %td#file_background{width: '50%'}
-                  Proteome-wide background frequencies 
-                  %br
-                  from selected organism
+                  %select#organisms.input-medium{ name: 'bg' }
+                    %option{ value: 'input_sequence'} From input sequence
+                    - @bg_freqs.each do |id, name|
+                      %option{ value: id, title: name }
+                        %em= name
+                  /*Proteome-wide background frequencies 
+                  /*%br
+                  /*from selected organism
                 %td#organism_background{style: 'text-align:right; border-left: 1px solid #ccc;'}
                   background frequencies from S. cerevisae
                   /*Proteome-wide background frequencies 
