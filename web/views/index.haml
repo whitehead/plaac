@@ -48,18 +48,19 @@
 
     .row
       .span10.offset1
-        %label
+        %label.background_probabilities_label
           %b
-            Background probabilities
+            Organism Background Probabilities
           .pull-right
             %select#organisms.input-medium{ name: 'bg' }
+              %option{ value: 'input_sequence'} From input sequence
               - @bg_freqs.each do |id, name|
                 %option{ value: id, title: name }
                   %em= name
         %hr.clear
     .row
       .span10.offset1
-        .background-section.hide
+        .background-section
           .pull-right
             %input.input-mini{id:'alpha',name:'alpha', type:'text', value:'100', style:'display: inline-block'}
           %label
@@ -68,7 +69,7 @@
               %em alpha
               )
             .help-block.mute.footnote
-              0 meaning all from the FASTA Sequence. 100 meaning all from the selected organism's background frequencies.
+              0 meaning all from selected organism's background frequencies. 100 meaning all from S. cerevisae.
 
             %table{width: '100%'}
               %tr
@@ -78,11 +79,12 @@
                 %td#file_background{width: '50%'}
                   Proteome-wide background frequencies 
                   %br
-                  from FASTA Sequence*
-                %td#organism_background{style: 'text-align:right; border-left: 1px solid #ccc;'}
-                  Proteome-wide background frequencies 
-                  %br
                   from selected organism
+                %td#organism_background{style: 'text-align:right; border-left: 1px solid #ccc;'}
+                  background frequencies from S. cerevisae
+                  /*Proteome-wide background frequencies 
+                  /*%br
+                  /*from FASTA Sequence*
 
           .help-block.mute.footnote *Only appropriate when running across an entire proteome.
 

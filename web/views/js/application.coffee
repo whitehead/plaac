@@ -156,17 +156,20 @@ $ ->
 
   handle_slider_change = ->
     val = $('#alpha').val()
-    if val is "0"
+    if val is "100"
       $('#organisms').prop('disabled',true)
       $('#organism_background').css('color','#ccc')
     else
       $('#organisms').prop('disabled',false)
       $('#organism_background').css('color','black')
+      
 
     if val is "100"
-      $('#file_background').css('color','#ccc')
+      #$('#file_background').css('color','#ccc')
+      $('.background_probabilities_label').css('color','#ccc')
     else
-      $('#file_background').css('color','black')
+      #$('#file_background').css('color','black')
+      $('.background_probabilities_label').css('color','black')
 
   $('#alphaSlider').slider({
     min: -1
