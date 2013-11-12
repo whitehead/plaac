@@ -428,13 +428,14 @@ class Server < Sinatra::Base
     input_fasta = @@input_fasta
     output_filename = @@prion_candidates_details
 
+    job = Job.new(@job.token)
+    
     # generate details
     if !bgfreq_filename.nil? && params[:bg] != "input_sequence"
       job.add_file(path(bg_freq_local_filename[params[:bg]]), working_directory)
       bgfreq_opt = " -B #{bgfreq_filename} "
     end
 
-    job = Job.new(@job.token)
     job.command = <<-COMMAND
     sh -c "cd #{@job.working_directory} && 
       java -jar ./plaac.jar -i #{input_fasta} -c #{core_len} -a #{alpha} -p #{candidates_filename} #{bgfreq_opt} > #{output_filename} && 
