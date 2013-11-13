@@ -433,6 +433,7 @@ class Server < Sinatra::Base
     
     # generate details
     if !bgfreq_filename.nil? && params[:bg] != "input_sequence"
+      bg_freq_filename = ->(id){ id.nil? ? nil : "bg_freqs_#{id}.txt" }
       bg_freq_local_filename = ->(id){ id.nil? ? nil : "bg_freqs/#{bg_freq_filename[id]}" }
       job.add_file(path(bg_freq_local_filename[params[:bg]]), working_directory)
       bgfreq_opt = " -B #{bgfreq_filename} "
