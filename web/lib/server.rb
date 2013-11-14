@@ -244,13 +244,15 @@ class Server < Sinatra::Base
     # TODO: this is stupid, we should be using the prion_finder_picklist to random access the file, not load the whole thing.
     prion_candidates_file = File.join(@job.working_directory, @@prion_candidates)
     header_line = File.open(prion_candidates_file).lines.first
-    @header = header_line.split(/\t/)
-    @idx = Hash[@header.each_with_index.map{|column, i| [column.to_sym, i]}]
-    all_candidates, @picklist = load_candidates(prion_candidates_file)
-    selected_rows = cookies[:prion_finder_picklist].split(/,/).map{|i|i.to_i}
+    @header = header_line.try(:split, /\t/)
     @candidates = []
-    all_candidates.each_with_index do |candidate, i|
-      @candidates << candidate[0].split(/\t/) if selected_rows.include?(i)
+    unless @header.nil?
+      @idx = Hash[@header.each_with_index.map{|column, i| [column.to_sym, i]}]
+      all_candidates, @picklist = load_candidates(prion_candidates_file)
+      selected_rows = cookies[:prion_finder_picklist].split(/,/).map{|i|i.to_i}
+      all_candidates.each_with_index do |candidate, i|
+        @candidates << candidate[0].split(/\t/) if selected_rows.include?(i)
+      end
     end
 
     haml :visualize
