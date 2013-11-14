@@ -120,6 +120,7 @@ class Server < Sinatra::Base
     bg_freqs = read_bg_freqs() # ignore warning, bg_freqs used by filename lambdas
     bgfreq_filename = bg_freq_filename[params[:bg]]
     session[:bgfreq_filename] = bgfreq_filename
+    session[:bg] = params[:bg]
 
     if !bgfreq_filename.nil? && params[:bg] != "input_sequence"
       job.add_file(path(bg_freq_local_filename[params[:bg]]), working_directory)
@@ -156,6 +157,7 @@ class Server < Sinatra::Base
 
   get '/candidates/:token' do
     @job = Job.first(:token => params[:token])
+    # TODO: check that @job existed
     results_ready_file = File.join(@job.working_directory, "results_ready")
     prion_candidates_file = File.join(@job.working_directory, @@prion_candidates)
     
@@ -434,10 +436,10 @@ class Server < Sinatra::Base
     working_directory = job.working_directory
     
     # generate details
-    if !bgfreq_filename.nil? && params[:bg] != "input_sequence"
+    if !bgfreq_filename.nil? && session[:bg] != "input_sequence"
       bg_freq_filename = ->(id){ id.nil? ? nil : "bg_freqs_#{id}.txt" }
       bg_freq_local_filename = ->(id){ id.nil? ? nil : "bg_freqs/#{bg_freq_filename[id]}" }
-      job.add_file(path(bg_freq_local_filename[params[:bg]]), working_directory)
+      job.add_file(path(bg_freq_local_filename[session[:bg]]), working_directory)
       bgfreq_opt = " -B #{bgfreq_filename} "
     end
 
