@@ -70,6 +70,7 @@ class Server < Sinatra::Base
   # upload a fasta file for processing
   post '/find' do
     @@log.info("POST /run")
+    @bg_freqs = read_bg_freqs()
     # validation
     unless params[:len] && params[:len].to_i > 0
       @error = "Core length must be a positive integer"
