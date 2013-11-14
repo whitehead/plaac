@@ -5,7 +5,7 @@
     
     See LICENSE.TXT for license information.  
 
-    Last updated September 20, 2013
+    Last updated Noverber 15, 2013
     
     Compile with: javac plaac.java
     To see usage details, run with: java plaac 
@@ -13,6 +13,13 @@
 **/ ////////////////////////////////////////////////////////////////////////
 
 // java plaac -i hsap-hnrnpa1b2.faa -b human.protein.faa -c 60 -w 41 -W 41 -a 1 -p plotlist-hnrnp.txt 
+// grep -v "#" hsap_out_2013b.txt | cut -f 1,30,37 | more
+
+// TODO: 
+// Add refs for algorithms (FoldIndex, PAPA, HMM/Viterbi, PLAAC itself)
+// Compute fg params from file (need pseudocount option and weighting option)
+// Deal with n < window size for hss() and slidingaverage().
+// Be consistent with e.g. -1, -1000, -Infinity, NaN in output tables
 
 
 import java.io.*;
@@ -31,7 +38,7 @@ class plaac {
     static double [] loglut;
     static int loglutlength = 40*100;
     
-    static double tol = 0.000001; // small number to avoid += Inf in logratios
+    // static double tol = 0.000001; // small number to avoid += Inf in logratios? Use eps elswhere.
 
     static double [] aacharge = {
 	0, // 'X'
@@ -41,9 +48,9 @@ class plaac {
 	1, // 'E'
 	0, // 'F'
 	0, // 'G'
-	0, // 'H' -0.5?
+	0, // 'H' 
 	0, // 'I'
-	-1, // 'K'
+ 	-1, // 'K'
 	0, // 'L'
 	0, // 'M'
 	0, // 'N'
@@ -84,6 +91,9 @@ class plaac {
 	-1.3, // 'Y'
 	0.0  // '*'
     };
+
+    // scaled and shifted
+    static double [] aahydro2 = axpb(1.0/9.0,aahydro,0.5);
 
     // From Toombs, McCarty and Ross, MCB 2009
     static double [] fgpapa1 = {
@@ -166,6 +176,8 @@ class plaac {
 
     // From Toombs, McCarty and Ross, MCB 2009
     // D 4% too high, E too low?  F 3% too high, R too low?
+    // Note: these published frequencies don't agree with the raw AA counts and don't add up to 1; 
+    // Can recompute frequencies from raw AA counts with recompute_papa_parameters()
     static double [] bgpapa2 = {
 	0.0, // 'X'
 	0.064, // 'A'
@@ -220,6 +232,7 @@ class plaac {
 	0.0         // *
     };
 
+    // problem causd by bgpapa2?
     static double [] odpapa2 ={
 	0.0,        // X
 	0.88066554, // A
@@ -248,7 +261,7 @@ class plaac {
 
     //  static double [] gnq = {0,0,0,0,0,0,1.0,0,0,0,0,0,1.0,0,1.0,0,0,0,0,0,0,0};
    
-    // global AA frequencies from S. Cerevisiae used in Alberti et al Cell 2009. 
+    // global AA frequencies from S. cerevisiae used in Alberti et al Cell 2009. 
     static double [] bg_freq_scer = {0,0.0550,0.0126,0.0586,0.0655,0.0441,0.0498,0.0217,0.0655,0.0735,0.0950,0.0207,
 			     0.0615,0.0438,0.0396,0.0444,0.0899,0.0592,0.0556,0.0104,0.0337,0};
     // values used in Alberti et al Cell 2009 based on prion domains from Sup3p5, Rnq1p, Ure2p, New1p
@@ -268,13 +281,9 @@ class plaac {
     // uniform bg frequencies; not currently used. 
     // static double [] unibg = {0.0,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.0};
     
-
-
-
     static double [][] aastats;
 
     static boolean verbose = false;
-
 
     plaac() {
 	
@@ -302,7 +311,9 @@ class plaac {
     public static void main (String args[]) {
 
 	// if (hss_tests()==1) return;
-     
+        // if (slidingaverage_test()==1) return;
+
+
 	plaac ms = new plaac(); 
 
         // if (1==1) {print_aa_params(newfgred); return;}
@@ -321,11 +332,12 @@ class plaac {
         String fgfreqfile = "";
 	String plotlist = "";
 	int corelength = 60;
-	int ww = 41;
+	int ww1 = 41;
 	int ww2 = 41;
+	int ww3 = 41;
 	double alpha = 0.5;
 	int hmmtype = 1;
-       	boolean smushpp = true;
+       	boolean adjustprolines = true;
 
         // should check for valid input here!
 	for (int i=0; i<args.length - 1; i++) {
@@ -334,13 +346,15 @@ class plaac {
 	    else if (args[i].equals("-B")) {bgfreqfile = args[i+1]; i++;}
             else if (args[i].equals("-F")) {fgfreqfile = args[i+1]; i++;}
 	    else if (args[i].equals("-c")) {corelength = Integer.parseInt(args[i+1]); i++;}
-	    else if (args[i].equals("-w")) {ww = Integer.parseInt(args[i+1]); i++;}
+	    else if (args[i].equals("-w")) {ww1 = Integer.parseInt(args[i+1]); i++;}
 	    else if (args[i].equals("-W")) {ww2 = Integer.parseInt(args[i+1]); i++;}
 	    else if (args[i].equals("-a")) {alpha = Double.parseDouble(args[i+1]); i++;}
 	    else if (args[i].equals("-m")) {hmmtype = Integer.parseInt(args[i+1]); i++;}
 	    else if (args[i].equals("-p")) {plotlist = args[i+1]; i++;}
-	    else {System.out.println("skipping unknown option" + args[i]);}
+	    else {System.out.println("# skipping unknown option" + args[i]);}
 	}
+
+	ww3 = ww2;
 
 	if (verbose) {
 	    System.out.println("## -i -->"+inputfile+"<---");
@@ -350,7 +364,7 @@ class plaac {
 	    System.out.println("## -m -->"+hmmtype+"<---");
 	    System.out.println("## -p -->"+plotlist+"<---");
 	    System.out.println("## -c -->"+corelength+"<---");
-	    System.out.println("## -w -->"+ww+"<---");
+	    System.out.println("## -w -->"+ww1+"<---");
 	    System.out.println("## -W -->"+ww2+"<---"); 
 	    System.out.println("## -a -->"+alpha+"<---");
 	} 
@@ -456,7 +470,13 @@ class plaac {
 	    System.out.println("## bg-this");
 	    printaausage(bgthis); 
 	    System.out.println("## bg-mixed");
-	    printaausage(bgcombo); 
+	    printaausage(bgcombo);
+	    System.out.println("## papa-lod");
+	    printaausage(lodpapa1); 
+	    System.out.println("## aa-hydro");
+	    printaausage(aahydro);
+	    System.out.println("## aa-hydro2");
+	    printaausage(aahydro2);     
 	    // System.out.println("## og");
 	    // printaausage(ogf); 
 	}  
@@ -464,9 +484,9 @@ class plaac {
 
         if ((inputfile.length() > 0) && (plotlist.length() == 0)) {
 	    // can pass in any fg and bg frequencies here, if these are not suitable
-	    scorefastas(inputfile, corelength, ww, ww2, fgfreq, bgcombo, hmmtype, smushpp);
+	    scorefastas(inputfile, corelength, ww1, ww2, ww3, fgfreq, bgcombo, hmmtype, adjustprolines);
 	} else if ((inputfile.length() > 0) && (plotlist.length() > 0)) {
-	    plotsomefastas(inputfile, corelength, ww, ww2, fgfreq, bgcombo, hmmtype, plotlist, smushpp);
+	    plotsomefastas(inputfile, corelength, ww1, ww2, ww3, fgfreq, bgcombo, hmmtype, plotlist, adjustprolines);
 	     // // attempt to call R plot routine; doesn't work in current state.
 	     //    try {
 	     //         String [] cmd = {"Rscript", "plaacwrap.r", "hnrnp-w41a.out"}; // make 3rd arg dynamic here! 
@@ -482,6 +502,25 @@ class plaac {
     }
 
    
+    static int slidingaverage_test() {
+        double [] seq1 = new double[100];
+        double [] seq2 = new double[100];
+	for (int i=0; i<100; i++) seq1[i] = 1.0;
+       	for (int i=0; i<100; i++) seq2[i] = (i*i)/100.0; 
+	double [] sa1a = slidingaverage(seq1, 21, true, false);
+        double [] sa1b = slidingaverage(seq1, 21, false, false);
+        double [] sa1c = slidingaverage(seq1, 21, false, false, 13, new int [100]);
+	// double [] sa1c = slidingaverage2_old(seq1, 21, false);
+	double [] sa2a = slidingaverage(seq2, 21, true, false);
+        double [] sa2b = slidingaverage(seq2, 21, false, false);
+        double [] sa2c = slidingaverage(seq2, 21, false, false, 13, new int [100]);
+        //double [] sa2c = slidingaverage2_old(seq2, 21, false);
+	for (int i=0; i<100; i++) System.out.format("%.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f\n", seq1[i], seq2[i], sa1a[i], sa1b[i],sa1c[i],sa2a[i], sa2b[i], sa2c[i]);
+	return 1;
+    }
+
+
+
 
     static int hss_tests() {
 	// ack! looks like hss1 didn't use last index sometimes, and hss2 didn't use first index.
@@ -705,9 +744,9 @@ class plaac {
    }
 
 
-    // pass HMM as argument? Pass papa lods? --- pulled out of global variable now
-    static void plotsomefastas(String filename,	 int corelength, int ww, int ww2, double [] fgfreq, 
-			       double [] bgfreq, int hmmtype, String genelist, boolean smushpp) {
+    // pass HMM as argument? Pass PAPA lods? (taken from global variable now)
+    static void plotsomefastas(String filename,	 int corelength, int ww1, int ww2, int ww3, double [] fgfreq, 
+			       double [] bgfreq, int hmmtype, String genelist, boolean adjustprolines) {
 
 	HashMap<String,String> ht1 = new HashMap<String,String>(); // for synonym
 	HashMap<String,String> ht2 = new HashMap<String,String>(); // for order
@@ -731,20 +770,20 @@ class plaac {
 	    printaausage(fg);
 	    System.out.println("## bgfreqs");  
 	    printaausage(bg);
-	    // System.out.println("## og freqs");  
-	    //  printaausage(og);
 	    System.out.println("## llratio");  
 	    printaausage(llr);
+            System.out.println("## papalods");  
+	    printaausage(lodpapa1);
 	}
 
 	hmm myhmm = prionhmm1(fg,bg);	
 	// hmm myhmm = prionhmm3(fg,bg,og);
+	// hmm bghmm = prionhmm111(bg); 
 
-	boolean reflect = false; 
+
 
 	fastareader fs = new fastareader(filename);
-
-	// print AA iteslf rather than index?
+	// change GENE to SEQID?
 	System.out.print("ORDER\tGENE\tAANUM\tAA\tVIT\tMAP\tCHARGE\tHYDRO\tFI\tPLAAC\tPAPA\tFIx2\tPLAACx2\tPAPAx2");
 	for (int i=0; i<myhmm.numclasses; i++) System.out.print("\tHMM." + myhmm.unames[i]);
 	System.out.println();
@@ -769,36 +808,37 @@ class plaac {
 		int [] seq = string2aa(sb);
 		genecount++;
 
-		// make sure name has no spaces here!! {CHECK: why is this important?}
+		// make sure name has no spaces here!! {CHECK: why was this important?}
 		// name = name.replace(' ',  '-');
 		// name = name.replace('\t', '-');
 
 		myhmm.decodealls(seq);
+		//	bghmm.decodealls(seq);
 		// myhmm.printme(genecount + "\t" + name, seq);
 		// myhmm.sposteriorl(seq);
 		// myhmm.sviterbidecodel(seq);
-		disorderreport dr = new disorderreport(seq, ww, ww2, reflect, new double [] {2.78 , -1  ,-1.15}, llr, lodpapa1, smushpp);
+		disorderreport dr = new disorderreport(seq, ww1, ww2, ww3, new double [] {2.785 , -1  ,-1.151}, llr, lodpapa1, adjustprolines);
 		//  dr.printme(genecount + "\t" + name);
 		for (int i=0; i<seq.length; i++) {
 		    System.out.print(id + "\t" + nm + "\t" + (i+1) + "\t" + aanames[seq[i]] + "\t" + myhmm.viterbipath[i] + "\t" + myhmm.mappath[i]+"\t");
-		    System.out.format("%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f", dr.charge[i], dr.hydro[i], dr.fi[i], 
+		    System.out.format("%.4f\t%.4f\t%.8f\t%.4f\t%.8f\t%.8f\t%.4f\t%.8f", dr.charge[i], dr.hydro[i], dr.fi[i], 
 				      dr.plaacllr[i], dr.papa[i], dr.fix2[i], dr.plaacllrx2[i], dr.papax2[i]);
                     // use exp format here? not a big deal for plotting, but if we went to take logs later could be helpful
-		    for (int j=0; j<myhmm.postprob.length; j++) System.out.format("\t%.3f", myhmm.postprob[j][i]);
+		    for (int j=0; j<myhmm.postprob.length; j++) System.out.format("\t%.4f", myhmm.postprob[j][i]);
 		    System.out.println();
 		}
-
-		System.out.println("####### "+ myhmm.lmarginalprob + "\t" + myhmm.lviterbiprob);
+		// System.out.format("#### %.4f\t%.4f\t%.4f\t%.4f\n", myhmm.lmarginalprob, myhmm.lviterbiprob,  bghmm.lviterbiprob,  bghmm.lviterbiprob);
+		System.out.println("########################################################");
 
 	    }
 	}
     }
 
 
-    // pass HMM as argument? Pass papa lods? --- pulled out of global variable now
-    //	MW, HG, LLR, HMM, FI, PAPA  --- currently leaves out HG 
-    static void scorefastas(String filename,  int corelength, int ww, int ww2, double [] fgfreq, 
-			    double [] bgfreq, int hmmtype, boolean smushpp) {
+    // pass HMM as argument? Pass PAPA lods? (taken from global variable now)
+    //	MW, HG, LLR, HMM, FI, PAPA  --- HG disabled for speed 
+    static void scorefastas(String filename,  int corelength, int ww1, int ww2, int ww3, double [] fgfreq, 
+			    double [] bgfreq, int hmmtype, boolean adjustprolines) {
 
 	// Random rg = new Random(7);
 	int chomp = 0;
@@ -814,23 +854,80 @@ class plaac {
 	    printaausage(fg);
 	    System.out.println("## bgfreqs");  
 	    printaausage(bg);
-	    //System.out.println("## og freqs");  
-	    // printaausage(og);
 	    System.out.println("## llratio");  
 	    printaausage(llr);
+            System.out.println("## papalods");  
+	    printaausage(lodpapa1);
 	}
 
-	System.out.print("geneID\tMW\tMWstart\tMWend\tMWlen\tLLR\tLLRstart\tLLRend\t");	
-	System.out.print("LLRlen\tNLLR\tVITmaxrun\tCOREscore\tCOREstart\tCOREend\tCORElen\tPRDstart\tPRDend\tPRDlen\tPROTlen\t");				
-	System.out.print("HMMmap\tHMMvit\tCOREaa\tSTARTaa\tENDaa\tPRDaa\tPRDscore\tFInumaa\tFImeanhydro\tFImeancharge\tFImeancombo\tFImaxrun\t");
-	System.out.print("PAPAcombo\tPAPAprd\tPAPAfi\tPAPAllr\tPAPAllr2\tPAPAcen\tPAPAaa");
+	boolean printheaders = true;
+        if (printheaders) {
+
+	    System.out.println("############################ Description of output columns ############################");	
+	    
+	    System.out.println("## SEQid: sequence name from fasta file");
+	    System.out.println("## MW: Michelitsh-Weissman (PNAS 2000) score -- maximum number of N + Q in window of at most 80 AA");
+	    System.out.println("## MWstart: index of start position of window with max MW score.");
+	    System.out.println("## MWend: index of end position of window with max MW score"); // Redundant with start and 80 if we don't allow width <80 for PROTlen < 80
+            System.out.println("## MWlen: length of window used for MW score --- will be minumum of 80 and protein length."); // Redundant with start and end
+           
+	    System.out.println("## LLR: max sum of PLAAC log-likelihood ratios (base 4) in window of size c");
+            System.out.println("## LLRstart: index of start position of window with max LLR score.");
+	    System.out.println("## LLRend: index of end position of window with max LLR score");  // Redundant with start and c, unless we allow small c for PROlen < c
+            System.out.println("## LLRlen: length of window used for LLR score --- will be minumum of W and protein length");  // Redundant with start and end
+	    System.out.println("## NLLR: normalized LLR score, i.e. LLR/LLRlen"); // Redundant with LLR and LLRlen
+            
+	    System.out.println("## VITmaxrun: maximum length of consecutive PrD state in Viterbi parse");
+	    System.out.println("## COREscore: max sum of PLAAC LLRs in window of size c contained entirely within Viterbi parse.");
+            System.out.println("## COREstart: index of start position of window with max COREscore; NA if VITmaxrun < c");
+	    System.out.println("## COREend: index of end position of window with max COREscore; NA if VITmaxrun < c"); // Redundant with start and c
+            System.out.println("## CORElen: length of window used for CORElen --- will be either c or NA");  // Redundant with start and end
+	    // moved PRDScore column to here
+            System.out.println("## PRDscore: sum of PLAAC LLRs in full region of Viterbi parse containing CORE region, if any.");
+            System.out.println("## PRDstart: index of start position of window with PRDscore; NA if VITmaxrun < c");
+	    System.out.println("## PRDend: index of end position of window with PRDscore; NA if VITmaxrun < c");
+            System.out.println("## PRDlen: length of window used for PRDscore");  // Redundant with start and end
+            System.out.println("## PROTlen: number of AAs in protein, not including terminal stop codon if any.");
+	    System.out.println("## HMMall: log-likelihood ratio for sequence under two-state HMM vs. one-state background HMM"); // base e? renamed from HMMmap.
+            System.out.println("## HMMvit: log-likelihood ratio for sequence under Viterbi parse of two-state HMM vs. one-state background HMM"); // base e?
+	    System.out.println("## COREaa: AA sequence at which COREscore is attained, or - if VITmaxrun < c");
+            System.out.println("## STARTaa: first 15 AA of PRDaa."); // Redundant with PRDaa --- mostly used to check that the parse starts with a sensible residue, but a few upstream AAs would help for that (if there are any)
+            System.out.println("## ENDaa: last 15 AA of PRDaa"); // Redundant with PRDaa mostly used to check that the parse starts with a sensible residue, but a few downstream AAs would help for that (if there are any)
+	    System.out.println("## PRDaa: AA sequence at which PRDscore is attained, or - if VITmaxrun < c");
+            // moved PRDscore column from here
+
+            System.out.println("## FInumaa: number of AA predicted to be disordered by FoldIndex (ref) (exludes runs of under 5 AA)"); // check if this excludes short runs
+            System.out.println("## FImeanhydro: hydropathy score for entire protein"); // ref Uverski and Fink instead for full-length?
+	    System.out.println("## FImeancharge: mean charge for entire protein"); // ref Uverski and Fink instead for full-length?
+            System.out.println("## FImeancombo: FoldIndex-style score for entire protein: (formula here)");  // ref Uverski and Fink instead for full-length?
+            System.out.println("## FImaxrun: length of longest run of predicted disorder by FoldIndex");
+	   
+	    // need to explain these better!!
+            System.out.println("## PAPAcombo: signed distance to PAPA decision surface (ref?)"); // at PAPAcen? Or anywhere? can use this even no region has negative FI score. Need to fix this.
+            System.out.println("## PAPAprop: maximal score of PAPA prion propensities (averges of averages) in region with negative FI score"); // renamed from PAPAprd
+	    System.out.println("## PAPAfi: FI score (averages of averages) at PAPAcen");
+            System.out.println("## PAPAllr: PLAAC LLR score (avergage) at PAPAcen");
+            System.out.println("## PAPAllr2: PLAAC LLR score (avergage of avergaes) at PAPAcen");
+	    System.out.println("## PAPAcen: index of center of window at which PAPAprop is obtained"); // move to earlier?
+	    System.out.println("## PAPAaa: AA sequence of width W centered at PAPAcen");
+	    
+	    System.out.println("#######################################################################################");
+	    
+	    // print run-time paramaters (bgfreq, fgfreq, etc) in header, too?
+
+	}
+
+	System.out.print("SEQid\tMW\tMWstart\tMWend\tMWlen\tLLR\tLLRstart\tLLRend\t");	
+	System.out.print("LLRlen\tNLLR\tVITmaxrun\tCOREscore\tCOREstart\tCOREend\tCORElen\tPRDscore\tPRDstart\tPRDend\tPRDlen\tPROTlen\t");				
+	System.out.print("HMMall\tHMMvit\tCOREaa\tSTARTaa\tENDaa\tPRDaa\tFInumaa\tFImeanhydro\tFImeancharge\tFImeancombo\tFImaxrun\t");
+	System.out.print("PAPAcombo\tPAPAprop\tPAPAfi\tPAPAllr\tPAPAllr2\tPAPAcen\tPAPAaa");
 	System.out.println();
 
 
 	fastareader fs = new fastareader(filename);
 	// int maxlen = 500; // not currently used
 	// hgalg hg = new hgalg(maxlen,bg);
-	int genecount=0;
+	int genecount = 0;
         
         //                 {X,A,C,D,E,F,G,H,I,K,L,M,N  ,P,Q,  R,S,T,V,W,Y,*}
 	double [] qnmask = {0,0,0,0,0,0,0,0,0,0,0,0,1.0,0,1.0,0,0,0,0,0,0,0};
@@ -851,7 +948,7 @@ class plaac {
 	int [] aa;
 	String flag;
 
-	int [] aacomp;
+	// int [] aacomp;
 
 	double hmmscore;
 	double hmmscorev;
@@ -863,9 +960,9 @@ class plaac {
 	hmm fghmm = prionhmm1(fg, bg);	
 	hmm bghmm = prionhmm111(bg); 
 
-	// int ww = 51;
+	// int ww1 = 51;
 	// int ww2 = 51;
-	boolean reflect = false;
+
 	char stopcodon = '*';
 
 	while (fs.hasmorefastas()) {
@@ -874,12 +971,12 @@ class plaac {
 	    if ((sb.charAt(sb.length()-1)) == stopcodon) sb.deleteCharAt(sb.length()-1); // kill stop codon
 	    aa = string2aa(sb);
 
-	    aacomp = aacomposition(aa);
+	    // aacomp = aacomposition(aa);
 
 	    // something longer here? 41? 60? ww?
 	    if (aa.length < 12) continue; // print output anyway?
 
-	    // MW
+	    // MW -- can allow window to be smaller than 80, since we're looking for max sum rather than max averge.
 	    maa1 = mapseq(aa, qnmask);
 	    hs1 = hss2(maa1, 80, 80);
 	    hs1b = hss(maa1, 80, 80);
@@ -898,10 +995,10 @@ class plaac {
 	    hmmscore = fghmm.lmarginalprob - bghmm.lmarginalprob;
 	    hmmscorev = fghmm.lviterbiprob - bghmm.lviterbiprob;
 
-	    disorderreport  dr = new disorderreport(aa, ww, ww2, reflect, new double [] {2.78 , -1, -1.15}, llr, lodpapa1, smushpp);
+	    disorderreport  dr = new disorderreport(aa, ww1, ww2, ww3, new double [] {2.785 , -1, -1.151}, llr, lodpapa1, adjustprolines);
 	    // dr.printme();
-	    // disorderreport dr2 = new disorderreport(aa, ww, ww2, reflect, new double [] {2.78, -1, -1.15}, llr, lodpapa2, smushpp);
-
+            //System.out.println(dr.papamaxprop + "\t" + dr.papamaxscore);
+	   
 	    // gets rid of leading ">" from fasta 
 	    String nm = name.substring(chomp);
 
@@ -962,7 +1059,7 @@ class plaac {
 		}
 	    }  else {
 		//  if (aastop - aastart + 1 < corelength) {
-		hs3[2] = 0; // NA instead?
+		hs3[2] = 0; // NA instead? Doubles can be NaN = 0.0/0.0.
 		aastart = -1;
 		aastop  = -2;
 		corestart = -1;
@@ -980,15 +1077,23 @@ class plaac {
 		}
 	    } else {
 		if (true) { //(hs3[2] > -1) {	
-		    // should use System.out.format for rounding off!
-		    System.out.print(nm + 
-				     "\t" + (int) hs1[2]   + "\t" + (int) hs1[0] + "\t" + (int) hs1[1] + "\t" + (int) (hs1[1]-hs1[0]+1) + 
-				     "\t" + roundoff(hs2[2],3) + "\t" + (int) hs2[0] + "\t" + (int) hs2[1] + "\t" + (int) (hs2[1]-hs2[0]+1) + 
-				     "\t" + roundoff(hs2[2]/(hs2[1]-hs2[0]+1),3) + "\t" + longestprd +
-				     "\t" + roundoff(hs3[2],3) + "\t" + corestart + "\t" + corestop +
-				     "\t" + (corestop-corestart+1) + 
-				     "\t" + aastart + "\t" + aastop + "\t" + (aastop-aastart+1) + "\t" + aa.length +
-				     "\t" + roundoff(hmmscore,3) + "\t" + roundoff(hmmscorev,3) + "\t");
+		    // changed to System.out.format for rounding off
+		    // System.out.print(nm + 
+		    //			     "\t" + (int) hs1[2]   + "\t" + (int) hs1[0] + "\t" + (int) hs1[1] + "\t" + (int) (hs1[1]-hs1[0]+1) + 
+		    //		     "\t" + roundoff(hs2[2],3) + "\t" + (int) hs2[0] + "\t" + (int) hs2[1] + "\t" + (int) (hs2[1]-hs2[0]+1) + 
+		    //		     "\t" + roundoff(hs2[2]/(hs2[1]-hs2[0]+1),3) + "\t" + longestprd +
+		    //		     "\t" + roundoff(hs3[2],3) + "\t" + corestart + "\t" + corestop +
+		    //		     "\t" + (corestop-corestart+1) + 
+		    //		     "\t" + aastart + "\t" + aastop + "\t" + (aastop-aastart+1) + "\t" + aa.length +
+		    //		     "\t" + roundoff(hmmscore,3) + "\t" + roundoff(hmmscorev,3) + "\t");
+		    System.out.format("%s\t%d\t%d\t%d\t%d\t%.3f\t%d\t%d\t%d\t%.3f\t%d\t%.3f\t%d\t%d\t%d\t%.3f\t%d\t%d\t%d\t%d\t%.3f\t%.3f\t",
+				      nm,
+				      (int) hs1[2], (int) hs1[0], (int) hs1[1], (int) (hs1[1]-hs1[0]+1), 
+				      hs2[2], (int) hs2[0], (int) hs2[1], (int) (hs2[1]-hs2[0]+1) , 
+				      hs2[2]/(hs2[1]-hs2[0]+1), longestprd,
+				      hs3[2], corestart, corestop , corestop-corestart+1 , 
+				      prdscore, aastart, aastop, aastop-aastart+1 , 
+				      aa.length ,hmmscore, hmmscorev);
 		    if (aastop - aastart + 1 >= corelength) {
 			System.out.print(aa2string(submatrix(aa, corestart, corestop)));
 			System.out.print("\t");
@@ -997,7 +1102,8 @@ class plaac {
 			System.out.print(aa2string(submatrix(aa, aastop-14, aastop)));
 			System.out.print("\t");
 			System.out.print(aa2string(prd));
-			System.out.print("\t" + roundoff(prdscore,3));
+			//System.out.print("\t" + roundoff(prdscore,3));
+			//System.out.format("\t%.3f", prdscore); // moved to earlier
 		    } else {
 			System.out.print("-");
 			System.out.print("\t");
@@ -1006,20 +1112,34 @@ class plaac {
 			System.out.print("-");
 			System.out.print("\t");
 			System.out.print("-");
-			System.out.print("\t");
-			System.out.print("-");
+			//System.out.print("\t");
+			//System.out.print("-");
 		    }
-		    //if ((fix2[k] < 0) && (papax2[k] > 0.05)) {
+		    // if ((fix2[k] < 0) && (papax2[k] > 0.05)) {
 		    //   papascore = Math.min(-1*fix2[k], (papax2[k] - 0.05));
-		    //} else {  
+		    // } else {  
 		    //  papascore = -1*Math.sqrt((Math.min(0,-1.0*fix2[k])*Math.min(0,-1.0*fix2[k]) 
 		    //			      + Math.min(0,papax2[k]-0.05)*Math.min(0,papax2[k]-0.05)));
 	     	    // }
-		    System.out.print("\t" + dr.numdisorderedstrict2 + "\t" + roundoff(dr.meanhydro,3) +"\t" + roundoff(dr.meancharge,3) + 
-				     "\t" + roundoff(dr.meanfi,3) + "\t" + (int) (dr.maxlen) + "\t" + roundoff(dr.papascore,3) +
-				     "\t" + roundoff(dr.papamaxprd,3) + "\t" + roundoff(dr.papamaxdis,3) + "\t" + roundoff(dr.papamaxllr,3) + 
-				     "\t" + roundoff(dr.papamaxllr2,3) + "\t" + (int) (dr.papamaxcenter) + 
-				     "\t" + aa2string(submatrix(aa,  dr.papamaxcenter - ww2/2, dr.papamaxcenter + ww2/2))); // + ok for length < w? 
+		    // changed to System.out.format for rounding off
+		    // System.out.print("\t" + dr.numdisorderedstrict2 + "\t" + roundoff(dr.meanhydro,3) +"\t" + roundoff(dr.meancharge,3) + 
+		    //		     "\t" + roundoff(dr.meanfi,3) + "\t" + (int) (dr.maxlen) + "\t" + roundoff(dr.papascore,3) +
+		    //		     "\t" + roundoff(dr.papamaxprop,3) + "\t" + roundoff(dr.papamaxdis,3) + "\t" + roundoff(dr.papamaxllr,3) + 
+		    //		     "\t" + roundoff(dr.papamaxllr2,3) + "\t" + (int) (dr.papamaxcenter) + 
+		    //		     "\t" + aa2string(submatrix(aa,  dr.papamaxcenter - ww2/2, dr.papamaxcenter + ww2/2))); // + ok for length < w? 
+		    System.out.format("\t%d\t%.3f\t%.3f\t%.3f\t%d\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%d\t%s",
+				      dr.numdisorderedstrict2,
+				      dr.meanhydro, 
+				      dr.meancharge,
+				      dr.meanfi,
+				      dr.maxlen,
+				      dr.papamaxscore,
+				      dr.papamaxprop,
+				      dr.papamaxdis,
+				      dr.papamaxllr,
+				      dr.papamaxllr2,
+				      dr.papamaxcenter, 
+				      aa2string(submatrix(aa,  dr.papamaxcenter - ww2/2, dr.papamaxcenter + ww2/2))); // + ok for length < w? 
 		    System.out.println();
 		}
 	    }
@@ -1040,11 +1160,10 @@ class plaac {
 
     }
 
-    // should just use System.out.format when printing instead.
-    static float roundoff(double number, int digits) {
-	return (float) (Math.round(Math.pow(10,digits)*number)/Math.pow(10,digits));
-
-    }	
+    // Now use System.out.format when printing instead
+    // static float roundoff(double number, int digits) {
+    //	return (float) (Math.round(Math.pow(10,digits)*number)/Math.pow(10,digits));
+    // }	
 
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1284,42 +1403,42 @@ class plaac {
 	return narr;
     }
 
-    // highest-scoring-subsequence -- brute force, order n^2
-    static double [] hss_old(double [] seq, int minlength, int maxlength) {
-	int n = seq.length;
-	if (minlength > n) minlength = n; 
-	if (maxlength > n) maxlength = n;
-	double [] score = new double[3]; // start, end, score
-	double bestscore;
-	double tempscore;
-	double [] psum = new double[n+1];
-	int beststart = 0;
-	int beststop = minlength; 
-	psum[0] = 0;
-	for (int i=0; i<n; i++) {
-	    psum[i+1] = psum[i] + seq[i];
-	}
+    // // highest-scoring-subsequence -- brute force, order n^2
+    // static double [] hss_old(double [] seq, int minlength, int maxlength) {
+    // 	int n = seq.length;
+    // 	if (minlength > n) minlength = n; 
+    // 	if (maxlength > n) maxlength = n;
+    // 	double [] score = new double[3]; // start, end, score
+    // 	double bestscore;
+    // 	double tempscore;
+    // 	double [] psum = new double[n+1];
+    // 	int beststart = 0;
+    // 	int beststop = minlength; 
+    // 	psum[0] = 0;
+    // 	for (int i=0; i<n; i++) {
+    // 	    psum[i+1] = psum[i] + seq[i];
+    // 	}
 
-	bestscore = psum[minlength]-psum[0];
+    // 	bestscore = psum[minlength]-psum[0];
 
-	for (int i=0; i<n-minlength; i++) {
-	    for (int j=i+minlength; j<=Math.min(i+maxlength,n); j++) {
-		tempscore = psum[j] - psum[i];
-		if (tempscore > bestscore) {
-		    bestscore = tempscore;
-		    beststart = i;
-		    beststop = j-1;
-		}
-	    }
-	}
-	score[0] = beststart;
-	score[1] = beststop;
-	score[2] = bestscore;
-	return score;
-    }
+    // 	for (int i=0; i<n-minlength; i++) {
+    // 	    for (int j=i+minlength; j<=Math.min(i+maxlength,n); j++) {
+    // 		tempscore = psum[j] - psum[i];
+    // 		if (tempscore > bestscore) {
+    // 		    bestscore = tempscore;
+    // 		    beststart = i;
+    // 		    beststop = j-1;
+    // 		}
+    // 	    }
+    // 	}
+    // 	score[0] = beststart;
+    // 	score[1] = beststop;
+    // 	score[2] = bestscore;
+    // 	return score;
+    // }
 
 
-     // highest-scoring-subsequence -- brute force, order n^2
+     // highest-scoring-subsequence -- brute force, order n*maxlen
     static double [] hss_new(double [] seq, int minlength, int maxlength) {
 	int n = seq.length;
 	if (minlength > n) minlength = n;  //ODK return NA instead????
@@ -1490,8 +1609,6 @@ class plaac {
 	score[2] = bestscore;
 	return score;
     }
-
-
 
     // static int [] firstandlast(int p1, int p2, int [] vec, int skipme) {
     // 	int [] fal = new int[2];
@@ -1761,7 +1878,7 @@ class plaac {
 	}
     }
 
-
+    // excise instead?
     static void killlowercase(StringBuffer sb) {
 	for (int j=0; j<sb.length(); j++) {
 	    if (Character.isLowerCase(sb.charAt(j))) {
@@ -2439,10 +2556,11 @@ class plaac {
 
     // FIXME eps
     static double [] normalize(double [] arr) {
+	double eps = 0.000000000001;
 	int n = arr.length;
 	double [] narr = new double [n];
 	double sm = 1.0*sum(arr);
-	if (sm < 0.000000000001) sm = 1;
+	if (sm < eps) sm = 1;
 	for (int i=0; i<n; i++) narr[i] = arr[i]/sm;
 	return narr;
     }
@@ -2458,6 +2576,7 @@ class plaac {
     // FIXME eps
     // makes total sum	1
     static double [][] normalizemat(double [][] mat) {
+	double eps = 0.000000000001;
 	int m = mat.length;
 	int n = mat[0].length;
 	double [][] nmat = new double[m][n];
@@ -2467,7 +2586,7 @@ class plaac {
 		ts = ts+mat[i][j];
 	    }
 	}
-	if (ts < 0.00000000001) ts = 0.00000000001;
+	if (ts < eps) ts = eps;
 
 
 	for (int i=0; i<m; i++) {
@@ -2598,7 +2717,7 @@ class plaac {
 	int c = mat2.length;
 	int d = mat2[0].length;
 	if (b !=c )  {
-	    System.out.println("inner dimensions don't match: "	  + a + " x " + b + ", " +  c + " x " + d);
+	    System.out.println("# inner dimensions don't match: " + a + " x " + b + ", " +  c + " x " + d);
 	    return (new double[1][1]);
 	}
 	double [][] mat3 = new double[a][d];
@@ -2621,7 +2740,7 @@ class plaac {
 	int b = mat1[0].length;
 	int c = vec.length;
 	if (b!=c)  {
-	    System.out.println("inner dimensions don't match: "	  + a + " x " + b + ", " +  c);
+	    System.out.println("# inner dimensions don't match: " + a + " x " + b + ", " +  c);
 	    return (new double[1]);
 	}
 	double [] vec2 = new double[a];
@@ -2732,7 +2851,7 @@ class plaac {
 	int c = mat2.length;
 	int d = mat2[0].length;
 	if (a != c || b != d)  {
-	    System.out.println("matrix dimensions don't match: "   + a + " x " + b + ", " +  c + " x " + d);
+	    System.out.println("# matrix dimensions don't match: "  + a + " x " + b + ", " +  c + " x " + d);
 	    return (new double[1][1]);
 	}
 	double [][] mat3 = new double[a][b];
@@ -2981,7 +3100,7 @@ class plaac {
 	    toker = new StringTokenizer(line);
 	    n = toker.countTokens() - skipcol;
 	    m = 0;
-	    while((line != null) && (toker.countTokens() - skipcol == n)) { // make sure toker is non null?
+	    while((line != null) && (toker.countTokens() - skipcol == n)) { // make sure toker is non-null?
 	    	m++;
 	    	line = in.readLine();
 	    	if (line != null) toker = new StringTokenizer(line);
@@ -3024,8 +3143,6 @@ class plaac {
 	return mat;
 
     }
-
-
 
 
     static void printmatrix(int [][] mat) {
@@ -3086,178 +3203,102 @@ class plaac {
 	return newarr;
     }
 
-    // no longer used
-    // static double [] slidingaverage(double [] arr, int ww, boolean reflect) {
-    // 	int n = arr.length;
-    // 	// System.out.println(n);
-    // 	if (n==0) return arr;
-    // 	int w = ww/2;
-    // 	if (w >= n) w = n-1;
-    // 	double [] padarr = new double[n + 2*w];
-    // 	System.arraycopy(arr, 0, padarr, w, n);
-    // 	// printmatrix(padarr);
-    // 	if (reflect) {
-    // 	    for (int i=0; i<=w; i++) {
-    // 		padarr[i] = arr[w - i];
-    // 		padarr[n + 2*w - 1 - i] = arr[n - w - 1 + i];
-    // 	    }
-    // 	}
-    // 	// printmatrix(padarr);
-    // 	double [] sa = new double[n];
-    // 	double score;
-    // 	for (int i=0; i<n; i++) {
-    // 	    score = 0;
-    // 	    for (int j=-w; j<=w; j++) {
-    // 		score = score+padarr[i + w + j];
-    // 	    }
-    // 	    sa[i] = score/(2.0*w + 1);
-    // 	}
-
-    // 	return sa;
-    // }
-
-
-    // if  reflect==F, average over smaller windows
-    static double [] slidingaverage2(double [] arr, int ww, boolean reflect) {
+ 
+    // ww should be odd. 
+    static double [] slidingaverage(double [] arr, int ww, boolean shrink, boolean weight) {
 	int n = arr.length;
-	// System.out.println(n);
 	if (n == 0) return arr;
-	int w = ww/2;
-	if ( w>= n) w=n-1;
-	double [] padarr = new double[n + 2*w];
-	System.arraycopy(arr, 0, padarr, w, n);
-	// printmatrix(padarr);
-	if (reflect) {
-	    for (int i=0; i<=w; i++) {
-		padarr[i] = arr[w - i];
-		padarr[n + 2*w - 1 - i] = arr[n - w - 1 + i];
-	    }
-	}
-	// printmatrix(padarr);
+	int w = ww/2; // floor if odd
+	if ( w>= n) w=n-1; // necessary ??
 	double [] sa = new double[n];
 	double score;
-	int inrange;
-	for (int i=0; i<n; i++) {
-	    score = 0;
-	    inrange = 0;
-	    for (int j=-w; j<=w; j++) {
-		score = score + padarr[i + w + j];
-		if ((i+j >= 0) & (i+j < n)) inrange++;
-	    }
-	    if (reflect) {
-		sa[i] = score/(2.0*w + 1);
-	    } else {
-		sa[i] = score/(1.0*inrange);
-	    }
+	double denom;
+        double wt;
+        int mini, maxi;
+        if (shrink) {
+	    mini = 0;
+	    maxi = n-1;
+	} else {
+	    mini = w;
+	    maxi = n-w-1;
+	    for (int i=0; i<mini; i++) sa[i] = 0.0/0.0;
+	    for (int i=maxi+1; i<n; i++) sa[i] = 0.0/0.0;
 	}
-
+	for (int i=mini; i<=maxi; i++) {
+	    score = 0.0;
+	    denom = 0.0;
+	    for (int j=-w; j<=w; j++) { // should tighten bounds to avoid next test
+        	if ((i + j >= 0) && (i + j < n)) { 
+		    wt = 1.0;
+                    if (weight) {
+			wt = 1.0 + Math.min(i+j, w) + Math.min(n-i-j-1, w);
+			//System.out.println(n + "\t" + ww + "\t" + i + "\t" + j + "\t" + wt);
+		    }
+		    // if (weight) wt = Math.max(i+j, w) + Math.max(n-i-j-1, w);
+		    denom = denom + wt;
+		    score = score + wt*arr[i + j];
+		}
+	    }
+	    sa[i] = score/denom;   
+	}
 	return sa;
     }
 
-
-    // could speed this up by re-using common portion of overlapping windows!
-    // if  reflect==F, average over smaller windows, scores only first in consecutive run of mergeme
-    static double [] slidingaverage2(double [] arr, int ww, boolean reflect, int mergeme, int [] seq) {
+    
+    //  if mergeme=Z, scores only first Z in ZZ or Z.Z in each window
+    static double [] slidingaverage(double [] arr, int ww, boolean shrink, boolean weight, int mergeme, int [] seq) {
 	int n = arr.length;
-	// System.out.println(n);
 	if (n == 0) return arr;
-	int w = ww/2;
-	if (w >= n) w = n-1;
-	double [] padarr = new double[n + 2*w];
-	int [] padseq = new int[n + 2*w];
-	System.arraycopy(arr, 0, padarr, w, n);
-	System.arraycopy(seq, 0, padseq, w, n);
-	// printmatrix(padarr);
-	if (reflect) {
-	    for (int i=0; i<=w; i++) {
-		padarr[i] = arr[w - i];
-		padarr[n + 2*w - 1 - i] = arr[n - w - 1 + i];
-	    }
-	}
-	// printmatrix(padarr);
+      	int w = ww/2; // floor if odd
+	if ( w >= n) w=n-1; // necessary ??
 	double [] sa = new double[n];
 	double score;
-	int inrange;
-	for (int i=0; i<n; i++) {
-	    score = 0;
-	    inrange = 0;
-	    for (int j=-w; j<=w; j++) {
-                if ((padseq[i + w + j] != mergeme) // could do this without padding seq
-		    || ((i + j >= 1) && (padseq[i + w + j - 1] != mergeme))
-                    || ((i + j >= 2) && (padseq[i + w + j - 2] != mergeme))) {
-		    score = score + padarr[i + w + j];
-		} // else add zero but increment denominator anyway...
-		if ((i + j >= 0) & (i + j < n)) inrange++;
-	    }
-	    if (reflect) {
-		sa[i] = score/(2.0*w + 1);
-	    } else {
-		sa[i] = score/(1.0*inrange);
-	    }
+	double denom;
+	double wt;
+	int mini, maxi;
+	if (shrink) {
+	    mini = 0;
+	    maxi = n-1;
+	} else {
+	    mini = w;
+	    maxi = n-w-1;
+	    for (int i=0; i<mini; i++) sa[i] = 0.0/0.0;
+	    for (int i=maxi+1; i<n; i++) sa[i] = 0.0/0.0;
 	}
-
+	for (int i=mini; i<=maxi; i++) {
+	    score = 0.0;
+	    denom = 0.0;
+	    for (int j=-w; j<=w; j++) { // should tighten bounds to avoid next test
+		if ((i + j >= 0) && (i + j < n)) {
+		    wt = 1.0;
+		    if (weight)	wt = 1.0 + Math.min(i+j, w) + Math.min(n-i-j-1, w);
+		    denom = denom + wt;
+		    if (!((seq[i + j] == mergeme) && (i + j >= 1) && (seq[i + j - 1] == mergeme))
+			  && !((seq[i + j] == mergeme) && (i + j >= 2) && (seq[i + j - 2] == mergeme))) {
+			score = score + wt*arr[i + j];
+		    } 
+		} 
+	    } 
+	    sa[i] = score/denom;
+	}
 	return sa;
     }
-
-    // downweighted PP but not PXP
-    // // if  reflect==F, average over smaller windows, scores only first in consecutive run of mergeme, allowing one gap
-    // static double [] slidingaverage2_old(double [] arr, int ww, boolean reflect, int mergeme, int [] seq) {
-    // 	int n = arr.length;
-    // 	// System.out.println(n);
-    // 	if (n == 0) return arr;
-    // 	int w = ww/2;
-    // 	if (w >= n) w = n-1;
-    // 	double [] padarr = new double[n + 2*w];
-    // 	int [] padseq = new int[n + 2*w];
-    // 	System.arraycopy(arr, 0, padarr, w, n);
-    // 	System.arraycopy(seq, 0, padseq, w, n);
-    // 	// printmatrix(padarr);
-    // 	if (reflect) {
-    // 	    for (int i=0; i<=w; i++) {
-    // 		padarr[i] = arr[w - i];
-    // 		padarr[n + 2*w - 1 - i] = arr[n - w - 1 + i];
-    // 	    }
-    // 	}
-    // 	// printmatrix(padarr);
-    // 	double [] sa = new double[n];
-    // 	double score;
-    // 	int inrange;
-    // 	for (int i=0; i<n; i++) {
-    // 	    score = 0;
-    // 	    inrange = 0;
-    // 	    for (int j=-w; j<=w; j++) {
-    //             if ((padseq[i + w + j] != mergeme) // could do this without padding seq
-    // 		    || ((i + j >= 1) && (padseq[i + w + j - 1] != mergeme))) {
-    // 		    score = score + padarr[i + w + j];
-    // 		} // else add zero but increment denominator anyway...
-    // 		if ((i + j >= 0) & (i + j < n)) inrange++;
-    // 	    }
-    // 	    if (reflect) {
-    // 		sa[i] = score/(2.0*w + 1);
-    // 	    } else {
-    // 		sa[i] = score/(1.0*inrange);
-    // 	    }
-    // 	}
-
-    // 	return sa;
-    // }
-
-
-   
 
     // companion to read_aa_params
     static void print_aa_params(double [] aaparams) {
 	for (int i=0; i<22; i++) {
-	    System.out.println((float) aaparams[i] + " # " + aanames[i]);
+	    // System.out.println((float) aaparams[i] + " # " + aanames[i]);
+	    System.out.format("%.6f # %s\n", aaparams[i], aanames[i]);
 	}
     }
 
     static void print_aa_params(int [] aaparams) {
 	for (int i=0; i<22; i++) {
-	    System.out.println(aaparams[i] + " # " + aanames[i]);
+	    // System.out.println(aaparams[i] + " # " + aanames[i]);
+            System.out.format("%.6f # %s\n", aaparams[i], aanames[i]);
 	}
     }
-    
+   
     
     // companion to print_aa_params.
     // file should be 22 numbers, one per line, in order of string array aanames. 
@@ -3282,14 +3323,14 @@ class plaac {
 		   toker.nextToken(); // should be #
 		   name = toker.nextToken();
 		   if (name.charAt(0) != aanames[i]) {
-		       System.out.println("warning: " + filename + " does not have expected name in line" + (i+1));
+		       System.out.println("# warning: " + filename + " does not have expected name in line" + (i+1));
 		   }
 	       }
 	    }
 	    in.close();
 	}
 	catch (IOException e) {
-	    System.out.println("Couldn't open " + filename);
+	    System.out.println("# Couldn't open " + filename);
 	}
 	// FIXME: catch other sorts of exceptions for invalid formats, not enough lines, ...
 	return vec;
@@ -3300,7 +3341,8 @@ class plaac {
      // starts with comment char so can be ignored by R
     static void printaausage(double [] aafreq) {
 	for (int i=0; i<22; i++) {
-	    System.out.println("# " + aanames[i] + " " + (float) aafreq[i]);
+	    // System.out.println("# " + aanames[i] + " " + (float) aafreq[i]);
+	    System.out.format("# %s %.6f\n", aanames[i], aafreq[i]);
 	}
     }
 
@@ -3309,21 +3351,22 @@ class plaac {
 	for (int i=0; i<22; i++) {
 	    System.out.print("# " + aanames[i]);
 	    for (int j=0; j<aafreq.length; j++) {
-		System.out.print("\t" + (float) aafreq[j][i]);
+		//System.out.print("\t" + (float) aafreq[j][i]);
+               	System.out.format("\t%.6f",aafreq[j][i]);
 	    }
 	    System.out.println();
 	}
     }
 
-    static void printaausage(double [][] aafreq, int sd) {
-	for (int i=0; i<22; i++) {
-	    System.out.print("# " + aanames[i]);
-	    for (int j=0; j<aafreq.length; j++) {
-		System.out.print("\t" + (float) (Math.round(sd*aafreq[j][i])/(1.0*sd)));
-	    }
-	    System.out.println();
-	}
-    }
+    // static void printaausage(double [][] aafreq, int sd) {
+    //	for (int i=0; i<22; i++) {
+    //	    System.out.print("# " + aanames[i]);
+    //	    for (int j=0; j<aafreq.length; j++) {
+    //		System.out.print("\t" + (float) (Math.round(sd*aafreq[j][i])/(1.0*sd)));
+    //	    }
+    //	    System.out.println();
+    //	}
+    //}
 
 
 }
@@ -3673,13 +3716,14 @@ class hmm {
     //FIXME eps
     // sparse transmat
     public int [] sviterbidecodel(int [] seq) {
+	double eps = 0.000000000001;
 	int n = seq.length;
 	int [] vit = new int[n];
 
 	double [][] s = new double[ns][n];
 	int [][] tb = new int[ns][n];	    // traceback
 
-	int [][] sps = plaac.sparsesupport(plaac.transpose(tprob), 0.000000001);
+	int [][] sps = plaac.sparsesupport(plaac.transpose(tprob), eps);
 
 
 	for (int i=0; i<ns; i++) {
@@ -3962,6 +4006,7 @@ class hmm {
     //FIXME eps
     // in log-space, sparse transmat
     public double [][] sposteriorl(int [] seq) {
+	double eps = 0.000000001;
 	int n = seq.length;
 	double [][] pp = new double[ns][n];
 
@@ -3969,8 +4014,8 @@ class hmm {
 	double [][] a = new double[ns][n];
 	a = plaac.logmat(a);
 
-	int [][] sps = plaac.sparsesupport(plaac.transpose(tprob),0.000000001);
-	int [][] sps2 = plaac.sparsesupport(tprob,0.000000001);
+	int [][] sps = plaac.sparsesupport(plaac.transpose(tprob), eps);
+	int [][] sps2 = plaac.sparsesupport(tprob, eps);
 
 	for (int i=0; i<ns; i++) {
 	    a[i][0] = liprob[i] + leprob[i][seq[0]];
@@ -4132,6 +4177,8 @@ class hmm {
     // sparse transmat; use scaling to prevent underflow
 
     public double [][] sposteriors(int [] seq, double [][] tprob, double [][] eprob, double [] iprob) {
+	
+	double eps = 0.000000001;
 
 	int n = seq.length;
 	double [][] pp = new double[ns][n];
@@ -4143,8 +4190,8 @@ class hmm {
 	// forward algorithm
 	double [][] a = new double[ns][n];
 
-	int [][] sps = plaac.sparsesupport(plaac.transpose(tprob),0.000000001);
-	int [][] sps2 = plaac.sparsesupport(tprob,0.000000001);
+	int [][] sps = plaac.sparsesupport(plaac.transpose(tprob), eps);
+	int [][] sps2 = plaac.sparsesupport(tprob, eps);
 
 	for (int i=0; i<ns; i++) {
 	    a[i][0] = sc[0]*iprob[i]*eprob[i][seq[0]];
@@ -4862,6 +4909,7 @@ class fastareader {
     }
 
     public boolean hasmorefastas() {
+	if (!goodfile) return false; // some error message, too??
 	if (ondeck) return true;
 	try {
 	    while ((line = in.readLine()) != null) {
@@ -5082,8 +5130,12 @@ class fastareader {
 // */
 
 
-///////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+// This class implements FoldIndex [] for predicting protein disorder
+// and PAPA [] for prion-forming propensity
+/////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
 
 class disorderreport {
 
@@ -5098,13 +5150,14 @@ class disorderreport {
     double [] fi;  
     double [] plaacllr; 
     double [] papa; 
-    double [] papax2; // x2 are twice-smoothed versions
+    double [] papax2;      // x2 are twice-smoothed versions
     double [] plaacllrx2;  // x2 are twice-smoothed versions  
-    double [] fix2;  // x2 are twice-smoothed versions
+    double [] fix2;        // x2 are twice-smoothed versions
     int [] aa;
-    int ww;
+    int ww1;
     int ww2;
-    boolean reflect;
+    int ww3;
+    // boolean reflect;
     double meancharge;
     double meanhydro;
     double meanfi;
@@ -5139,55 +5192,60 @@ class disorderreport {
     double [] plaacweights;   
     double [] papaweights;  
     
-    // change meanings of these to get better tradeoff between papa score and FI!
-    double papamaxprd;	  // maximum papa score
-    double papascore;   // tradeoff
+    double papascore;     // temp
+    double papamaxprop;	  // maximum papa propensity
+    double papamaxscore;  // tradeoff between prop and FI
     double papamaxdis;	  // corresponding FI
     double papamaxllr;	  // corresponding LLR
     double papamaxllr2;	  // corresponding LLR2
     int papamaxcenter;	  // index of max above
    
 
-    disorderreport(int [] aa, int ww, int ww2, boolean reflect, double [] cc, 
-		   double [] plaacweights, double [] papaweights, boolean smushpp) {
-    	this.ww = ww;
+    disorderreport(int [] aa, int ww1, int ww2, int ww3, double [] cc, 
+		   double [] plaacweights, double [] papaweights, boolean adjustprolines) {
+    	this.ww1 = ww1;
     	this.ww2 = ww2;
+	this.ww3 = ww3;
     	this.cc = cc;
-    	this.reflect = reflect;
+    	// this.reflect = reflect;
     	this.aa = aa;
 	// check previous version: other and other2 
     	this.plaacweights = plaacweights;
     	this.papaweights = papaweights;
     	n = aa.length;
-    	double [] maa1 = plaac.mapseq(aa,plaac.axpb(1.0/9,plaac.aahydro,0.5));
+    
+	double [] maa1 = plaac.mapseq(aa, plaac.aahydro2);
     	meanhydro = plaac.mean(maa1);
-    	hydro = plaac.slidingaverage2(maa1,ww,reflect);
-    	double [] maa2 = plaac.mapseq(aa,plaac.aacharge);
+    	hydro = plaac.slidingaverage(maa1,ww1,true,false);
+    	
+        double [] maa2 = plaac.mapseq(aa,plaac.aacharge);
     	meancharge = plaac.mean(maa2);
-	charge = plaac.slidingaverage2(maa2,ww,false); // don't reflect charges
+	charge = plaac.slidingaverage(maa2,ww1,true,false);
+
 	meanfi  = cc[2] + cc[1]*Math.abs(meancharge) + cc[0]*meanhydro;
+	// note absolute value of local net charge here!!
 	fi = plaac.axpbypc(cc[0],hydro,cc[1],plaac.absval(charge),cc[2]);
+
 	maa3 = plaac.mapseq(aa,plaacweights);
-	plaacllr = plaac.slidingaverage2(maa3,ww,reflect);
+	plaacllr = plaac.slidingaverage(maa3,ww3,true,false);
 	maa4 = plaac.mapseq(aa,papaweights);
-	if (smushpp) {
-	    papa = plaac.slidingaverage2(maa4,ww2,false,13,aa);
+
+	if (adjustprolines) {
+	    papa = plaac.slidingaverage(maa4,ww2,true,false,13,aa);
 	} else { 
-	    papa = plaac.slidingaverage2(maa4,ww2,false);
+	    papa = plaac.slidingaverage(maa4,ww2,true, false);
 	}
 
-	// average of averages
-	papax2 = plaac.slidingaverage2(papa,ww2,false);
-	plaacllrx2 = plaac.slidingaverage2(plaacllr,ww2,false);
-	fix2 = plaac.slidingaverage2(fi,ww,false);
+	// Average of averages. Scores for first and last ww residues depend on how boundaries are handled.
+        // Here we use the approach used in PAPA, for consistency: 
+        // In first round of averages, smaller windows are used when sliding window would extend out-of-bounds;
+	// In second round of averages, scores are weighted based on number of residues in each round-one window. 
+	papax2 = plaac.slidingaverage(papa,ww2,false,true);
+	plaacllrx2 = plaac.slidingaverage(plaacllr,ww3,false,true);
+	fix2 = plaac.slidingaverage(fi,ww1,false,true);
+	
 
-	// FIXME: -1/0 instead of -1000?
-	numdisordered = 0;
-	papamaxprd = -1000; 
-	papamaxdis = -1000;  
-        papamaxllr = -1000;  
-        papamaxllr2 = -1000;  
-        papamaxcenter = -1;
+        numdisordered = 0;
         for (int k=0; k<n; k++) {
 	    if (fi[k]<0) { 
 		numdisordered++;
@@ -5195,7 +5253,7 @@ class disorderreport {
         } 
 
         numdisorderedstrict = 0;
-	int halfw = (ww-1)/2; // or 0
+	int halfw = (ww1-1)/2; // or 0
 	if (halfw > n/2) halfw = n/2;
 	// System.out.println("halfww " + halfw);
 	if (fi[halfw]<0) { 
@@ -5211,8 +5269,10 @@ class disorderreport {
 	} 
 
 	// restrict to MAP parse?
-	double papamaxscore = -1000; // -Inf or NA instead
-	
+	papamaxscore = -1.0/0; // -Inf or NA instead
+        papamaxcenter = -1;	
+
+
 	int papamode = 1; // 1: maximum PAPA score with FI < 0 
                           // 2: maximum PAPA score, even if FI > 0
                           // 3: tradeoff between PAPA score and FI: maximum of min(PAPA - 0.05, -FI) 
@@ -5236,25 +5296,22 @@ class disorderreport {
 	    } 
 	} else if (papamode == 3) {
 	    for (int k=(ww2-1)/2; k<n-(ww2-1)/2; k++) {
-                // if both positive, find distance to decision boundary
+                // if both positive, find distance to decision boundary. weight dimensions differently?
 		if ((fix2[k] < 0) && (papax2[k] > 0.05)) {
 		    papascore = Math.min(-1*fix2[k], (papax2[k] - 0.05));
 		} else {  
 		    papascore = -1*Math.sqrt((Math.min(0,-1.0*fix2[k])*Math.min(0,-1.0*fix2[k]) 
 					      + Math.min(0,papax2[k]-0.05)*Math.min(0,papax2[k]-0.05)));
-		    // papascore = Math.min(0,-1.0*fix2[k]) + Math.min(0,papax2[k]-0.05);
 		}
 		if ((papascore > papamaxscore)) { 
-		    // || ((papascore == papamaxscore) 
-		    //  && ((papax2[k] > papax2[papamaxcenter]) || (fix2[k] < fix2[papamaxcenter])))) { 
 		    papamaxcenter = k;
 		    papamaxscore = papascore;	    
 		} 
 	    } 
-	} else if (papamode == 4) {
+	} else if (papamode == 4) { // improve this!!
 	    for (int k=(ww2-1)/2; k<n-(ww2-1)/2; k++) {
-	        papascore = Math.min(-1.0*fix2[k]-0.0,papax2[k]-0.05); // weight these two differently? 
-                papascore = Math.min(papascore, plaacllrx2[k]-0.0); // use singly-smoothed LLR instead?
+	        papascore = Math.min(-1.0*fix2[k]-0.0,papax2[k]-0.05); // weight dimensions differently?
+                papascore = Math.min(papascore, plaacllrx2[k]-0.0);    // use singly-smoothed LLR instead?
                 if ((papascore > papamaxscore)
 		    || ((papascore == papamaxscore)                      
 			&& ((papax2[k] > papax2[papamaxcenter]) || (fix2[k] < fix2[papamaxcenter]) 
@@ -5265,13 +5322,21 @@ class disorderreport {
 	    } 
 	}
 
+        // undefined if no valid center
+	papamaxprop = 0.0/0.0; 
+	papamaxdis = 0.0/0.0;  
+        papamaxllr = 0.0/0.0;  
+        papamaxllr2 = 0.0/0.0; 
+        // papamaxscore = 0.0/0.0; // already set 
+
 	if (papamaxcenter >= 0) {
-	    papamaxprd = papax2[papamaxcenter];
+	    papamaxprop = papax2[papamaxcenter];
 	    papamaxdis = fix2[papamaxcenter];
 	    papamaxllr2 = plaacllrx2[papamaxcenter];
 	    papamaxllr = plaacllr[papamaxcenter];
 	}
 
+	// System.out.println(papamaxprop + "\t" + papamaxscore);
 	/////////////////////////////
 
 	hssr = plaac.hss2(maa3);
@@ -5366,7 +5431,7 @@ class disorderreport {
 	    System.out.println(id + "\t" + aa[i] + "\t" + (float) charge[i] + "	 \t"
 			       + (float) hydro[i] + "  \t" + (float) fi[i] + "\t" + (float) plaacllr[i] 
 			       + " \t"	 + (float) papa[i]
-			       + "\t # ["+(i+1-ww/2)+"-"+(i+1 + ww/2)+"]");
+			       + "\t # ["+(i+1-ww1/2)+"-"+(i+1 + ww1/2)+"]");
 	}
     }
 }
