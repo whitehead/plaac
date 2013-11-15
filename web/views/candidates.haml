@@ -80,23 +80,23 @@
                           %input.all_toggle{type: 'checkbox',checked:false, id:'chkAll', title: "Toggle all on page"}
                             %label{for: "chkAll"}
                         %th{colspan: 5}
-                          %label{style:'color: green'} geneID
+                          %label{style:'color: green'} SEQid
                       %tr.header_details
                         %th{width:'1%'} &nbsp;
                         %th COREscore
                         %th LLR
-                        %th PAPAprd
+                        %th PAPAprop
                         %th PAPAfi
                         %th &nbsp;
                       - @candidates.each do |line,r|
                         - row = line.split(/\t/)
-                        - next if row.first == "geneID"
+                        - next if row.first == "SEQid"
                         %tr.candidate_geneId
                           %td{style:'width:16px ! important'}
                             %input{id: "chk#{r}", name: 'selected[]', value: r, type: 'checkbox',checked:false}
                           %td.tt{colspan: 5}
-                            %label{for: "chk#{r}", title: row[@idx[:geneID]], style: 'color: #393;'}
-                              = row[@idx[:geneID]]
+                            %label{for: "chk#{r}", title: row[@idx[:SEQid]], style: 'color: #393;'}
+                              = row[@idx[:SEQid]]
                         %tr.candidate_details
                           %td{style:'width:16px ! important'} &nbsp;
                           %td.tt
@@ -104,11 +104,11 @@
                           %td.tt
                             %label{for: "chk#{r}"}= row[@idx[:LLR]]
                           %td.tt
-                            %label{for: "chk#{r}"}= row[@idx[:PAPAprd]]
+                            %label{for: "chk#{r}"}= row[@idx[:PAPAprop]]
                           %td.tt
                             %label{for: "chk#{r}"}= row[@idx[:PAPAfi]]
                           %td
-                            - if row[@idx[:geneID]] =~ /[\s|](NP_[\d\.]+)[\s|]/
+                            - if row[@idx[:SEQid]] =~ /[\s|](NP_[\d\.]+)[\s|]/
                               - np_number = $1.to_s
                               %a{target:'_blank',href:"http://www.ncbi.nlm.nih.gov/protein/#{np_number}"}
                                 %img{src:'/images/ncbi.png', border:0}
@@ -127,11 +127,11 @@
               - if !@picklist.nil? && !@picklist.empty?
                 - @picklist.each do |line,r|
                   - row = line.split(/\t/)
-                  - next if row.first == "geneID"
+                  - next if row.first == "SEQid"
                   %li
-                    %label.checkbox{for: "picklist_chk#{r}", title: row[@idx[:geneID]]}
+                    %label.checkbox{for: "picklist_chk#{r}", title: row[@idx[:SEQid]]}
                       %input{id: "picklist_chk#{r}", name: 'selected[]', value: r, type: 'checkbox',checked:false}
-                      - idstr = row[@idx[:geneID]].split(/\|/)
+                      - idstr = row[@idx[:SEQid]].split(/\|/)
                       - idstr = "<b>" + idstr[0] + "</b><br/><small>"+ idstr[1..-1].join("|") + "</small>"
                       = idstr
             %form{id:'display_form', action:"#{$config[:apppath]}/visualize", method:'post'}
