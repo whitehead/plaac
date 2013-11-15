@@ -29,7 +29,7 @@
               %td &nbsp;
             - @output.each_with_index do |row,r|
               - row = row.first
-              - next if row =~ /^geneID/
+              - next if row =~ /^SEQid/
               %tr
                 %td.tt
                   %a{href: "#img#{r}"}
@@ -44,7 +44,7 @@
 
           - @output.each_with_index do |row,r|
             - row = row.first
-            - next if row =~ /^geneID/
+            - next if row =~ /^SEQid/
             %hr
             .detail
               %a.anchor{name: "img#{r}"}
@@ -55,7 +55,7 @@
               %br.clear
 
               - row = @candidates[r]
-              - idstr = row[@idx[:geneID]].split(/\|/)
+              - idstr = row[@idx[:SEQid]].split(/\|/)
               - idstr = "<b>" + idstr[0] + "</b><br/><small>"+ idstr[1..-1].join("|") + "</small>"
               = idstr
               %br
@@ -68,13 +68,13 @@
                   %th PAPAprd
                   %th PAPAfi
                   %th &nbsp;
-                  - next if row.first == "geneID"
+                  - next if row.first == "SEQid"
                   -#%tr.candidate_geneId
                   -#  %td{style:'width:16px ! important'}
                   -#    %input{id: "chk#{r}", name: 'selected[]', value: r, type: 'checkbox',checked:false}
                   -#  %td.tt{colspan: 5}
-                  -#    %label{for: "chk#{r}", title: row[@idx[:geneID]], style: 'color: #393;'}
-                  -#      = row[@idx[:geneID]]
+                  -#    %label{for: "chk#{r}", title: row[@idx[:SEQid]], style: 'color: #393;'}
+                  -#      = row[@idx[:SEQid]]
                 %tr.candidate_details
                   %td{style:'width:16px ! important'} &nbsp;
                   %td.tt
@@ -82,11 +82,11 @@
                   %td.tt
                     %label{for: "chk#{r}"}= row[@idx[:LLR]]
                   %td.tt
-                    %label{for: "chk#{r}"}= row[@idx[:PAPAprd]]
+                    %label{for: "chk#{r}"}= row[@idx[:PAPAprop]]
                   %td.tt
                     %label{for: "chk#{r}"}= row[@idx[:PAPAfi]]
                   %td
-                    - if row[@idx[:geneID]] =~ /[\s|](NP_[\d\.]+)[\s|]/
+                    - if row[@idx[:SEQid]] =~ /[\s|](NP_[\d\.]+)[\s|]/
                       - np_number = $1.to_s
                       %a{target:'_blank',href:"http://www.ncbi.nlm.nih.gov/protein/#{np_number}"}
                         %img{src:'/images/ncbi.png', border:0}

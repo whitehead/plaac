@@ -860,7 +860,7 @@ class plaac {
 	    printaausage(lodpapa1);
 	}
 
-	boolean printheaders = true;
+	boolean printheaders = false;
         if (printheaders) {
 
 	    System.out.println("############################ Description of output columns ############################");	

@@ -16,9 +16,11 @@ if (length(args) < 2) {
 } else if (length(args)>2 && args[3]=="-d") {
   plot_genes(args[1], args[2], showSeq=T, showHMMProbs=T, showParses=T, 
              seqUnderline=c("PLAACx2"), seqColor="MAP",
-             tracks=c("FIx2","PLAACx2","PAPAx2","THRESH"), w=41)
+             tracks=c("FIx2","PLAACx2","PAPAx2","THRESH"), w=21)
 } else {
   plot_genes(args[1], args[2], showSeq=T, showHMMProbs=T, showParses=F, 
              seqUnderline=c("FIx2","PAPAx2"), seqColor="MAP",
-             tracks=c("FI","PLAAC","PAPA","THRESH","HYDRO","CHARGE"), w=21)
+             #tracks=c("FI","PLAAC","PAPA","THRESH","HYDRO","CHARGE"), 
+             tracks=c("FI","PLAAC","PAPA","THRESH"),
+             w=1)
 }

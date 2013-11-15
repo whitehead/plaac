@@ -1,3 +1,9 @@
+#!/usr/bin/env Rscript
+## Original program copyright 2009 Whitehead Institute for Biomedial Research
+## Additions copyright 2013 University of Massachusetts
+## Author: Oliver D. King (oliver.king@umassmed.edu) 
+## See LICENSE.TXT for license information.  
+
 args = commandArgs(TRUE)
 source("plaac_plot_util.r") 
 if (length(args) < 2) {
