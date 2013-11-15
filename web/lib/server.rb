@@ -86,7 +86,6 @@ class Server < Sinatra::Base
     output_filename = File.join(working_directory,@@prion_candidates)
     filename = File.join(working_directory,@@input_fasta)
 
-    job.add_file(path("bin/prion_candidates_to_pdf.sh"), working_directory) # r library
     job.add_file(path("bin/plaac_plot.r"), working_directory) # r library
     job.add_file(path("bin/plaac_plot_util.r"), working_directory) # r library
     job.add_file(path("bin/plaac.jar"), working_directory) # binary
