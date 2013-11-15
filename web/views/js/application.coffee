@@ -155,21 +155,26 @@ $ ->
   bind_hover_highlight()
 
   handle_slider_change = ->
-    val = $('#alpha').val()
-    if val is "100"
+    bg_freq_val = $('#organisms').val()
+    alpha_val = $('#alpha').val()
+    if alpha_val is '100'
       $('#organisms').prop('disabled',true)
       $('#organism_background').css('color','#ccc')
+      $('.background_probabilities_label').css('color','#ccc')
     else
       $('#organisms').prop('disabled',false)
       $('#organism_background').css('color','black')
-      
-
-    if val is "100"
-      #$('#file_background').css('color','#ccc')
-      $('.background_probabilities_label').css('color','#ccc')
-    else
-      #$('#file_background').css('color','black')
       $('.background_probabilities_label').css('color','black')
+
+    if bg_freq_val is '' && alpha_val != '100'
+      $('#run_analysis').removeClass('btn-primary')
+      $('#run_analysis').prop('disabled',true)
+      $('#organisms').css('color','red')
+    else
+      $('#run_analysis').addClass('btn-primary')
+      $('#run_analysis').prop('disabled',false)
+      $('#organisms').css('color','black')
+
 
   $('#alphaSlider').slider({
     min: -1
@@ -182,6 +187,7 @@ $ ->
       handle_slider_change()
   })
 
+  $('#organisms').on 'change', handle_slider_change
   $('input[name=file]').on 'change', ->
     val= $(this).val()
     bgsect= $('.background-section')

@@ -73,6 +73,7 @@
               %tr
                 %td#file_background{width: '50%'}
                   %select#organisms.input-medium{ name: 'bg' }
+                    %option{ value: ''} Select one!
                     %option{ value: 'input_sequence'} From input sequence
                     - @bg_freqs.each do |id, name|
                       %option{ value: id, title: name }
