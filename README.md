@@ -5,10 +5,10 @@ Prion-Like Amino Acid Composition
 
 
 Installation
-============
+------------
 
-Command-line application (cli)
-------------------------------
+### Command-line application (cli) ###
+
 
 ```
 cd cli
@@ -18,8 +18,8 @@ cd cli
 This will build a jar file in the ```cli/target``` subdirectory.  Instructions for use of the
 ```plaac``` cli are found in ```cli/README```
 
-Web-application
----------------
+### Web-application ###
+
 
 Perform the same steps as for the cli, above, then:
 
