@@ -191,17 +191,17 @@ $ ->
   $('input[name=file]').on 'change', ->
     val= $(this).val()
     bgsect= $('.background-section')
-    if val == ""
-      bgsect.hide()
-      bgsect.effect('highlight', {}, 1000)
-      $('#alpha').val( 100 )
-      $('#alphaSlider').slider('value',100)
-      handle_slider_change()
-    else
-      bgsect.show()
-      $('#alpha').val( 0 )
-      $('#alphaSlider').slider('value',0)
-      handle_slider_change()
+    #if val == ""
+    #bgsect.hide()
+    #bgsect.effect('highlight', {}, 1000)
+    $('#alpha').val( 100 )
+    $('#alphaSlider').slider('value',100)
+    handle_slider_change()
+    #else
+    #  bgsect.show()
+    #  $('#alpha').val( 0 )
+    #  $('#alphaSlider').slider('value',0)
+    #  handle_slider_change()
 
   # bootstrap
   $('.collapse').collapse(toggle: false)
@@ -221,4 +221,4 @@ $ ->
   #    $(this).next().removeClass('collapsed')
   
 
-# vim: ft=coffee
+# vim: ft=coffee foldmethod=manual
