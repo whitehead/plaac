@@ -55,7 +55,7 @@ class Server < Sinatra::Base
     # Strip the last / from the path
     request.env['PATH_INFO'].gsub!(/\/$/, '')
   end
-  
+
   #--------------------------------------------------------------------
   # Pages
 
@@ -63,7 +63,7 @@ class Server < Sinatra::Base
     @bg_freqs = read_bg_freqs()
     haml :index
   end
-  
+
   #--------------------------------------------------------------------
   # Actions
 
@@ -102,7 +102,7 @@ class Server < Sinatra::Base
     else
       @error = "No sequence."
       @@log.info(@error)
-      return haml(:index) 
+      return haml(:index)
     end
 
     @@log.debug "validating fasta #{filename}"
@@ -156,14 +156,19 @@ class Server < Sinatra::Base
   end
 
   get '/candidates/:token' do
+    @@log.info "candidates #{params[:token]}"
     @job = Job.first(:token => params[:token])
     # TODO: check that @job existed
     results_ready_file = File.join(@job.working_directory, "results_ready")
     prion_candidates_file = File.join(@job.working_directory, @@prion_candidates)
-    
+
+
     # get header, and produce a hash of column symbol to array index.
     if File.exist?(results_ready_file)
-      header_line = File.open(prion_candidates_file).lines.first
+      @@log.info "results ready"
+      lines = File.open(prion_candidates_file).lines
+      lines = lines.reject{|line| line =~ /^##/}
+      header_line = lines.first
       if header_line.nil?
         redirect "#{$config[:apppath]}/candidates/#{@job.token}?bounce"
         return
@@ -181,10 +186,10 @@ class Server < Sinatra::Base
           sleep 1
         end
         @@log.info "sorting #{prion_candidates_file}"
-        @output = File.open(prion_candidates_file).readlines.map{|line| line.split(/\t/)}
+        @output = lines.map{|line| line.split(/\t/)}
         # sort the candidates in reverse order from highest COREscore to lowest
-        @output = @output.sort_by{|line| -1*line[@idx[:COREscore]].to_f }
-      
+        @output = @output.sort_by{|line| -1*line[@idx[:COREscore]].to_f rescue 0 }
+
         # save re-sorted file to make sure they are in the right order for next step
         File.open(prion_candidates_file, 'w') do |s|
           s.puts @header.join("\t")
@@ -202,6 +207,7 @@ class Server < Sinatra::Base
       return
     end
 
+    @@log.info "render!"
     haml :candidates
   end
 
@@ -224,7 +230,7 @@ class Server < Sinatra::Base
     else
       image_filename="prion_details_#{"%05d" % [params[:id].to_i]}.png"
       file = File.join(@job.working_directory,image_filename)
-      send_file file, 
+      send_file file,
         :type => 'image/png',
         :filename => image_filename
     end
@@ -274,7 +280,7 @@ class Server < Sinatra::Base
       f.write string
     end
   end
-  
+
   # writes filename with the contents from iostream
   def write_file(filename,iostream)
     File.open(filename,'wb+') do |f|
@@ -434,7 +440,7 @@ class Server < Sinatra::Base
 
     job = Job.new(@job.token)
     working_directory = job.working_directory
-    
+
     # generate details
     if !bgfreq_filename.nil? && session[:bg] != "input_sequence"
       bg_freq_filename = ->(id){ id.nil? ? nil : "bg_freqs_#{id}.txt" }
@@ -444,8 +450,8 @@ class Server < Sinatra::Base
     end
 
     job.command = <<-COMMAND
-    sh -c "cd #{@job.working_directory} && 
-      java -jar ./plaac.jar -i #{input_fasta} -c #{core_len} -a #{alpha} -p #{candidates_filename} #{bgfreq_opt} > #{output_filename} && 
+    sh -c "cd #{@job.working_directory} &&
+      java -jar ./plaac.jar -i #{input_fasta} -c #{core_len} -a #{alpha} -p #{candidates_filename} #{bgfreq_opt} > #{output_filename} &&
       ./plaac_plot.r prion_candidates_details.tsv prion_details.pdf &&
       ./plaac_plot.r prion_candidates_details.tsv prion_details.png ;
       touch details_ready
@@ -460,7 +466,7 @@ class Server < Sinatra::Base
         @@log.error(error)
       end
     end
-     
+
     job.submit()
 
     redirect "#{$config[:apppath]}/visualize/#{job.token}"
