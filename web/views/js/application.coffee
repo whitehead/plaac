@@ -194,8 +194,8 @@ $ ->
     #if val == ""
     #bgsect.hide()
     #bgsect.effect('highlight', {}, 1000)
-    $('#alpha').val( 100 )
-    $('#alphaSlider').slider('value',100)
+    #$('#alpha').val( 100 )
+    #$('#alphaSlider').slider('value',100)
     handle_slider_change()
     #else
     #  bgsect.show()
