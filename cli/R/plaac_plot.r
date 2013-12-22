@@ -14,13 +14,12 @@ if (length(args) < 2) {
   cat("   The optional flag -d plots doubly-smoothed rather than singly-smoothed curves.\n")
   cat("See sourcecode of plaac_plot_util.r and plaac_plot.r for other plot options.\n")
 } else if (length(args)>2 && args[3]=="-d") {
-  plot_genes(args[1], args[2], showSeq=T, showHMMProbs=T, showParses=T, 
+  plot_genes(args[1], args[2], showSeq=T, showHMMProbs=T, showParses=T, showAAColors=T,
              seqUnderline=c("PLAACx2"), seqColor="MAP",
              tracks=c("FIx2","PLAACx2","PAPAx2","THRESH"), w=21)
 } else {
-  plot_genes(args[1], args[2], showSeq=T, showHMMProbs=T, showParses=F, 
+  plot_genes(args[1], args[2], showSeq=T, showHMMProbs=T, showParses=T, showAAColors=T,
              seqUnderline=c("FIx2","PAPAx2"), seqColor="MAP",
              #tracks=c("FI","PLAAC","PAPA","THRESH","HYDRO","CHARGE"), 
-             tracks=c("FI","PLAAC","PAPA","THRESH"),
-             w=1)
+             tracks=c("FI","PLAAC","PAPA","THRESH"), w=1)
 }
