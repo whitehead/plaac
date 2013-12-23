@@ -1180,7 +1180,7 @@ class plaac {
 	hmm h = new hmm(tmat,emat,imat);
 	h.subtrellis = new int [] {1,0};
 	h.states = new char[] {'-','+'};
-	h.setnames(new String [] {"background","PrD-like"});
+	h.setnames(new String [] {"background","prion.like"});
 	return h;
 
     }
@@ -1195,7 +1195,7 @@ class plaac {
 	hmm h = new hmm(tmat,emat,imat);
 	h.subtrellis = new int [] {1,0};
 	h.states = new char[] {'-','+'};
-	h.setnames(new String [] {"background","PrD-like"});
+	h.setnames(new String [] {"background","prion.like"});
 	return h;
     }
 
