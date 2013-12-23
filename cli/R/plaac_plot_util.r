@@ -95,7 +95,7 @@ if (autocolors) {
 
 ## function for single gene rather than whole file...
 
-plot_gene = function(dat, 
+plot_seq = function(dat, 
                       showHMMProbs=TRUE,
                       showParses=FALSE, 
                       showAAColors=FALSE,
@@ -340,7 +340,7 @@ plot_gene = function(dat,
 ########################
 ############### Oct 2013
 
-plot_genes = function(infile="plot_data.txt", 
+plot_seqs = function(infile="plot_data.txt", 
                       outfile="plaac_plots.pdf",
                       showHMMProbs=TRUE,
                       showParses=FALSE, 
@@ -390,7 +390,7 @@ plot_genes = function(infile="plot_data.txt",
     
     ## use ellipses ... to avoid explicitly passing the args?
     par(mfrow=c(1,1), family="Courier", mar=c(1,4,4,1)+0.1);
-    plot_gene(dat, showHMMProbs=showHMMProbs, showParses=showParses, showAAColors=showAAColors, showSeq=showSeq,  
+    plot_seq(dat, showHMMProbs=showHMMProbs, showParses=showParses, showAAColors=showAAColors, showSeq=showSeq,  
               tracks=tracks, seqUnderline=seqUnderline, seqColor=seqColor,w=w)
     
     if (plotPng) {dev.off();}
@@ -403,7 +403,7 @@ plot_genes = function(infile="plot_data.txt",
 #######
 
 
-color_seqs = function(infile="plot_data.txt", outfile="color_plots.pdf", max_n=NA, showlegend=T, showparse=T) {
+color_code_seqs = function(infile="plot_data.txt", outfile="color_plots.pdf", max_n=NA, showLegend=T, showParses=T) {
   datAll = read.table(infile, header=TRUE, sep="\t", stringsAsFactors=F);
   
   ## use positive max_n to enforce max_length and/or to include padding so different plots will have same scale.
@@ -426,13 +426,14 @@ color_seqs = function(infile="plot_data.txt", outfile="color_plots.pdf", max_n=N
   plotPng = grepl("png$", outfile);
   
   if (plotPng) { 
-    png(outfile, height=100*(0.6 + 0.3*(num_seq + ifelse(showlegend, 1.5, 0))), width=100*8, units="px", family="Courier", pointsize=16)
+    png(outfile, height=100*(0.6 + 0.3*(num_seq + ifelse(showLegend, 1.5, 0))), width=100*8, units="px", family="Courier", pointsize=16)
   } else{ 
-    pdf(outfile, height=0.5 + 0.3*(num_seq + ifelse(showlegend, 1.5, 0)), width=8, family="Courier", pointsize=12)
+    pdf(outfile, height=0.5 + 0.3*(num_seq + ifelse(showLegend, 1.5, 0)), width=8, family="Courier", pointsize=12)
   }
   
   par(mfrow=c(1,1), mar=c(1,1,1,1)+0.1)
-  plot(1, type="n", axes=F, xlab="", ylab="", xaxs="i", yaxs="i", xlim=c(-(max_n/8), max_n + 2), ylim=c(0.6, num_seq + 0.4 + ifelse(showlegend,1.6,0)));
+  plot(1, type="n", axes=F, xlab="", ylab="", xaxs="i", yaxs="i", xlim=c(-(max_n/8), max_n + 2), 
+       ylim=c(0.6, num_seq + 0.4 + ifelse(showLegend,1.6,0)));
   for (k in seq_along(unique_order)) {
     dex = unique_order[k];
     dat = datAll[datAll$ORDER==dex,]; 
@@ -442,7 +443,7 @@ color_seqs = function(infile="plot_data.txt", outfile="color_plots.pdf", max_n=N
       lines(c(i-1,i), rep(num_seq - k + 1, 2), col=aaColorVec[i], lwd=14, lend=1);
     }
     text(0, rep(num_seq - k + 1, 2), substr(dat$GENE[1],1,20), pos=2, cex=1, adj=0)
-    if (showparse) {
+    if (showParses) {
       myParse = dat$VIT;
       ## myParse = dat$MAP;       
       diffParse = diff(myParse)
@@ -457,7 +458,7 @@ color_seqs = function(infile="plot_data.txt", outfile="color_plots.pdf", max_n=N
       }
     }
   }
-  if (showlegend) {
+  if (showLegend) {
     midx = seq(0.25*max_n, 0.75*max_n, length.out=length(aaColors))
     startx = midx - 0.5*max_n/length(aaColors)/3;
     endx = midx + 0.5*max_n/length(aaColors)/3;
