@@ -7,9 +7,14 @@
       .pull-right
         %ul.inline
           %li
+            %a.btn.btn-success.btn-large{href: "/visualize/#{@job.token}/strippdf"}
+              %i.icon-download.icon-white
+              Combined strip plots
+            .inline-help.muted Adobe PDF (.pdf)
+          %li
             %a.btn.btn-success.btn-large{href: "/visualize/#{@job.token}/pdf"}
               %i.icon-download.icon-white
-              Graphical details
+              Individual plots 
             .inline-help.muted Adobe PDF (.pdf)
           %li
             %a.btn.btn-success.btn-large{href: "/visualize/#{@job.token}/csv"}
@@ -41,7 +46,10 @@
                     %a{target:'_blank',href:"http://www.ncbi.nlm.nih.gov/protein/#{np_number}"}
                       %img{src:'/images/ncbi.png', border:0}
                       = np_number
-
+          %hr
+            -# Output the "strip"-style plot
+            %b Combined plot
+            %img{src: "/visualize/#{@job.token}/strippng", style:'border:1px solid #efefef'}              
           - @output.each_with_index do |row,r|
             - row = row.first
             - next if row =~ /^SEQid/

@@ -222,6 +222,20 @@ class Server < Sinatra::Base
       :filename => "prion_details.pdf"
   end
 
+  get '/visualize/:token/strippdf' do
+    @job = Job.first(:token => params[:token])
+    send_file File.join(@job.working_directory,"prion_strip.pdf"),
+      :type => 'application/pdf',
+      :filename => "prion_strip.pdf"
+  end
+
+  get '/visualize/:token/strippng' do
+    @job = Job.first(:token => params[:token])
+    send_file File.join(@job.working_directory,"prion_strip.png"),
+      :type => 'application/png',
+      :filename => "prion_strip.png"
+  end
+
   get '/visualize/:token/images/:id.png' do
     @job = Job.first(:token => params[:token])
     if @job.nil?
@@ -453,7 +467,9 @@ class Server < Sinatra::Base
     sh -c "cd #{@job.working_directory} &&
       java -jar ./plaac.jar -i #{input_fasta} -c #{core_len} -a #{alpha} -p #{candidates_filename} #{bgfreq_opt} > #{output_filename} &&
       ./plaac_plot.r prion_candidates_details.tsv prion_details.pdf &&
-      ./plaac_plot.r prion_candidates_details.tsv prion_details.png ;
+      ./plaac_plot.r prion_candidates_details.tsv prion_details.png &&
+      ./plaac_plot.r prion_candidates_details.tsv prion_strip.pdf -c &&
+      ./plaac_plot.r prion_candidates_details.tsv prion_strip.png -c ;
       touch details_ready
     "
     COMMAND
