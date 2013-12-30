@@ -3,9 +3,7 @@ PLAAC
 
 PLAAC (Prion-Like Amino Acid Composition) searches protein sequences
 to identify probable prion subsequences using a hidden-Markov model
-(HMM) algorithm.
-
-The PLAAC website is located at: 
+(HMM) algorithm.  The PLAAC website is located at: 
 
  http://plaac.wi.mit.edu/
 
