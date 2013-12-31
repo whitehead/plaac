@@ -1,12 +1,11 @@
 
 .container
-  .hero-unit{style: 'padding-top: 5px; padding-bottom: 5px'}
-    -#%h1 PLAAC
+  .hero-unit{style: 'padding-top: 2px; padding-bottom: 2px'}
     %p
       %strong PLAAC 
-      (Prion-Like Amino Acid Composition) searches protein sequences to identify probable prion subsequences using a
+      searches protein sequences to identify probable prion subsequences using a
       hidden-Markov model (HMM) algorithm.
-      %a{href: '#details'} more details
+      %a{href: '#details'} details and how to cite
       -#.muted (Note that the foreground probabilities for the HMM have been updated based on the hits from [1])
 
 .container
@@ -18,7 +17,6 @@
           .alert.alert-success= @success
         - unless @error.nil?
           .alert.alert-error= @error
-
     .row
       .span12
         %h4 Paste or Upload Protein Sequence*
@@ -61,7 +59,7 @@
           %label
             %b
               Relative weighting of background probabilities (
-              %em alpha
+              %em &alpha;
               )
             .help-block.mute.footnote
               0 meaning all from selected organism's background frequencies. 100 meaning all from S. cerevisae.
@@ -100,27 +98,30 @@
       .span8
         %a{name: 'details'}
 
-        %h4{style:'margin-top:0; padding-top:0'} Algorithm Details
+        %h4{style:'margin-top:0; padding-top:0'} How to cite PLAAC
         %p 
-          The details of the PLAAC algorithm are described in Albert et al. (2009).  If you use this
-          this website, or the underlying code, in any publication, please also cite Lancaster et al. (2013),
-          which also describes additional extensions and implementation details of the algorithm.  Code for
-          the algorithm, as well as for powering this website is available at
+          If you use this this website, or the underlying code, in any
+          publication, please cite Lancaster et al., which
+          also describes additional extensions and implementation
+          details of the algorithm.  Code for the algorithm, as well
+          as for powering this website is available at
           %a{href:"http://github.com/whitehead/plaac"}
             GitHub
-          under the open-source MIT license.
+          under the open-source MIT license.  Details of the PLAAC
+          algorithm itself are described in Alberti and Halfmann et al. (2009).
+
         %blockquote
-          Alberti, S., Halfmann, R., King, O., Kapila, A. &amp; Lindquist, S. (2009)
+          Alberti S, Halfmann R, King O, Kapila A, Lindquist S. (2009)
           %br
           %a{target:'_blank',href:"http://www.sciencedirect.com/science/article/pii/S0092867409002669"}
             A systematic survey identifies prions and illuminates sequence features of prionogenic proteins.
           %em Cell
           137, 146–58.
         %blockquote
-          Lancaster, A.K., Nutter-Upham, A., Lindquist, S. &amp; King, O.D. (2013)
+          Lancaster AK, Nutter-Upham A, Lindquist S, King OD.
           %br
           PLAAC: a web and command-line application to identify proteins with Prion-Like Amino Acid Composition
-          %em in preparation
+          %em submitted
           %br
 
       .span4
@@ -133,6 +134,21 @@
               %em (S. cerevisiae)
               (XLS file)
             .muted (most recent: 2012-07-20)
+        %h4{style:'margin-top:10; padding-top:10'} Related Links
+        %ul.unstyled 
+          %li
+            %a{href:"http://jura.wi.mit.edu/cgi-bin/bio/draw_enrichment.pl"}
+              Protein Sequence Enrichment Tool
+            available from the Whitehead Institute's
+            %a{href:"http://jura.wi.mit.edu/bio/"}
+              Bioinformatics and Research Computing
+            group.
+        %h4{style:'margin-top:10; padding-top:10'} Code snapshot for review
+        %ul.unstyled
+          %li
+            %a{href:"#{$config[:apppath]}/PLAAC-master.zip"}
+              %i.icon-download
+              PLAAC-master.zip
 
 
 %br.clear
