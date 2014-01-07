@@ -1,3 +1,4 @@
+# Encoding: utf-8
 require 'bundler/setup'
 require 'sinatra/base'
 require 'sinatra/cookies'
@@ -12,6 +13,11 @@ require 'benchmark'
 $:.push File.expand_path("..",__FILE__)
 require 'assets'
 require 'job'
+
+if RUBY_VERSION =~ /1.9/ # assuming you're running Ruby ~1.9
+  Encoding.default_external = Encoding::UTF_8
+  Encoding.default_internal = Encoding::UTF_8
+end
 
 # ensure required directories
 %w[tmp logs].each do |dir|
