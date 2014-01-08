@@ -64,7 +64,7 @@
 
               - row = @candidates[r]
               - idstr = row[@idx[:SEQid]].split(/\|/)
-              - idstr = "<b>" + idstr[0] + "</b><br/><small>"+ idstr[1..-1].join("|") + "</small>"
+              - idstr = "<b>" + idstr[0] + "</b><br/><small>"+ Array(idstr[1..-1]).join("|") + "</small>"
               = idstr
               %br
               %br
