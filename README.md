@@ -41,8 +41,9 @@ cd cli
 ./build_plaac.sh
 ```
 
-This will build a jar file in the ```cli/target``` subdirectory.  Instructions for use of the
-```plaac``` cli are found in ```cli/README```
+This will build a jar file in the ```cli/target``` subdirectory.  Some
+brief instructions for the use of the ```plaac``` cli and information
+on some supporting files are found in ```cli/README.md```
 
 ### Web-application ###
 
@@ -54,5 +55,5 @@ cp target/plaac.jar ../web/bin/
 cp R/plaac_plot.r R/plaac_plot_util.r ../web/bin/
 ```
 
-The remaining installation steps are detailed in the ```web/README``` (note that ```Rscript``` 
+The remaining installation steps are detailed in the ```web/README.md``` (note that ```Rscript``` 
 should be installed).
