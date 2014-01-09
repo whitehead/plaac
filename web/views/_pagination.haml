@@ -7,7 +7,7 @@
 - win_end = [@page + paging_window, @pages].min
 
 - ##########################################################
-%span.info Page #{@page} of #{@pages} (#{@total} records)
+%span.info Page #{@page} of #{@pages} (#{@total-2} records)
 .pagination
   %ul{style:'padding-left:0'}
     - if @page > paging_window
