@@ -1,59 +1,43 @@
-Developer Installation
+Developer installation for PLAAC web application
+================================================
 
-  Requirements
+Requirements
+------------
 
-    Ruby 1.9.3
-    https://rvm.io/
+* Ruby 1.9.3 https://rvm.io/
     > rvm install 1.9.3
     > rvm use 1.9.3
 
-    Dependencies (bundler)
+* Dependencies (bundler)
     > gem install bundler
     > bundle install
 
 Infrastructure
+--------------
 
-  bin/sinatra_server
-    a webrick server (same as ruby lib/server.rb)
+* bin/sinatra_server
+ *  a webrick server (same as ruby lib/server.rb)
 
-  bin/shotgun_server
-    a development server that reloads all the 
+* bin/shotgun_server
+ *  a development server that reloads all the 
     code every request (slow but useful)
 
-  config.ru
-    makes the application rackable 
+* config.ru
+ *  makes the application rackable 
     (e.g. you can drop it into passenger)
 
-  lib/server.rb
-    Start here.
-
+* lib/server.rb
+ *  Start here.
 
 Application
+-----------
 
-  Designed to handle the submission of FASTA files
-  to a sequence analysis application called plaac
+Designed to handle the submission of FASTA files
+to a sequence analysis application called plaac
 
 
-  flow:
-  / - input form
-  /run - handles post from the input form
+* flow:
+ *  / - input form
+ *  /run - handles post from the input form
          runs plaac with given options
-  /sequence(.*).fasta - the format of the results files
-
-  Thoughts:
-  since there is multi step processing, and plaac is slow
-  we probably need to produce tickets and have background
-  processing and progress checking.
-
-  ticket = sha1(fasta_file + options)
-
-  public/runs/#{ticket}/
-    input.fasta
-    primary_output.fasta
-    secondary_output.fasta
-    individual/
-        a.fasta
-        a.png
-        b.fasta
-        b.png
-    all.zip
+ *  /sequence(.*).fasta - the format of the results files
