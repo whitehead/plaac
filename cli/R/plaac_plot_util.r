@@ -446,7 +446,10 @@ color_code_seqs = function(infile="plot_data.txt", outfile="color_plots.pdf", ma
               y=num_seq-k+1 + c(0.2, 0.2, 0.08, 0, -0.08, -0.2, -0.2), col="grey40", lwd=2)
       # arrows(x0=max_n, x1=max_n+3, y0=num_seq-k+1, y1=num_seq-k+1, col="grey", lwd=2, code=2, length=0.1);
     }
-    text(0, rep(num_seq - k + 1, 2), substr(dat$GENE[1],1,20), pos=2, cex=1, adj=0)
+    ## truncate name to 10 characters so it can fit in left margin --- this should accommodate monospace fonts in pdf;
+    ## for variable width fonts in png output, it's possible that ten-letter names with lots of wide letters may go 
+    ## out of bounds, but this may not be an issue in practice.  
+    text(0, rep(num_seq - k + 1, 2), substr(dat$GENE[1],1,10), pos=2, cex=0.8, adj=0)
     if (showParses) {
       myParse = dat$VIT;
       ## myParse = dat$MAP;       
