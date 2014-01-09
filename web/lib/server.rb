@@ -97,15 +97,15 @@ class Server < Sinatra::Base
     job.add_file(path("bin/plaac.jar"), working_directory) # binary
 
     # Create input file on disk.
-    if params[:sequence] && !params[:sequence].empty?
-      # Accept String (pasted)
-      #@@log.debug "raw sequence \"#{params[:sequence].inspect}\""
-      write_string(filename, add_gene_id(params[:sequence]))
-    elsif params[:file] &&
+    if params[:file] &&
         (tmpfile = params[:file][:tempfile]) &&
         (name = params[:file][:filename])
       # Accept File (uploaded)
       write_file(filename, tmpfile)
+    elsif params[:sequence] && !params[:sequence].empty?
+      # Accept String (pasted)
+      #@@log.debug "raw sequence \"#{params[:sequence].inspect}\""
+      write_string(filename, add_gene_id(params[:sequence]))
     else
       @error = "No sequence."
       @@log.info(@error)
