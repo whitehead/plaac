@@ -99,6 +99,7 @@ class Server < Sinatra::Base
     # Create input file on disk.
     if params[:sequence] && !params[:sequence].empty?
       # Accept String (pasted)
+      #@@log.debug "raw sequence \"#{params[:sequence].inspect}\""
       write_string(filename, add_gene_id(params[:sequence]))
     elsif params[:file] &&
         (tmpfile = params[:file][:tempfile]) &&
@@ -317,6 +318,7 @@ class Server < Sinatra::Base
 
   def scrub(str)
     str.gsub!(/ /,' ') # remove non-breaking space
+    str
   end
 
   def time(comment='',&block)
@@ -388,7 +390,9 @@ class Server < Sinatra::Base
   def add_gene_id(sequence)
     raw_sequences = []
     raw_sequence = ""
-    sequence.strip.lines.each do |line|
+    lines = sequence.strip.lines
+    #@@log.debug "sequence_lines: #{lines.to_a.size}"
+    lines.each do |line|
       if line.strip == ""
         unless raw_sequence.empty?
           raw_sequences << raw_sequence
@@ -409,10 +413,12 @@ class Server < Sinatra::Base
       if sequence[0] == '>'
         sequences << sequence
       else
-        sequences << ">gene#{UUID.generate[0..7]}\n"+sequence
+        sequences << ">gene#{UUID.generate[0..7]}\r\n"+sequence
       end
     end
-    sequences.join("\n\n")
+    final_sequence = sequences.join("\n\n")
+    #@@log.debug "final_sequence: #{final_sequence.inspect}"
+    final_sequence
   end
 
   def page_url(page)
