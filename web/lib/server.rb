@@ -302,7 +302,7 @@ class Server < Sinatra::Base
   # writes filename with the contents from string
   def write_string(filename,string)
     File.open(filename,'wb+') do |f|
-      f.write string
+      f.write scrub(string)
     end
   end
 
@@ -310,9 +310,13 @@ class Server < Sinatra::Base
   def write_file(filename,iostream)
     File.open(filename,'wb+') do |f|
       while (blk = iostream.read(65536))
-          f.write blk
+          f.write scrub(blk)
       end
     end
+  end
+
+  def scrub(str)
+    str.gsub!(/ /,' ') # remove non-breaking space
   end
 
   def time(comment='',&block)
