@@ -402,7 +402,7 @@ plot_seqs = function(infile="plot_data.txt",
 
 #######
 
-
+## allowing range of n to show would be more flexible than 1:max_n
 color_code_seqs = function(infile="plot_data.txt", outfile="color_plots.pdf", max_n=NA, showLegend=T, showParses=T) {
   datAll = read.table(infile, header=TRUE, sep="\t", stringsAsFactors=F);
   
@@ -414,8 +414,6 @@ color_code_seqs = function(infile="plot_data.txt", outfile="color_plots.pdf", ma
     print(paste("## This (and potentially others) will be truncated at", max_n, "residues"))
     print("## You can increase max_n in function call, or set it to NA for no limit.")
   }
-  
-  ## should indicate in plots which are truncated, e.g. with arrow at C-term end
   
   hmmColors = rep(c("black","red","green","blue","cyan", "magenta","yellow"), 
                   length.out=length(grep("^HMM", colnames(datAll))));
@@ -432,25 +430,36 @@ color_code_seqs = function(infile="plot_data.txt", outfile="color_plots.pdf", ma
   }
   
   par(mfrow=c(1,1), mar=c(1,1,1,1)+0.1)
-  plot(1, type="n", axes=F, xlab="", ylab="", xaxs="i", yaxs="i", xlim=c(-(max_n/8), max_n + 2), 
+  plot(1, type="n", axes=F, xlab="", ylab="", xaxs="i", yaxs="i", xlim=c(-0.15*max_n, 1.02*(max_n)), 
        ylim=c(0.6, num_seq + 0.4 + ifelse(showLegend,1.6,0)));
   for (k in seq_along(unique_order)) {
     dex = unique_order[k];
     dat = datAll[datAll$ORDER==dex,]; 
     aaColorVec = aaColors[match(dat$AA,names(aaColors))];
     aaColorVec[is.na(aaColorVec)]=="#666666";
-    for (i in seq_along(aaColorVec)) {
+    for (i in seq_len(min(length(aaColorVec), max_n))) {
       lines(c(i-1,i), rep(num_seq - k + 1, 2), col=aaColorVec[i], lwd=14, lend=1);
     }
-    text(0, rep(num_seq - k + 1, 2), substr(dat$GENE[1],1,20), pos=2, cex=1, adj=0)
+    if (length(aaColorVec) > max_n) {
+      print(paste("## truncating sequence", dat$GENE[1]))
+      lines(x=c(max_n, 1.01*max_n, 1.005*max_n, 1.01*max_n, 1.005*max_n, 1.01*max_n, max_n), 
+              y=num_seq-k+1 + c(0.2, 0.2, 0.08, 0, -0.08, -0.2, -0.2), col="grey40", lwd=2)
+      # arrows(x0=max_n, x1=max_n+3, y0=num_seq-k+1, y1=num_seq-k+1, col="grey", lwd=2, code=2, length=0.1);
+    }
+    ## truncate name to 10 characters so it can fit in left margin --- this should accommodate monospace fonts in pdf;
+    ## for variable width fonts in png output, it's possible that ten-letter names with lots of wide letters may go 
+    ## out of bounds, but this may not be an issue in practice.  
+    text(0, rep(num_seq - k + 1, 2), substr(dat$GENE[1],1,10), pos=2, cex=0.8, adj=0)
     if (showParses) {
       myParse = dat$VIT;
       ## myParse = dat$MAP;       
       diffParse = diff(myParse)
       segStart = c(0, which(diffParse!=0))
       segEnd = c(which(diffParse!=0),length(diffParse)+1)
+      capDex = max(which(segStart < max_n)) 
+      segEnd = pmin(segEnd, max_n);
       segState = myParse[segEnd]+1;
-      for (i in seq_along(segStart)) {
+      for (i in seq_len(capDex)) {
         lines(c(segStart[i],segEnd[i]), rep(num_seq - k + 1 - 0.20, 2), pch=22,
               col=hmmColors[segState[i]], bg=hmmColors[segState[i]], lwd=3, lend=1);
         lines(c(segStart[i],segEnd[i]), rep(num_seq - k + 1 + 0.20, 2), pch=22,
