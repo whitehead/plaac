@@ -147,7 +147,12 @@ class Server < Sinatra::Base
     # If we only have one gene, skip to visualization
     if gene_count == 1
       params['token'] = job.token
-      cookies[:prion_finder_picklist] = "1"
+      #cookies[:prion_finder_picklist] = "1"
+      response.set_cookie(:prion_finder_picklist,
+                          value: '1',
+                          domain: nil,
+                          path: '/')
+
       display_prion_candidates()
     else
       redirect "#{$config[:apppath]}/candidates/#{job.token}"
