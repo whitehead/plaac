@@ -16,7 +16,7 @@ require 'job'
 
 if RUBY_VERSION =~ /1.9/ # assuming you're running Ruby ~1.9
   Encoding.default_external = Encoding::UTF_8
-  #Encoding.default_internal = Encoding::UTF_8
+  Encoding.default_internal = Encoding::UTF_8
 end
 
 # ensure required directories
@@ -336,14 +336,13 @@ class Server < Sinatra::Base
         picklist_ids = []
       end
     end
+    @@log.debug "picklist_ids.size = #{picklist_ids.size}"
 
     if filter
       # filter with grep
-      time('ruby') {
-        all_lines = File.open(filename).lines.each_with_index.map{|line,i| [line,i]}
-        @picklist = all_lines.select{|pair| picklist_ids.include? pair[1] }
-        filtered = all_lines.select{|pair| pair[0] =~ filter}
-      }
+      all_lines = File.open(filename).lines.each_with_index.map{|line,i| [line,i]}
+      @picklist = all_lines.select{|pair| picklist_ids.include? pair[1] }
+      filtered = all_lines.select{|pair| pair[0] =~ filter}
 
       @total = filtered.size
     else
@@ -373,6 +372,7 @@ class Server < Sinatra::Base
       @dataset = all_lines.take(@per_page)
     end
 
+    @@log.debug "load_candidates size:[%s, %s]" % [@dataset.size, @picklist.size]
     [@dataset, @picklist]
   end
 
