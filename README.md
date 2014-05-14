@@ -27,8 +27,8 @@ features of prionogenic proteins](http://www.sciencedirect.com/science/article/p
 *Cell* 137, 146–58.  
 
 * Lancaster, A.K., Nutter-Upham, A., Lindquist, King, O.D. (2014)
-PLAAC: a web and command-line application to identify proteins with
-Prion-Like Amino Acid Composition *Bioinformatics* (submitted)
+[PLAAC: a web and command-line application to identify proteins with
+Prion-Like Amino Acid Composition](http://bioinformatics.oxfordjournals.org/content/early/2014/05/13/bioinformatics.btu310.abstract) *Bioinformatics* doi:10.1093/bioinformatics/btu310
 
 
 Installation
@@ -39,7 +39,7 @@ Installation
     cd cli
     ./build_plaac.sh
 
-This will build a ```plaac.jar``` file , as well as column outputs for the website in the ```_plaac_headers.haml``` both in the ```cli/target``` subdirectory.  More  detailed instructions for the use of the ```plaac``` cli are found in [```cli/README.md```](https://github.com/whitehead/PLAAC/blob/master/cli/README.md).
+This will build a ```plaac.jar``` file , as well as column outputs for the website in the ```_plaac_headers.haml``` both in the ```cli/target``` subdirectory.  More  detailed instructions for the use of the ```plaac``` cli are found in [```cli/README.md```](https://github.com/whitehead/plaac/blob/master/cli/README.md).
 
 
 ### Web-application
@@ -53,5 +53,5 @@ If the column outputs from cli version have changed (i.e. in ```cli/src/plaac.ja
 
     cp target/_plaac_headers.haml ../web/views/
 
-The remaining installation steps are detailed in the [```web/README.md```](https://github.com/whitehead/PLAAC/blob/master/web/README.md) (note that ```Rscript``` 
+The remaining installation steps are detailed in the [```web/README.md```](https://github.com/whitehead/plaac/blob/master/web/README.md) (note that ```Rscript``` 
 should be installed).
