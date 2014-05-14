@@ -1,0 +1,127 @@
+
+.container-fluid
+  .row-fluid
+    .span12
+
+
+      .pull-right
+        %ul.inline
+          %li
+            %a.btn.btn-large.btn-success{href: "/candidates/#{@job.token}/tsv"}
+              %i.icon-download.icon-white
+              All Text 
+              %b Summary
+            .inline-help.muted Tab-separated Text File (.tsv)
+          %li
+            %a.btn.btn-success.btn-large{href: "/visualize/#{@job.token}/tsv"}
+              %i.icon-download.icon-white
+              Selected Text 
+              %b Details
+            .inline-help.muted Tab-separated Text File (.tsv)
+      %br.clear
+      .pull-right
+        %ul.inline
+          %li
+            %a.btn.btn-success.btn-large{href: "/visualize/#{@job.token}/strippdf"}
+              %i.icon-download.icon-white
+              Color-coded sequence visualization
+            .inline-help.muted Adobe PDF (.pdf)
+          %li
+            %a.btn.btn-success.btn-large{href: "/visualize/#{@job.token}/pdf"}
+              %i.icon-download.icon-white
+              Score visualization 
+            .inline-help.muted Adobe PDF (.pdf)
+      %br.clear
+
+      %h2 Visualization &amp; Details
+
+      %br.clear
+      #candidates
+        - if !@output.nil? && !@output.empty?
+          %table.long
+            %tr
+              %td
+                %b Sequences
+              %td &nbsp;
+            - @output.each_with_index do |row,r|
+              - row = row.first
+              - next if row =~ /^SEQid/
+              %tr
+                %td.tt
+                  %a{href: "#img#{r}"}
+                    %i.icon-arrow-down
+                    = row
+                %td
+                  - if row =~ /[\s|](NP_[\d\.]+)[\s|]/
+                    - np_number = $1.to_s
+                    %a{target:'_blank',href:"http://www.ncbi.nlm.nih.gov/protein/#{np_number}"}
+                      %img{src:'/images/ncbi.png', border:0}
+                      = np_number
+          %hr
+            -# Output the "strip"-style plot
+            %b Color-coded visualization
+            %img{src: "/visualize/#{@job.token}/strippng", style:'border:1px solid #efefef'}              
+          - @output.each_with_index do |row,r|
+            - row = row.first
+            - next if row =~ /^SEQid/
+            %hr
+            .detail
+              %a.anchor{name: "img#{r}"}
+              %a{href: '#top'}
+                %i.icon-arrow-up
+                top
+              %br
+              %br.clear
+
+              - row = @candidates[r]
+              - if row.nil?
+                - puts "plaac - could not find candidate details #{@job.token}"
+                .alert.alert-block
+                  %h4 Warning
+                  Could not find candidate details.
+                - next
+              - #idstr = row[@idx[:SEQid]].split(/\|/)
+              - idstr = row.nil? ? ["???"] : row[@idx[:SEQid]].split(/\|/)
+              - idstr = "<b>" + idstr[0] + "</b><br/><small>"+ Array(idstr[1..-1]).join("|") + "</small>"
+              = idstr
+              %br
+              %br
+              %table.long#candidate_list{style:'background: white'}
+                %tr.header_details
+                  %th{width:'1%'} &nbsp;
+                  %th COREscore
+                  %th LLR
+                  %th PAPAprop
+                  %th PAPAfi
+                  %th
+                    %a{href: '/details#output'} (column descriptions)
+                  %th &nbsp; 
+                  - next if row.first == "SEQid"
+                  -#%tr.candidate_geneId
+                  -#  %td{style:'width:16px ! important'}
+                  -#    %input{id: "chk#{r}", name: 'selected[]', value: r, type: 'checkbox',checked:false}
+                  -#  %td.tt{colspan: 5}
+                  -#    %label{for: "chk#{r}", title: row[@idx[:SEQid]], style: 'color: #393;'}
+                  -#      = row[@idx[:SEQid]]
+                %tr.candidate_details
+                  %td{style:'width:16px ! important'} &nbsp;
+                  %td.tt
+                    %label{for: "chk#{r}"}= row[@idx[:COREscore]]
+                  %td.tt
+                    %label{for: "chk#{r}"}= row[@idx[:LLR]]
+                  %td.tt
+                    %label{for: "chk#{r}"}= row[@idx[:PAPAprop]]
+                  %td.tt
+                    %label{for: "chk#{r}"}= row[@idx[:PAPAfi]]
+                  %td
+                    - if row[@idx[:SEQid]] =~ /[\s|](NP_[\d\.]+)[\s|]/
+                      - np_number = $1.to_s
+                      %a{target:'_blank',href:"http://www.ncbi.nlm.nih.gov/protein/#{np_number}"}
+                        %img{src:'/images/ncbi.png', border:0}
+                        = np_number
+
+              %img{src: "/visualize/#{@job.token}/images/#{r+1}.png", style:'border:1px solid #efefef'}
+
+-#Local Variables: 
+-#indent-tabs-mode: nil
+-#End:

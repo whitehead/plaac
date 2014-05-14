@@ -1,0 +1,148 @@
+- n = @total
+- formatted_n = n.to_s.reverse.gsub(/...(?=.)/,'\&,').reverse
+.container-fluid
+  .row-fluid
+    .span12
+
+      .pull-right
+        %a.btn.btn-large.btn-success{href: "/candidates/#{@job.token}/tsv"}
+          %i.icon-download.icon-white
+          Download
+          %b All
+          Text Results
+        .inline-help.muted Tab-separated Text File (.tsv)
+
+      %h2 Prion Candidates
+      %p Computationally predicted prion characteristics for each of the #{formatted_n} proteins.
+
+.container-fluid
+  .row-fluid#visualize
+    .span12
+
+      %hr{style:'border-top: 5px solid #eee'}
+
+      %h2 Visualize Results
+      %p Select proteins for visualization and detailed analysis from the available proteins ranked by COREscore.
+
+
+  /* XXX THIS IS HIDDENb
+  .row-fluid{style: 'display:none;'}
+    .span12
+      %fieldset
+        %legend.collapsible Advanced Options
+        %table.collapsed{width:'100%'}
+          %tr
+            %td
+              %label{for:'len'} Core Length
+              %br
+              %input{id:'len', name:'len', value:60}
+            %td
+              %span Background Probabilities
+              %br
+
+              %input{id:'alpha0',name:'alpha', type:'radio', value:'0', checked: true}
+              %label{for:'alpha0'} Saccharomyces cerevisiae
+              %br
+
+              %input{id:'alpha1',name:'alpha', type:'radio', value:'1'}
+              %label{for:'alpha1'} from fasta file*
+              .mute.footnote *Only appropriate when running across an entire proteome.
+
+
+  .row-fluid
+    .span12
+
+      %table#results_layout
+        %tr
+          %td#results_candidates
+            %table#candidates.table-bordered{width: '100%'}
+              %tr
+                %td{style:'background: #efefef'}
+                  - if @candidates.nil? || @candidates.empty?
+                    -#:javascript
+                    -#  setTimeout("location.reload(true);", 1000);
+
+                  - if !@candidates.nil? && !@candidates.empty?
+                    %table{width:'100%',style:'border-bottom: 1px solid #ccc'}
+                      %tr
+                        %td
+                          %form{id: 'filter_form', action: "#{$config[:apppath]}/candidates/#{@job.token}"}
+                            Enter name to filter:
+                            %br
+                            %input{name:'filter',value: params[:filter]}
+                            %input{type:'submit', value:'filter'}
+                        %td.text-right
+                          = haml :_pagination
+
+                    %table.long#candidate_list{style:'background: white'}
+                      %tr.header_geneId
+                        %th{style:'width:16px ! important'}
+                          %input.all_toggle{type: 'checkbox',checked:false, id:'chkAll', title: "Toggle all on page"}
+                            %label{for: "chkAll"}
+                        %th{colspan: 5}
+                          %label{style:'color: green'} SEQid
+                      %tr.header_details
+                        %th{width:'1%'} &nbsp;
+                        %th COREscore
+                        %th LLR
+                        %th PAPAprop
+                        %th PAPAfi
+                        %th{width:'10%'}
+                          %a{href: '/details#output'} (column descriptions)
+                      - @candidates.each do |line,r|
+                        - row = line.split(/\t/)
+                        - next if row.first == "SEQid"
+                        %tr.candidate_geneId
+                          %td{style:'width:16px ! important'}
+                            %input{id: "chk#{r}", name: 'selected[]', value: r, type: 'checkbox',checked:false}
+                          %td.tt{colspan: 5}
+                            %label{for: "chk#{r}", title: row[@idx[:SEQid]], style: 'color: #393;'}
+                              = row[@idx[:SEQid]]
+                        %tr.candidate_details
+                          %td{style:'width:16px ! important'} &nbsp;
+                          %td.tt
+                            %label{for: "chk#{r}"}= row[@idx[:COREscore]]
+                          %td.tt
+                            %label{for: "chk#{r}"}= row[@idx[:LLR]]
+                          %td.tt
+                            %label{for: "chk#{r}"}= row[@idx[:PAPAprop]]
+                          %td.tt
+                            %label{for: "chk#{r}"}= row[@idx[:PAPAfi]]
+                          %td
+                            - if row[@idx[:SEQid]] =~ /[\s|](NP_[\d\.]+)[\s|]/
+                              - np_number = $1.to_s
+                              %a{target:'_blank',href:"http://www.ncbi.nlm.nih.gov/protein/#{np_number}"}
+                                %img{src:'/images/ncbi.png', border:0}
+                                = np_number
+                  %table{width:'100%'}
+                    %tr
+                      %td.text-right
+                        %hr
+                        = haml :_pagination
+
+          %td#results_picklist
+            .btn.clear_picklist.pull-right clear
+            %h4 Currently selected candidates
+            %br.clear
+            %ul#picklist.blank
+              - if !@picklist.nil? && !@picklist.empty?
+                - @picklist.each do |line,r|
+                  - row = line.split(/\t/)
+                  - next if row.first == "SEQid"
+                  %li
+                    %label.checkbox{for: "picklist_chk#{r}", title: row[@idx[:SEQid]]}
+                      %input{id: "picklist_chk#{r}", name: 'selected[]', value: r, type: 'checkbox',checked:false}
+                      - idstr = row[@idx[:SEQid]].split(/\|/)
+                      - idstr = "<b>" + idstr[0] + "</b><br/><small>"+ idstr[1..-1].join("|") + "</small>"
+                      = idstr
+            %form{id:'display_form', action:"#{$config[:apppath]}/visualize", method:'post'}
+              %input{type:'hidden', id:'len', name:'len', value:60}
+              %input{type:'hidden', name:'alpha', value:'0', checked: true}
+
+              %input{type:'hidden', name:'token', value: @job.token}
+              .pull-right
+                %input#visualize_btn.btn.btn-large{type:'submit',value:'Visualize!'}
+
+-#Local Variables: 
+-#indent-tabs-mode: nil
+-#End:

@@ -1,0 +1,44 @@
+- @total ||= 100
+- @page ||= 1
+- @per_page ||= 25
+
+- paging_window ||= 3
+- win_start = [@page - paging_window, 1].max
+- win_end = [@page + paging_window, @pages].min
+
+- ##########################################################
+%span.info Page #{@page} of #{@pages} (#{@total} records)
+.pagination
+  %ul{style:'padding-left:0'}
+    - if @page > paging_window
+      %li
+        %a{href: page_url(1)}
+          %i.icon-step-backward
+          first
+
+    - if @page > 1
+      %li
+        %a{href: page_url(@page-1)}
+          %i.icon-backward
+          prev
+
+    - win_start.upto(win_end) do |page_n|
+      -if (@page==page_n)
+        %li.disabled
+          %a{href: '#'}= page_n
+      - else
+        %li
+          %a{href: page_url(page_n)}= page_n
+
+    - if @page < @pages
+      %li
+        %a{href: page_url(@page+1)}
+          next
+          %i.icon-forward
+
+    - if @page < @pages - paging_window
+      %li
+        %a{href: page_url(@pages)}
+          last
+          %i.icon-step-forward
+

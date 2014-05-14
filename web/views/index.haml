@@ -1,0 +1,148 @@
+
+.container
+  .hero-unit{style: 'padding-top: 2px; padding-bottom: 2px'}
+    %p
+      %strong PLAAC 
+      searches protein sequences to identify probable prion subsequences using a
+      hidden-Markov model (HMM) algorithm.
+      %a{href: '/details'} documentation and how to cite
+      -#.muted (Note that the foreground probabilities for the HMM have been updated based on the hits from [1])
+
+.container
+%form{action: "#{$config[:apppath]}/find", method:'post', enctype:'multipart/form-data'}
+  .container
+    .row
+      .span12
+        - unless @success.nil?
+          .alert.alert-success= @success
+        - unless @error.nil?
+          .alert.alert-error= @error
+    .row
+      .span12
+        %h4 Paste or Upload Protein Sequence*
+    .row
+      .span10.offset1
+        %textarea{id: 'sequence', name:'sequence', size:20, style:'width: 95%;font-family:"Courier New", Courier, monospace'}
+        .pull-right
+          .help-block.mute.footnote
+            *Note that all sequences must contain only valid amino acid identifiers.  Uploaded files
+            need to be in
+            %a{target:'_blank',href:"http://zhanglab.ccmb.med.umich.edu/FASTA/"}
+              FASTA format.
+            Uploaded files override pasted sequences.
+        %input#fasta_file{name:'file', type:'file'}
+        %span#clear_file.help-block.hide
+          %a.badge{href:"javascript:clear_fasta_file();"}
+            %i.icon-remove.icon-white
+            clear
+
+    .row
+      .span12
+        %h4 Options
+        %hr{style:'margin-top: 0'}
+
+    .row
+      .span10.offset1
+        %label
+          %b Core&nbsp;Length
+          .pull-right
+            %input.input{id:'len', type:'text', name:'len', value:60, size: 6, style:'display: inline-block'}
+        %hr.clear
+
+    /*.row
+    /*  .span10.offset1
+    /*    %label.background_probabilities_label
+    /*      %b
+    /*        Organism Background Probabilities
+    /*      .pull-right
+    /*    %hr.clear
+    .row
+      .span10.offset1
+        .background-section
+          .pull-right
+            %input.input-mini{id:'alpha',name:'alpha', type:'text', value:'100', style:'display: inline-block'}
+          %label
+            %b
+              Relative weighting of background probabilities (
+              %em &alpha;
+              )
+            .help-block.mute.footnote
+              0 meaning all from selected organism's background frequencies. 100 meaning all from S. cerevisae.
+
+            %table{width: '100%'}
+              %tr
+                %td{colspan:2}
+                  %div{id:'alphaSlider'}
+              %tr
+                %td#file_background{width: '50%'}
+                  %select#organisms.input-medium{ name: 'bg' }
+                    %option{ value: ''} Select one!
+                    %option{ value: 'input_sequence'} From input sequence
+                    - @bg_freqs.each do |id, name|
+                      %option{ value: id, title: name }
+                        %em= name
+                  /*Proteome-wide background frequencies 
+                  /*%br
+                  /*from selected organism
+                %td#organism_background{style: 'text-align:right; border-left: 1px solid #ccc;'}
+                  background frequencies from S. cerevisae
+                  /*Proteome-wide background frequencies 
+                  /*%br
+                  /*from FASTA Sequence*
+
+          .help-block.mute.footnote *"From input sequence" is only appropriate when running across an entire proteome.
+
+    .row
+      .span8
+      .span4.text-right
+        %input#run_analysis.btn.btn-large.btn-primary{type:'submit', value:'Run Analysis'}
+    .row
+      .span12
+        %hr{style: 'border-top: 5px solid #eee'}
+    .row
+      .span4
+        %h4{style:'margin-top:0; padding-top:0'} Precomputed Proteomes
+        %ul.unstyled
+          %li
+            %a{href:"#{$config[:apppath]}/Scer-all-proteins-2012-07-20.xls"}
+              %i.icon-download
+              Yeast
+              %em (S. cerevisiae)
+              (XLS file)
+            .muted (most recent: 2012-07-20)
+
+      .span4          
+        %h4{style:'margin-top:0; padding-top:0'} Links
+        %ul
+          %li
+            %a{href:"http://profiles.umassmed.edu/Profiles/display/132367"}
+              Oliver D. King, UMass Medical School
+          %li
+            %a{href:"http://scholar.harvard.edu/lancaster"}
+              Alex K. Lancaster, Harvard Medical School
+          %li
+            %a{href:"http://lindquistlab.wi.mit.edu/"}
+              Lindquist Lab, Whitehead Institute
+              
+          %li
+            %a{href:"http://jura.wi.mit.edu/cgi-bin/bio/draw_enrichment.pl"}
+              Protein Sequence Enrichment Tool
+            available from the Whitehead Institute's
+            %a{href:"http://jura.wi.mit.edu/bio/"}
+              Bioinformatics and Research Computing
+            group.
+
+      .span4
+        %h4{style:'margin-top:0; padding-top:0'} Download code
+        %ul.unstyled
+          %li
+            %a{href:"http://github.com/whitehead/plaac"}
+              %i.icon-download
+              GitHub repo
+
+%br.clear
+
+
+-#Local Variables:
+-#indent-tabs-mode: nil
+-#End:

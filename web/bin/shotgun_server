@@ -1,0 +1,2 @@
+#!/bin/bash
+shotgun config.ru --port 4567 -o '0.0.0.0' "$@" 2>&1

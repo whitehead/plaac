@@ -1,0 +1,233 @@
+body
+  //background: #efefef
+
+
+table
+  td
+    vertical-align: top
+
+.text-right
+  text-align: right
+
+#progress
+  ul
+    width: 150px
+    margin: auto
+    li.step
+      list-style: none
+      font-family: sans-serif
+      font-size: 1.5em
+      margin-bottom: 5px
+    li.step.complete
+    li.step.failure
+      color: red
+    li.step.success
+      color: green
+    li.step.active
+      font-weight: bold
+    li.step.active.display,
+    li.step.active.success
+      font-weight: bold
+    li.step.active.failure
+      font-weight: bold
+    li.step.waiting
+      color: #ccc
+
+.zero-height
+  height: 0px
+
+.hide
+  display: none
+
+.command-handle
+  cursor: pointer
+
+#footer
+  font-size: .7em
+  font-family: sans-serif
+  color: #999
+  text-align: center
+  margin-top: 10px
+
+table#results_layout
+  table-layout: fixed
+  width: 100%
+
+table#candidate_list
+  table-layout: fixed
+  width: 100%
+  td
+    overflow: hidden
+
+td#results_candidates
+  width: 70%
+td#results_picklist
+  width: 30%
+  border-left: 2px solid #ccc
+  background: #efefef
+  padding: 5px
+
+  ul
+    padding: 0
+    li
+      background: white
+      border-left: 2px solid #ccc
+      border-right: 2px solid #ccc
+      padding: 3px
+      margin-bottom: 3px
+
+table.long
+  th
+    text-align: left
+    color: #666
+    background: #efefef
+  tr.header_geneId
+    th
+      border-bottom: 1px dotted #ccc
+  tr.header_details
+    th
+      border-bottom: 2px solid #ccc
+  td.tt
+    font-family: mono
+    font-size: .8em
+
+.hover
+  background: #ffffef
+
+
+#content > div,
+#content > table
+  border: 1px solid #ddd
+  background: white
+  padding: 10px
+  margin: auto
+  margin-top: 5px
+
+#results
+  pre
+    background: #efefef
+
+  table
+    td
+      padding: 0
+
+    /*tr:hover
+      background: #ffffef
+
+
+#sequence
+  height: 200px
+  width: 38em
+
+/*.link
+/*  color: blue
+/*  text-decoration: underline
+/*  cursor: pointer
+
+/*.collapsible
+/*  cursor: pointer
+/*
+/*.collapsed
+/*  display: none
+
+.right
+  text-align: right
+
+.right-right
+  float: right
+  text-align: right
+
+/*.error
+/*  background: #ffefef
+/*  padding: 5px
+/*  border: 1px solid #fcc
+/*  margin-bottom: 5px
+/*.success
+/*  background: #efffef
+/*  padding: 5px
+/*  border: 1px solid #cfc
+/*  margin-bottom: 5px
+
+a.nolink
+  cursor: default
+
+ul
+  margin: 0
+  padding: 0
+  padding-left: 15px
+
+.log
+  font-family: monospace
+  white-space: nowrap
+
+  .INFO
+    color: green
+  .WARN
+    color: brown
+  .ERROR
+    color: red
+  .DEBUG
+    color: #999
+form
+  margin: 0
+  padding: 0
+  display: inline-block
+  width: 100%
+
+  fieldset
+    /*border: 1px solid #ddd
+
+  input
+    /*text-align: left
+
+  input[type=submit]
+    /*margin-top: 5px
+
+  textarea
+    width: 100%
+    height: 40em
+    white-space: nowrap
+
+  .right
+    text-align: right
+.mute
+  color: #666
+
+.footnote
+  font-style: italic
+  font-size: .8em
+
+.anchor
+  padding-top: 50px
+
+.clear
+  clear: both
+
+#stderr pre
+  color: #c33
+
+ul.blank
+  list-style: none
+
+#edit
+  width: auto
+  margin: 10px
+  overflow: auto
+
+tr.candidate_geneId
+  td
+    border-top: 2px solid #efefef !important
+    label
+      cursor: pointer
+tr.candidate_details
+  td
+    border-top: 1px dotted #efefef !important
+    label
+      cursor: pointer
+
+#results_picklist
+  label
+    cursor: pointer
+
+.pagination
+  margin: 0

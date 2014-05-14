@@ -1,0 +1,114 @@
+%li
+  %strong SEQid
+  sequence name from fasta file
+%li
+  %strong MW
+  Michelitsh-Weissman [PNAS 2000] score --- maximum number of N + Q in window of at most 80 AA
+%li
+  %strong MWstart
+  index of start position of window with max MW score.
+%li
+  %strong MWend
+  index of end position of window with max MW score
+%li
+  %strong MWlen
+  length of window used for MW score [smaller of 80 and PROTlen].
+%li
+  %strong LLR
+  max sum of PLAAC log-likelihood ratios (base 4) in window of size c [NaN if PROTlen &lt; c]
+%li
+  %strong LLRstart
+  index of start position of window with max LLR score [-1 if PROTlen &lt; c]
+%li
+  %strong LLRend
+  index of end position of window with max LLR score [-1 if PROTlen &lt; c]
+%li
+  %strong LLRlen
+  length of window used for LLR score [should be c]
+%li
+  %strong NLLR
+  normalized LLR score, i.e. LLR/LLRlen [NaN if PROTlen &lt; c]
+%li
+  %strong VITmaxrun
+  maximum length of consecutive PrD state in Viterbi parse
+%li
+  %strong COREscore
+  max sum of PLAAC LLRs in window of size c contained entirely within Viterbi parse [NaN if VITmaxrun &lt; c]
+%li
+  %strong COREstart
+  index of start position of window with max COREscore [-1 if VITmaxrun &lt; c]
+%li
+  %strong COREend
+  index of end position of window with max COREscore [-2 if VITmaxrun &lt; c]
+%li
+  %strong CORElen
+  length of window used for CORElen [should be either c or 0]
+%li
+  %strong PRDscore
+  sum of PLAAC LLRs in full region of Viterbi parse containing CORE region, if any [NaN otherwise].
+%li
+  %strong PRDstart
+  index of start position of window with PRDscore [-1 if VITmaxrun &lt; c]
+%li
+  %strong PRDend
+  index of end position of window with PRDscore [-2 if VITmaxrun &lt; c]
+%li
+  %strong PRDlen
+  length of window used for PRDscore
+%li
+  %strong PROTlen
+  number of AAs in protein, not including terminal stop codon if any.
+%li
+  %strong HMMall
+  log-likelihood ratio for sequence under two-state HMM vs. one-state background HMM
+%li
+  %strong HMMvit
+  log-likelihood ratio for sequence under Viterbi parse of two-state HMM vs. one-state background HMM
+%li
+  %strong COREaa
+  AA sequence at which COREscore is attained [- if VITmaxrun &lt; c]
+%li
+  %strong STARTaa
+  first 15 AA of PRDaa [- if VITmaxrun &lt; c]
+%li
+  %strong ENDaa
+  last 15 AA of PRDaa [- if VITmaxrun &lt; c]
+%li
+  %strong PRDaa
+  AA sequence at which PRDscore is attained [- if VITmaxrun &lt; c]
+%li
+  %strong FInumaa
+  number of AAs predicted to be disordered by FoldIndex [Prilusky et al, Bioinformatics, 2005] (exludes runs of under 5 AA)
+%li
+  %strong FImeanhydro
+  hydropathy score &lt;H&gt; for entire protein [Uversky et al, Proteins, 2000]
+%li
+  %strong FImeancharge
+  mean charge &lt;R&gt; for entire protein [Uversky et al, Proteins, 2000]
+%li
+  %strong FImeancombo
+  disorder score for entire protein: 2.785&lt;H&gt; - |&lt;R&gt;| - 1.151 [Uversky et al, Proteins, 2000]
+%li
+  %strong FImaxrun
+  length of longest run of predicted disorder by FoldIndex
+%li
+  %strong PAPAcombo
+  signed distance to PAPA decision surface [as in King et al Brain Res 2012]
+%li
+  %strong PAPAprop
+  maximal score of PAPA prion propensities (averges of averages) in region with negative FI score [Toombs et al MBC 2012]
+%li
+  %strong PAPAfi
+  FI score (averages of averages) at PAPAcen
+%li
+  %strong PAPAllr
+  PLAAC LLR score (average) at PAPAcen
+%li
+  %strong PAPAllr2
+  PLAAC LLR score (average of averages) at PAPAcen
+%li
+  %strong PAPAcen
+  index of center of window at which PAPAprop is obtained
+%li
+  %strong PAPAaa
+  AA sequence of width W centered at PAPAcen

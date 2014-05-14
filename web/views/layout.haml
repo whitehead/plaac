@@ -1,0 +1,27 @@
+!!!
+%head
+  %title PLAAC: finding sequences with Prion-Like Amino Acid Composition
+  %link{ :href => "#{$config[:apppath]}/bootstrap/css/bootstrap.min.css", :type => 'text/css', :rel => 'stylesheet' }
+  %link{ :href =>  "#{$config[:apppath]}/sass/application.css", :type => 'text/css', :rel => 'stylesheet' }
+  %link{ :href =>  "#{$config[:apppath]}/css/ui-lightness/jquery-ui-1.10.3.custom.min.css", :type => 'text/css', :rel => 'stylesheet' }
+  %script{ :src => "#{$config[:apppath]}/js/jquery-1.7.1.min.js", :type => 'text/javascript'}
+  %script{ :src => "#{$config[:apppath]}/js/jquery-ui-1.10.3.custom.min.js", :type => 'text/javascript'}
+  %script{ :src => "#{$config[:apppath]}/js/jquery.cookie.js", :type => 'text/javascript'}
+  %script{ :src => "#{$config[:apppath]}/bootstrap/js/bootstrap.min.js", :type => 'text/javascript'}
+  %script{ :src => "#{$config[:apppath]}/js/underscore-min.js", :type => 'text/javascript'}
+  %script{ :src => "#{$config[:apppath]}/coffee/console_stub.js", :type => 'text/javascript'}
+  %script{ :src => "#{$config[:apppath]}/coffee/application.js", :type => 'text/javascript'}
+%body
+  .navbar
+    .navbar-inner
+      .container
+        %a.brand{href: "#{$config[:apppath]}/"} #{$config[:apptitle]}
+
+  =yield
+
+  #footer
+    #{ENV["RAILS_ENV"]} - #{$version} - #{Time.now.to_s}
+
+-#Local Variables:
+-#indent-tabs-mode: nil
+-#End:
