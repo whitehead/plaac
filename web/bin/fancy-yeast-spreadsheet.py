@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # Author: Alex Lancaster <alexl@wi.mit.edu>
 # Whitehead Institute for Biomedical Research
-# Date: 2012-11-15
+# Date: 2014-05-17
 
 # Usage:
-# fancy-spreadsheet.py inputfile-from-spewey [-|numhits] output.xls [list-of-genes-to-include.txt] [gff3-file]
+# fancy-yeast-spreadsheet.py inputfile-from-plaac [-|numhits] output.xls [gff3-file] [list-of-genes-to-include.txt] 
 
 # FIXME/TODO:
 # - add original ranking from Alberti & Halfmann
@@ -13,11 +13,7 @@
 # - get mouse/Drosophila?
 # - add category (?) of gene
 
-import os, sys, csv, string
-
-# override path to ensure we use version of pybedtools that work
-# FIXME: should update to use new version
-#sys.path.insert(0, '/usr/local/lib/python2.6/dist-packages/pybedtools-0.5rc1-py2.6-linux-x86_64.egg/')
+import os, sys, csv, string, math
 import pybedtools
 
 import urllib
@@ -29,7 +25,10 @@ def get_width(num_characters):
     return int((1+num_characters) * 256)
 
 def move_to_back(li, item):
-    li.remove(item)
+    try:
+        li.remove(item)
+    except ValueError:
+        print item, li
     li.append(item)
     return li
 
@@ -55,41 +54,42 @@ if len(sys.argv) > 2:
         outputfilename = sys.argv[3]
 
         if len(sys.argv) > 4:
-            filterfile = open(sys.argv[4], 'r')
-            genes = [li.rstrip().upper() for li in filterfile.readlines()]
-            include = []
-            
-            candidate_list = open("%s-candidate-list" % outputfilename, 'w')
-            for gene in genes:
-                # convert all genes to systematic names
-                systematic = common_map[gene]
-                include.append(systematic)
-                candidate_list.write("%s\t%s\n" % (systematic, gene))
-            candidate_list.close()
+
+            # use GFF3 file to get data for spreadsheet
+            gff_filename = sys.argv[4]
+            # sgd_gff = pybedtools.BedTool(gff_filename).remove_invalid().saveas()
+            sgd_gff = pybedtools.BedTool(gff_filename).remove_invalid().saveas()
+
+            # filter out only the ORFs ('gene'  in GFF), also skip the 2-micron plasmid
+            # also check for transposable_element_gene (needed for YAR009C)
+            all_orfs = sgd_gff.filter(lambda f: (f[2] == 'gene' or f[2] == 'transposable_element_gene') and f.chrom != '2-micron')
+
+            orf_map = {}
+            common_map = {}
+            for orf in all_orfs:
+                systematic = orf.attrs['ID']
+                orf_map[systematic] = orf.attrs
+                try:
+                    gene = orf.attrs['gene']
+                    common_map[gene] = systematic
+                except KeyError:
+                    pass
+                # also map back to itself
+                common_map[systematic] = systematic
 
             if len(sys.argv) > 5:
+                filterfile = open(sys.argv[5], 'r')
+                genes = [li.rstrip().upper() for li in filterfile.readlines()]
+                include = []
 
-                # use GFF3 file to get data for spreadsheet
-                #gff_filename = os.path.expanduser("~/solexa_lindquist/seqs/gff/saccharomyces_cerevisiae.gff")
-                gff_filename = sys.argv[5]
-                sgd_gff = pybedtools.BedTool(gff_filename).remove_invalid().saveas()
+                candidate_list = open("%s-candidate-list" % outputfilename, 'w')
+                for gene in genes:
+                    # convert all genes to systematic names
+                    systematic = common_map[gene]
+                    include.append(systematic)
+                    candidate_list.write("%s\t%s\n" % (systematic, gene))
+                candidate_list.close()
 
-                # filter out only the ORFs ('gene'  in GFF), also skip the 2-micron plasmid
-                # also check for transposable_element_gene (needed for YAR009C)
-                all_orfs = sgd_gff.filter(lambda f: (f[2] == 'gene' or f[2] == 'transposable_element_gene') and f.chrom != '2-micron')
-
-                orf_map = {}
-                common_map = {}
-                for orf in all_orfs:
-                    systematic = orf.attrs['ID']
-                    orf_map[systematic] = orf.attrs
-                    try:
-                        gene = orf.attrs['gene']
-                        common_map[gene] = systematic
-                    except KeyError:
-                        pass
-                    # also map back to itself
-                    common_map[systematic] = systematic
 
                 
 
@@ -115,7 +115,9 @@ for inputrow in reader:
     savedinput.append(inputrow)
 
 # sort entries by COREscore, then by LLR
-sortedinput = sorted(savedinput, key=lambda d: (-float(d['COREscore']), -float(d['LLR'])))
+# need to take care of "NaN"
+sortedinput = sorted(savedinput, key=lambda d: (float('inf') if math.isnan(float(d['COREscore'])) else -float(d['COREscore']),
+                                                float('inf') if math.isnan(float(d['LLR'])) else -float(d['LLR'])))
 for order, inputrow in enumerate(sortedinput):
     inputrow["rank_by_corescore"] = order + 1
 
@@ -149,7 +151,7 @@ def write_sheet(sortedinput, sheetnum, header):
 
     # rearrange columns in rest: push lesser-used cols to end of list
     for item in ["PRDstart", "PRDend", "PRDlen", "PROTlen", "COREaa", "STARTaa", "ENDaa", "PRDaa", "PRDscore", \
-                     "MWstart", "MWend", "MWlen", "HMMmap", "HMMvit", "FInumaa", "FImeanhydro", "FImeancharge", "FImeancombo", "FImaxrun"]:
+                     "MWstart", "MWend", "MWlen", "HMMall", "HMMvit", "FInumaa", "FImeanhydro", "FImeancharge", "FImeancombo", "FImaxrun"]:
         move_to_back(rest, item)
 
     # now add them back
@@ -164,7 +166,7 @@ def write_sheet(sortedinput, sheetnum, header):
     # parse fields and generate output Excel file
 
     for inputrow in sortedinput:
-        orf_id = inputrow['geneID']
+        orf_id = inputrow['SEQid']
 
         # if we are filtering, only print out specified hits
         if include:
@@ -190,7 +192,7 @@ def write_sheet(sortedinput, sheetnum, header):
                 if debug: print orf_id, value
                 ws.row(row+1).write(col, value)
             # hyperlink ORF name to SGD
-            elif key == "geneID":
+            elif key == "SEQid":
                 try:
                     value = inputrow[key]
                     formula = 'HYPERLINK("http://www.yeastgenome.org/cgi-bin/locus.fpl?locus=%s";"%s")' % (value, value)
@@ -202,14 +204,14 @@ def write_sheet(sortedinput, sheetnum, header):
             elif key == "gene_name":
                 try:
                     common_name = orf_map[orf_id]['gene']
-                except NameError or KeyError:
+                except (NameError, KeyError) as e:
                     # default back to using the ORF id
                     common_name = orf_id
                 ws.row(row+1).write(col, common_name)
             elif key == "gene_aliases":
                 try:
                     aliases = orf_map[orf_id]['Alias']
-                except NameError or KeyError:
+                except (NameError, KeyError) as e:
                     # if no aliases leave blank
                     aliases = ""
                 if aliases == common_name:
@@ -221,13 +223,13 @@ def write_sheet(sortedinput, sheetnum, header):
             elif key == "orf_status":
                 try:
                     orf_status = orf_map[orf_id]['orf_classification']
-                except NameError or KeyError:
+                except (NameError, KeyError) as e:
                     orf_status = "NA"
                 ws.row(row+1).write(col, orf_status)
             elif key == "description":
                 try:
                     display = orf_map[orf_id]['display']
-                except NameError or KeyError:
+                except (NameError, KeyError) as e:
                     display = orf_id
                 ws.row(row+1).write(col, urllib.unquote(display), shrink_col_style)
             elif key == "COREscore":
@@ -285,8 +287,6 @@ def write_sheet(sortedinput, sheetnum, header):
     for colname in ["PRDstart", "PRDend", "PRDend", "PRDlen", "PROTlen"]:
         set_col_width(colname, header, ws, 8)
 
-
-
 # create Excel writer
 wb = Workbook()
 
@@ -306,10 +306,3 @@ for row_start in xrange(0, total_rows, max_rows_per_sheet):
 
 wb.save(outputfilename)
 tsvfile.close()        
-
-
-
-
-
-
-            
