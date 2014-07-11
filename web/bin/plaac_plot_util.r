@@ -188,7 +188,7 @@ plot_seq = function(dat,
         
       diffParse = diff(mapParse)
       segStart = c(0, which(diffParse!=0)) ## starts of runs in parse
-      segEnd = c(which(diffParse!=0),length(diffParse))+1 ## ends of runs in parse
+      segEnd = c(which(diffParse!=0), length(diffParse)+1) ## ends of runs in parse
       segState = mapParse[segEnd]+1;
       
       for (i in seq_along(segStart)) {
@@ -298,7 +298,7 @@ plot_seq = function(dat,
   }
   
   ##########################################################################
-  ############################# plot protein sequecne  #####################
+  ############################# plot protein sequence  #####################
   ##########################################################################
   
   if (showSeq) {
