@@ -366,7 +366,13 @@ plot_seqs = function(infile="plot_data.txt",
                       seqUnderline=c("FIx2","PLAACx2","PAPAx2"),
                       seqColor="PAPA"){
   
-  datAll = read.table(infile, header=TRUE, sep="\t", stringsAsFactors=F);
+  # datAll = read.table(infile, header=TRUE, sep="\t", stringsAsFactors=F);
+  ## changed from default comment.char="#" in order to allow # in fasta ID
+  datRaw = scan(infile, what="character", sep="\n", quiet=T, quote="")
+  datRaw = datRaw[!grepl("^#", datRaw)] 
+  datAll = read.table(text=datRaw, header=TRUE, sep="\t", stringsAsFactors=F, quote="", comment.char="")
+  rm(datRaw)
+  
   ## test for valid input here?
   
   plotWidth = 12;
@@ -420,7 +426,12 @@ plot_seqs = function(infile="plot_data.txt",
 
 ## allowing range of n to show would be more flexible than 1:max_n
 color_code_seqs = function(infile="plot_data.txt", outfile="color_plots.pdf", max_n=NA, showLegend=T, showParses=T) {
-  datAll = read.table(infile, header=TRUE, sep="\t", stringsAsFactors=F);
+  # datAll = read.table(infile, header=TRUE, sep="\t", stringsAsFactors=F);
+  ## changed from default comment.char="#" in order to allow # in fasta ID
+  datRaw = scan(infile, what="character", sep="\n", quiet=T, quote="")
+  datRaw = datRaw[!grepl("^#", datRaw)] 
+  datAll = read.table(text=datRaw, header=TRUE, sep="\t", stringsAsFactors=F, quote="", comment.char="")
+  rm(datRaw)
   
   ## use positive max_n to enforce max_length and/or to include padding so different plots will have same scale.
   if (is.na(max_n)) max_n = max(datAll$AANUM);          ## use max_n = NA to put no limit on length, but use no extra padding
