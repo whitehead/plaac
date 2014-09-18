@@ -91,7 +91,8 @@ class Server < Sinatra::Base
     session[:core_len] = core_len = params[:len].to_i
     alpha = params[:alpha].to_f
     alpha = 100 if alpha > 100
-    session[:alpha] = alpha = alpha / 100.0 rescue 0.0
+    alpha = alpha / 100.0 rescue 0.0
+    session[:alpha] = alpha 
 
     job = Job.new
     job.script_name = "find_candidates.sh"
@@ -473,8 +474,8 @@ class Server < Sinatra::Base
 
     plaac_candidates_file = File.join(@job.working_directory, @@plaac_candidates)
 
-    core_len = session[:core_len]
-    alpha = session[:alpha]
+    core_len = params[:len] || session[:core_len]
+    alpha = params[:alpha] || session[:alpha]
 
     # passed in from previous session
     bgfreq_filename = session[:bgfreq_filename]
