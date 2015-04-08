@@ -24,31 +24,6 @@
       %h2 Visualize Results
       %p Select proteins for visualization and detailed analysis from the available proteins ranked by COREscore.
 
-
-  /* XXX THIS IS HIDDENb
-  .row-fluid{style: 'display:none;'}
-    .span12
-      %fieldset
-        %legend.collapsible Advanced Options
-        %table.collapsed{width:'100%'}
-          %tr
-            %td
-              %label{for:'len'} Core Length
-              %br
-              %input{id:'len', name:'len', value:60}
-            %td
-              %span Background Probabilities
-              %br
-
-              %input{id:'alpha0',name:'alpha', type:'radio', value:'0', checked: true}
-              %label{for:'alpha0'} Saccharomyces cerevisiae
-              %br
-
-              %input{id:'alpha1',name:'alpha', type:'radio', value:'1'}
-              %label{for:'alpha1'} from fasta file*
-              .mute.footnote *Only appropriate when running across an entire proteome.
-
-
   .row-fluid
     .span12
 
@@ -136,9 +111,8 @@
                       - idstr = "<b>" + idstr[0] + "</b><br/><small>"+ idstr[1..-1].join("|") + "</small>"
                       = idstr
             %form{id:'display_form', action:"#{$config[:apppath]}/visualize", method:'post'}
-              %input{type:'hidden', id:'len', name:'len', value:60}
-              %input{type:'hidden', name:'alpha', value:'0', checked: true}
-
+              /%input{type:'hidden', id:'len', name:'core_len', value:@job.params[:core_len]}
+              /%input{type:'hidden', name:'alpha', value:@job.params[:alpha], checked: true}
               %input{type:'hidden', name:'token', value: @job.token}
               .pull-right
                 %input#visualize_btn.btn.btn-large{type:'submit',value:'Visualize!'}

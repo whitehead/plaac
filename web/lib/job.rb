@@ -24,6 +24,25 @@ class Job
     @stderr
   end
 
+  def params=(hash)
+    create_working_directory
+    IO.write(File.join(working_directory,'params.yml'), YAML.dump(hash))
+    nil
+  end
+
+  def params
+    @params ||= YAML.load(IO.read(File.join(working_directory,'params.yml')))
+    @params
+  end
+
+  def update_params(key,val)
+    h = params
+    h[key] = val
+    self.params = h
+    @params = nil
+    nil
+  end
+
   def working_directory
     File.join(WORKING_DIRECTORY_BASE, token)
   end
