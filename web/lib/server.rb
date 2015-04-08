@@ -88,11 +88,11 @@ class Server < Sinatra::Base
       return haml(:index)
     end
 
-    session[:core_len] = core_len = params[:len].to_i
+    core_len = params[:len].to_i
     alpha = params[:alpha].to_f
     alpha = 100 if alpha > 100
     alpha = alpha / 100.0 rescue 0.0
-    session[:alpha] = alpha 
+    alpha 
 
     job = Job.new
     job.script_name = "find_candidates.sh"
@@ -134,13 +134,20 @@ class Server < Sinatra::Base
 
     bg_freqs = read_bg_freqs() # ignore warning, bg_freqs used by filename lambdas
     bgfreq_filename = bg_freq_filename[params[:bg]]
-    session[:bgfreq_filename] = bgfreq_filename
-    session[:bg] = params[:bg]
+    bg = params[:bg] if @bg_freqs.keys.include? params[:bg]
 
     if !bgfreq_filename.nil? && params[:bg] != "input_sequence"
       job.add_file(path(bg_freq_local_filename[params[:bg]]), working_directory)
       bgfreq_opt = " -B #{bgfreq_filename} "
     end
+    job.params = {
+      core_len: core_len,
+      alpha: alpha,
+      bgfreq_filename: bgfreq_filename,
+      bg: bg,
+      bgfreq_opt: bgfreq_opt,
+    }
+
 
     job.command = <<-COMMAND.gsub(/\n/,'').squeeze(" ")
       java -jar #{working_directory}/plaac.jar -i #{filename} -c #{core_len} -a #{alpha} #{bgfreq_opt} > #{output_filename};
@@ -161,6 +168,7 @@ class Server < Sinatra::Base
                           value: '1',
                           domain: nil,
                           path: '/')
+      job.update_params(:picklist_ids, [1])
 
       display_plaac_candidates()
     else
@@ -231,7 +239,7 @@ class Server < Sinatra::Base
         FileUtils.touch sorted_flag_file
       end
 
-      @candidates, @picklist = load_candidates(plaac_candidates_file)
+      @candidates, @picklist = load_candidates(@job, plaac_candidates_file)
     else
       redirect "#{$config[:apppath]}/candidates/#{@job.token}"
       return
@@ -289,13 +297,14 @@ class Server < Sinatra::Base
 
   get '/visualize/:token' do
     @job = Job.first(:token => params[:token])
+    p @job.params
     candidates_filename = File.join(@job.working_directory,"plaac_candidates_selected.tsv")
     @output = File.open(candidates_filename).readlines.map{|line| line.split(/\t/)}
 
 
     # TODO: this is stupid, we should be using the plaac_finder_picklist to random access the file, not load the whole thing.
     plaac_candidates_file = File.join(@job.working_directory, @@plaac_candidates)
-    lines = File.open(plaac_candidates_file).lines
+    lines = IO.readlines(plaac_candidates_file)
     lines = lines.reject{|line| line =~ /^##/}
     header_line = lines.first
 
@@ -303,8 +312,10 @@ class Server < Sinatra::Base
     @candidates = []
     unless @header.nil?
       @idx = Hash[@header.each_with_index.map{|column, i| [column.to_sym, i]}]
-      all_candidates, @picklist = load_candidates(plaac_candidates_file)
-      selected_rows = cookies[:plaac_finder_picklist].split(/,/).map{|i|i.to_i}
+      all_candidates, @picklist = load_candidates(@job, plaac_candidates_file)
+
+      selected_rows = @job.params[:picklist_ids]
+
       all_candidates.each_with_index do |candidate, i|
         @candidates << candidate[0].split(/\t/) if selected_rows.include?(i)
       end
@@ -349,7 +360,7 @@ class Server < Sinatra::Base
     p [comment,b-a]
   end
 
-  def load_candidates(filename)
+  def load_candidates(job,filename)
     @dataset = []
     @picklist = []
 
@@ -358,11 +369,19 @@ class Server < Sinatra::Base
     filter = /#{params[:filter]}/ unless [nil,''].include? params[:filter].nil?
     filtered = []
     picklist_ids = []
+
     cookie_picklist = cookies[:plaac_finder_picklist]
-    unless cookie_picklist.nil?
+    if cookie_picklist.nil? 
+      if !job.params[:picklist_ids].nil?
+        picklist_ids = job.params[:picklist_ids]
+      else
+        @@log.warn "no picklist!"
+      end
+    else
       begin
         cookie_picklist.gsub!(/[^0-9\,]/,'') # clean input
         picklist_ids = cookie_picklist.split(/,/).map(&:to_i)
+        job.update_params(:picklist_ids, picklist_ids)
       rescue Error => e
         puts "Could not load cookie list: #{e}"
         picklist_ids = []
@@ -372,7 +391,7 @@ class Server < Sinatra::Base
 
     if filter
       # filter with grep
-      all_lines = File.open(filename).lines
+      all_lines = IO.readlines(filename)
       all_lines = all_lines.reject{|line| line =~ /^##/}
       all_lines = all_lines.each_with_index.map{|line,i| [line,i]}
       @picklist = all_lines.select{|pair| picklist_ids.include? pair[1] }
@@ -474,18 +493,20 @@ class Server < Sinatra::Base
 
     plaac_candidates_file = File.join(@job.working_directory, @@plaac_candidates)
 
-    core_len = params[:len] || session[:core_len]
-    alpha = params[:alpha] || session[:alpha]
+    core_len = @job.params[:core_len]
+    alpha = @job.params[:alpha]
 
-    # passed in from previous session
-    bgfreq_filename = session[:bgfreq_filename]
+    # passed in from previous page
+    bgfreq_filename = @job.params[:bgfreq_filename]
+    bg = @job.params[:bg]
 
     # rewrite plaac_candidates, with selections
-    session[:selected] = selected = [params[:selected]].flatten.compact.map(&:to_i)
+    selected = [params[:selected]].flatten.compact.map(&:to_i)
+    @job.update_params(:selected, selected)
 
     candidates_filename = File.join(@job.working_directory,"plaac_candidates_selected.tsv")
     File.open(candidates_filename,'w') do |candidates_file|
-      candidates, picklist = load_candidates(plaac_candidates_file)
+      candidates, picklist = load_candidates(@job, plaac_candidates_file)
       picklist.each do |columns,i|
         name = columns.split(/\t/)[0]
         # TODO: ultimately the second "name" should be replaced by the a user-specified "common" gene name
@@ -503,10 +524,10 @@ class Server < Sinatra::Base
     working_directory = job.working_directory
 
     # generate details
-    if !bgfreq_filename.nil? && session[:bg] != "input_sequence"
+    if !bgfreq_filename.nil? && bg != "input_sequence"
       bg_freq_filename = ->(id){ id.nil? ? nil : "bg_freqs_#{id}.txt" }
       bg_freq_local_filename = ->(id){ id.nil? ? nil : "bg_freqs/#{bg_freq_filename[id]}" }
-      job.add_file(path(bg_freq_local_filename[session[:bg]]), working_directory)
+      job.add_file(path(bg_freq_local_filename[bg]), working_directory)
       bgfreq_opt = " -B #{bgfreq_filename} "
     end
 
