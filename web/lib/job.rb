@@ -26,7 +26,9 @@ class Job
 
   def params=(hash)
     create_working_directory
-    IO.write(File.join(working_directory,'params.yml'), YAML.dump(hash))
+    File.open(File.join(working_directory,'params.yml'), 'w') do |file|
+      file.write YAML.dump(hash)
+    end
     nil
   end
 
