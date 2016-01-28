@@ -6,10 +6,10 @@
 #### Java
 See [java.com](http://www.java.com/en/) or reference your OS's installation instructions.
 
-#### Rscript
+#### Rscript & dependencies
 On Debian:
 ```
-    $ sudo apt-get install littler
+    $ sudo apt-get install littler r-cran-cairodevice
 ```
 On Fedora:
 ```

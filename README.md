@@ -24,7 +24,7 @@ and also at http://plaac.wi.mit.edu/details.
 * Alberti, S., Halfmann, R., King, O., Kapila, A., Lindquist, S. (2009) 
 [A systematic survey identifies prions and illuminates sequence
 features of prionogenic proteins](http://www.sciencedirect.com/science/article/pii/S0092867409002669).
-*Cell* 137, 146–58.  
+*Cell* 137, 146–58.
 
 * Lancaster, A.K., Nutter-Upham, A., Lindquist, King, O.D. (2014)
 [PLAAC: a web and command-line application to identify proteins with
