@@ -402,7 +402,7 @@ plot_seqs = function(infile="plot_data.txt",
   for (dex in sort(unique(datAll$ORDER))) {
     
     if (plotPng) {
-      png(file=paste(pngStub, "_", sprintf("%05d",pngCount),".png", sep=""), bg="transparent", 
+      png(file=paste(pngStub, "_", sprintf("%05d",pngCount),".png", sep=""), type="cairo", bg="transparent", 
           width=plotWidth, height=plotHeight, units="in", res=72, pointsize=12, family="Courier"); 
       pngCount = pngCount+1;
     }
@@ -451,7 +451,7 @@ color_code_seqs = function(infile="plot_data.txt", outfile="color_plots.pdf", ma
   plotPng = grepl("png$", outfile);
   
   if (plotPng) { 
-    png(outfile, height=100*(0.6 + 0.3*(num_seq + ifelse(showLegend, 1.5, 0))), width=100*8, units="px", family="Courier", pointsize=16)
+    png(outfile, type="cairo", height=100*(0.6 + 0.3*(num_seq + ifelse(showLegend, 1.5, 0))), width=100*8, units="px", family="Courier", pointsize=16)
   } else{ 
     pdf(outfile, height=0.5 + 0.3*(num_seq + ifelse(showLegend, 1.5, 0)), width=8, family="Courier", pointsize=12)
   }
