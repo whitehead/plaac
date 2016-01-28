@@ -48,9 +48,6 @@ The server is a rack compatable application. Please consult the official guides 
 * [Phusion Passenger Nginx Guide](http://www.modrails.com/documentation/Users%20guide%20Apache.html)
 * [Phusion Passenger Apache Guide](http://www.modrails.com/documentation/Users%20guide%20Apache.html)
 
-
-**headless server note**: R requires an X framebuffer to render graphics. If your server does not have X on it then you may need to install [Xvfb](http://en.wikipedia.org/wiki/Xvfb) and set a DISPLAY=:1 (or whatever port you run it on) in your webserver environment.
-
 -------------------------------------------------
 
 ## Contributing/Hacking
