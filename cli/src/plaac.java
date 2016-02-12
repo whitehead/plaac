@@ -331,8 +331,10 @@ class plaac {
 
         // should check for valid input here!
         int i = 0;
-	// for (int i=0; i<args.length - 1; i++) {
-        while(i<args.length - 1) {
+
+	// to avoid out-of-bounds attempt to grab an option from position i+1 for invalid command line-arguments, 
+	// iteration stops at next-to-last position, unless last position is one of the flags that doesn't take options.
+        while(i<args.length - 1 || (i<args.length && (args[i].equals("-d") || args[i].equals("-s")))) {
 	    if (args[i].equals("-i")) {inputfile = args[i+1]; i++;}
 	    else if (args[i].equals("-b")) {bgfile = args[i+1]; i++;}
 	    else if (args[i].equals("-B")) {bgfreqfile = args[i+1]; i++;}
@@ -343,7 +345,7 @@ class plaac {
 	    else if (args[i].equals("-a")) {alpha = Double.parseDouble(args[i+1]); i++;}
 	    else if (args[i].equals("-m")) {hmmtype = Integer.parseInt(args[i+1]); i++;} // different models. not currently used
 	    else if (args[i].equals("-p")) {plotlist = args[i+1]; i++;}
-            else if (args[i].equals("-h")) {hmmdotfile = args[i+1]; i++;} // if defined, dot file of HMM will be written to file
+            else if (args[i].equals("-h")) {hmmdotfile = args[i+1]; i++;} 
             else if (args[i].equals("-d")) {printheaders = true; } // don't consume another token, '-d' doesn't take an argument 
             else if (args[i].equals("-s")) {printparameters = false; } // don't consume another token, '-s' doesn't take an argument 
 	    else {System.out.println("# skipping unknown option " + args[i]);}
@@ -365,6 +367,7 @@ class plaac {
 	    System.out.println("## -a -->"+alpha+"<---");
             System.out.println("## -h -->"+hmmdotfile+"<---");
             System.out.println("## -d -->"+printheaders+"<---");
+            System.out.println("## -s -->"+(!printparameters)+"<---"); // negated, since s means skip printing
 	} 
 
 	// compute global AA frequencies for sequences being scored   
@@ -423,8 +426,8 @@ class plaac {
             System.out.println("-F fg_freqs.txt, specifying prion-like AA freqs in same format as -B above. Defaults to freqs from 28 S. cerevisiae domains.");
 	    System.out.println("-w window_size, the window size for FoldIndex disorder predictions. Default is 41.");
 	    System.out.println("-W Window_size, the window size for the PAPA algorithm. Default is 41.");
-	    System.out.println("-d, print documentation for headers. Default is false.");
-	    System.out.println("-s, skip printing of run-time parameters at top of file. Default is true.");
+	    System.out.println("-d, print documentation for headers. If flag is not set, headers will not be printed.");
+	    System.out.println("-s, skip printing of run-time parameters at top of file. If flag is not set, run-time parameters will be printed.");
             System.out.println("-h hmm_filename.txt, writes parameters of HMM to hmm_filenmae.txt in dot format, which can be made into a figure with GraphViz.");
 	    System.out.println("-p print_list.txt, where print_list.txt has the name of one fasta on each line, and specifies\n  which fastas in input.fa will be plotted");
 	    System.out.println("  The names must exactly match those in input.fa, but do need need the > symbol before the name.");
