@@ -194,10 +194,11 @@ class Server < Sinatra::Base
     # get header, and produce a hash of column symbol to array index.
     if File.exist?(results_ready_file)
       @@log.info "results ready"
-      lines = File.open(plaac_candidates_file).lines
+      lines = File.open(plaac_candidates_file).each_line
       lines = lines.reject{|line| line =~ /^##/}
       header_line = lines.first
       if header_line.nil?
+        sleep 2
         redirect "#{$config[:apppath]}/candidates/#{@job.token}?bounce"
         return
       end
