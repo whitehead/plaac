@@ -71,8 +71,8 @@ The main complication to both use-cases above is specifying the background amino
 to use for plaac. As the prion-like AA frequencies were derived from *S. cerevisiae*, one option 
 (the default) is to use background frequencies from *S. cerevisiae* as well (i.e., treat the per-AA likelihood-ratios 
 are species independent).  This is done with the command-line option ```-a 1``` (the default).
-The other extreme is to use use the background frequencies of the species being scores 
-(i.e., treat the prion-like AA frequencies as species-independent). 
+The other extreme is to use use the background frequencies of the species being scored 
+(i.e., treat the prion-like AA frequencies as species-dependent). 
 This is done with the command-line option ```-a 0```. One can also linearly interpolate between these 
 two extremes with any value of a between 0 and 1, e.g. use ```-a 0.5``` for an average of the background 
 frequencies of *S. cerevisiae* and the species being scored. 
