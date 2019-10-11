@@ -23,7 +23,7 @@ GEM
     macaddr (1.6.1)
       systemu (~> 2.5.0)
     multi_json (1.13.1)
-    rack (1.6.10)
+    rack (1.6.11)
     rack-protection (1.5.5)
       rack
     rack-test (1.1.0)
@@ -79,4 +79,4 @@ DEPENDENCIES
   uuid (~> 2.3.7)
 
 BUNDLED WITH
-   1.16.1
+   1.16.4
