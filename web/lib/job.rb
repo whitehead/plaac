@@ -35,6 +35,8 @@ class Job
   def params
     @params ||= YAML.load(IO.read(File.join(working_directory,'params.yml')))
     @params
+  rescue Errno::ENOENT
+    @params
   end
 
   def update_params(key,val)

@@ -384,7 +384,7 @@ class Server < Sinatra::Base
         picklist_ids = cookie_picklist.split(/,/).map(&:to_i)
         job.update_params(:picklist_ids, picklist_ids)
       rescue Error => e
-        puts "Could not load cookie list: #{e}"
+        @@log.warn("Could not load cookie list: #{e}")
         picklist_ids = []
       end
     end
@@ -473,7 +473,7 @@ class Server < Sinatra::Base
   private
 
   def local(cmd)
-    puts cmd
+    @@log.info "plaac running system(#{cmd})"
     p system(cmd)
   end
 
