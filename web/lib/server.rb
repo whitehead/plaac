@@ -298,7 +298,7 @@ class Server < Sinatra::Base
 
   get '/visualize/:token' do
     @job = Job.first(:token => params[:token])
-    p @job.params
+    # p @job.params
     candidates_filename = File.join(@job.working_directory,"plaac_candidates_selected.tsv")
     @output = File.open(candidates_filename).readlines.map{|line| line.split(/\t/)}
 
@@ -474,7 +474,7 @@ class Server < Sinatra::Base
 
   def local(cmd)
     @@log.info "plaac running system(#{cmd})"
-    p system(cmd)
+    system(cmd)
   end
 
   def valid_fasta_file(filename)
