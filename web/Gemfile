@@ -10,7 +10,7 @@ gem 'sinatra-contrib', '~> 1.4'
 # view
 gem 'sprockets', '~> 2.12'
 gem 'coffee-script', '~> 2.2.0'
-gem 'haml', '~> 3.1.4'
+gem 'haml', '~> 5.0.0'
 gem 'sass', '~> 3.2.3'
 
 # utility
