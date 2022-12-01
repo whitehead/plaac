@@ -3,12 +3,12 @@ source "https://rubygems.org"
 gem 'eventmachine', '~> 1.0.9.1'
 
 # framework
-gem 'sinatra', '~> 1.4'
+gem 'sinatra', '~> 3.0'
 gem 'sinatra-extension', '~> 1.0'
-gem 'sinatra-contrib', '~> 1.4'
+gem 'sinatra-contrib', '~> 3.0'
 
 # view
-gem 'sprockets', '~> 2.12'
+gem 'sprockets', '~> 4.1'
 gem 'coffee-script', '~> 2.2.0'
 gem 'haml', '~> 3.1.4'
 gem 'sass', '~> 3.2.3'
