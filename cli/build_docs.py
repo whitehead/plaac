@@ -6,7 +6,7 @@
 # Note this assumes that build_plaac.sh has already
 # been run.
 
-import os, sys, cgi
+import sys, html
 
 with open(sys.argv[1], 'r') as doc:
     for line in doc:
@@ -15,4 +15,5 @@ with open(sys.argv[1], 'r') as doc:
             col = col[3:]
             desc = desc.strip()
 
-            print "%%li\n  %%strong %s\n  %s" % (col, cgi.escape(desc))
+            print("%%li\n  %%strong %s\n  %s" % (col, html.escape(desc)))
+
