@@ -7,7 +7,7 @@ rm -rf target
 mkdir target
 
 echo build
-javac -source 1.5 -target 1.5 -d target src/*.java
+javac -source 8 -target 8 -d target src/*.java
 
 echo package
 cp src/mainClass target/.
@@ -24,7 +24,7 @@ echo "build-docs"
 cd -
 # generate documentation for command-line parameters, and dotfile for default hmm
 java -jar target/plaac.jar -s -d -i dummy -h target/hmm_default.txt > target/plaac_headers.txt
-./build_docs.py target/plaac_headers.txt > target/_plaac_headers.haml
+python3 ./build_docs.py target/plaac_headers.txt > target/_plaac_headers.haml
 
 echo "ok (see target/_plaac_headers.haml)"
 
