@@ -16,4 +16,4 @@ with open(sys.argv[1], 'r') as doc:
             col = col[3:]
             desc = desc.strip()
 
-            print "%%li\n  %%strong %s\n  %s" % (col, html.escape(desc))
+            print ("%%li\n  %%strong %s\n  %s" % (col, html.escape(desc)))
