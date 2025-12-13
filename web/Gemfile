@@ -3,24 +3,28 @@ source "https://rubygems.org"
 gem 'eventmachine', '~> 1.0.9.1'
 
 # framework
-gem 'sinatra', '~> 1.4'
+gem 'sinatra', '~> 3.0'
 gem 'sinatra-extension', '~> 1.0'
-gem 'sinatra-contrib', '~> 1.4'
+gem 'sinatra-contrib', '~> 3.0'
 
 # view
-gem 'sprockets', '~> 2.12'
+gem 'sprockets', '~> 4.1'
 gem 'coffee-script', '~> 2.2.0'
-gem 'haml', '~> 3.1.4'
-gem 'sass', '~> 3.2.3'
+gem 'haml', '~> 5.0'
+gem 'sass', '~> 3.7'
 
 # utility
 gem 'uuid', '~> 2.3.7'
-  gem 'systemu', '~> 2.5.2'
+gem 'systemu', '~> 2.5.2'
 gem 'bio', '~> 1.4.2'
 
 # development
-gem 'shotgun', '~> 0.9'
-gem 'better_errors', '~> 0.9.0'
-gem 'binding_of_caller', '~> 0.7.2'
+#gem 'shotgun', '~> 0.9.7'
+gem 'rerun', '~> 0.14'       # automatic code reloading for modern Rack/Sinatra
+gem 'better_errors', '~> 2.8.0'
+gem 'binding_of_caller', '~> 0.8.0'
 
-gem 'therubyracer', '~> 0.12.0'
+# development
+gem 'webrick', '~> 1.8'
+
+#gem 'therubyracer', '~> 0.12.0'

@@ -33,7 +33,16 @@ class Server < Sinatra::Base
   register Assets
 
   enable :sessions
-  set :session_secret, 'marshmallow'
+  #set :session_secret, 'marshmallow'
+
+  # enable sessions with a secure 32-byte secret
+  # use environment variable if set, otherwise generate a random 32-byte key
+  secret_key = ENV['PLAAC_SECRET'] || SecureRandom.hex(32)
+  set :session_secret, secret_key
+
+  # Also set Encryptor key if used
+  Encryptor.key = [secret_key].pack('H*') if defined?(Encryptor)
+  
   set :bind, '0.0.0.0'
 
   configure :development do

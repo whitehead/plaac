@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# bin/dev_server - modern replacement for bin/shotgun_server
+
+cd "$(dirname "$0")/.."
+
+# Optional: enable live reload using rack-livereload
+# Uncomment the next line if you have rack-livereload in your Gemfile
+# export RACK_ENV=development
+
+# Start the app with rackup
+bundle exec rackup config.ru -p 4567 -o '0.0.0.0' "$@"

@@ -35,10 +35,11 @@ On Fedora:
 #### Locally
 
 1. create a ```logs``` directory:```mkdir logs```
-2. Use the included **shotgun_server** script to launch a  development webserver at [http://localhost:4567](http://localhost:4567)
+2. Use the included **dev_server** script to launch a  development webserver at [http://localhost:4567](http://localhost:4567)
+   (note that **shotgun_server** is now obsolete)
 
 ```
-    $ bin/shotgun_server
+    $ bin/dev_server
 ```
 
 #### In Apache/Nginx
