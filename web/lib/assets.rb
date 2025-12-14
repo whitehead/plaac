@@ -6,6 +6,8 @@ require 'sass'
 module Assets
   extend Sinatra::Extension
 
+  Tilt.register Tilt::CoffeeScriptTemplate, 'coffee'
+  
   @@base = File.expand_path('../..',__FILE__)
 
   set :public_folder, @@base+"/public"
@@ -18,7 +20,12 @@ module Assets
 
   get '/coffee/:script.js' do
     clean! params[:script]
-    coffee :"js/#{params[:script]}"
+    #coffee :"js/#{params[:script]}"
+
+    file_path = File.join(settings.views, 'js', "#{params[:script]}.coffee")
+    halt 404, "Not found" unless File.exist?(file_path)
+    content_type 'application/javascript'
+    CoffeeScript.compile(File.read(file_path))
   end
 
   get '/js/:script' do

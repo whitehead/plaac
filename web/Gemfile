@@ -7,6 +7,9 @@ gem 'sinatra', '~> 3.0'
 gem 'sinatra-extension', '~> 1.0'
 gem 'sinatra-contrib', '~> 3.0'
 
+# Gemfile
+gem 'activesupport', '~> 7.1'
+
 # view
 gem 'sprockets', '~> 4.1'
 gem 'coffee-script', '~> 2.2.0'

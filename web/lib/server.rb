@@ -1,4 +1,5 @@
 # Encoding: utf-8
+require 'active_support/core_ext/object'  # defines Object#try
 require 'bundler/setup'
 require 'sinatra/base'
 require 'sinatra/cookies'
@@ -31,6 +32,8 @@ $version = `git log | head -n 1`.split(/\s/)[1][0,10] rescue "?"
 class Server < Sinatra::Base
   helpers Sinatra::Cookies
   register Assets
+
+  set :haml, format: :xhtml
 
   enable :sessions
   #set :session_secret, 'marshmallow'
