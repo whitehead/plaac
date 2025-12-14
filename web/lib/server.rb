@@ -48,6 +48,27 @@ class Server < Sinatra::Base
   
   set :bind, '0.0.0.0'
 
+  # read version at startup so it can be displayed to the end user
+  PLAAC_JAR = File.expand_path("../../bin/plaac.jar", __FILE__)
+
+  configure do
+    set :plaac_version, begin
+       cmd = ["java", "-jar", PLAAC_JAR, "-V"]
+       out = IO.popen(cmd, err: [:child, :out]) { |io| io.read }.strip
+
+       # Look for a line like: "PLAAC Version: 1.1.0"
+       if out
+         line = out.lines.find { |l| l =~ /version\s*:/i }
+         line ? line.split(":", 2).last.strip : "unknown"
+       else
+         "unknown"
+       end
+    rescue => e
+      warn "Failed to read PLAAC version: #{e}"
+      "unknown"
+     end
+  end
+  
   configure :development do
     use BetterErrors::Middleware
     BetterErrors.application_root = File.dirname(__FILE__)

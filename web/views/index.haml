@@ -2,7 +2,9 @@
 .container
   .hero-unit{style: 'padding-top: 2px; padding-bottom: 2px'}
     %p
-      %strong PLAAC 
+      %strong PLAAC
+      %span.muted
+        (v#{settings.plaac_version})
       searches protein sequences to identify probable prion subsequences using a
       hidden-Markov model (HMM) algorithm.
       %a{href: '/details'} documentation and how to cite
