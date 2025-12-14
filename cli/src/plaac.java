@@ -23,6 +23,8 @@ import java.util.regex.*;
 
 class plaac {
 
+    public static final String VERSION = "1.1.0";
+    
     static char [] aanames =   {'X','A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y','*'};
     static String [] aanames2 = {"???","Ala","Cys","Asp","Glu","Phe","Gly","His","Ile","Lys","Leu","Met","Asn",
 				 "Pro","Gln","Arg","Ser","Thr","Val","Trp","Tyr","***"};
@@ -323,6 +325,7 @@ class plaac {
 	double alpha = 1.0;
 	int hmmtype = 1;
 	boolean printheaders = false;   // print the headers at the top of the file (default: false)
+	boolean printversion = false;
        	boolean printparameters = true; // print the parameters at the top of the file (default: true)
 
         // from PAPA: score only first proline in PP or PXP
@@ -334,7 +337,7 @@ class plaac {
 
 	// to avoid out-of-bounds attempt to grab an option from position i+1 for invalid command line-arguments, 
 	// iteration stops at next-to-last position, unless last position is one of the flags that doesn't take options.
-        while(i<args.length - 1 || (i<args.length && (args[i].equals("-d") || args[i].equals("-s")))) {
+        while(i<args.length - 1 || (i<args.length && (args[i].equals("-d") || args[i].equals("-s") || args[i].equals("-V") ))) {
 	    if (args[i].equals("-i")) {inputfile = args[i+1]; i++;}
 	    else if (args[i].equals("-b")) {bgfile = args[i+1]; i++;}
 	    else if (args[i].equals("-B")) {bgfreqfile = args[i+1]; i++;}
@@ -346,12 +349,18 @@ class plaac {
 	    else if (args[i].equals("-m")) {hmmtype = Integer.parseInt(args[i+1]); i++;} // different models. not currently used
 	    else if (args[i].equals("-p")) {plotlist = args[i+1]; i++;}
             else if (args[i].equals("-h")) {hmmdotfile = args[i+1]; i++;} 
-            else if (args[i].equals("-d")) {printheaders = true; } // don't consume another token, '-d' doesn't take an argument 
+            else if (args[i].equals("-d")) {printheaders = true; } // don't consume another token, '-d' doesn't take an argument
+	    else if (args[i].equals("-V")) {printversion = true; } // don't consume another token, '-V' doesn't take an argument 
             else if (args[i].equals("-s")) {printparameters = false; } // don't consume another token, '-s' doesn't take an argument 
 	    else {System.out.println("# skipping unknown option " + args[i]);}
             i++;
 	}
 
+	if (printversion) {
+	    System.out.println("PLAAC Version: "+VERSION);
+	    return;
+	}
+	
 	ww3 = ww2; // don't currenty have a separate command-line paramater for ww3
 
 	if (verbose) {
@@ -367,6 +376,7 @@ class plaac {
 	    System.out.println("## -a -->"+alpha+"<---");
             System.out.println("## -h -->"+hmmdotfile+"<---");
             System.out.println("## -d -->"+printheaders+"<---");
+	    System.out.println("## -V -->"+printversion+"<---");	    
             System.out.println("## -s -->"+(!printparameters)+"<---"); // negated, since s means skip printing
 	} 
 
@@ -426,6 +436,7 @@ class plaac {
             System.out.println("-F fg_freqs.txt, specifying prion-like AA freqs in same format as -B above. Defaults to freqs from 28 S. cerevisiae domains.");
 	    System.out.println("-w window_size, the window size for FoldIndex disorder predictions. Default is 41.");
 	    System.out.println("-W Window_size, the window size for the PAPA algorithm. Default is 41.");
+	    System.out.println("-V, print version and exit.");
 	    System.out.println("-d, print documentation for headers. If flag is not set, headers will not be printed.");
 	    System.out.println("-s, skip printing of run-time parameters at top of file. If flag is not set, run-time parameters will be printed.");
             System.out.println("-h hmm_filename.txt, writes parameters of HMM to hmm_filenmae.txt in dot format, which can be made into a figure with GraphViz.");
