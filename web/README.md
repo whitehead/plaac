@@ -16,10 +16,10 @@ On Fedora:
     $ sudo yum install R-core
 ```
 
-#### Ruby >= 1.9.3 ([with rvm](https://rvm.io/))
+#### Ruby >= 3.3.10 ([with rvm](https://rvm.io/))
 ```
-    $ rvm install 1.9.3
-    $ rvm use 1.9.3
+    $ rvm install 3.3.10
+    $ rvm use 3.3.10
 ```
 
 #### Ruby Dependencies ([bundler](http://bundler.io/))
