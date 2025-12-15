@@ -1,14 +1,12 @@
 name: PLAAC CLI unit test
 
-x-paths: &plaac_cli_paths
-  - '.github/workflows/cli-unit-test.yml'
-  - 'cli/build_plaac.sh'
-  - 'cli/build_docs.py'
-  - 'cli/src/**'
-
 on:
   push:
-    paths: *plaac_cli_paths
+    paths: &plaac_cli_paths
+      - '.github/workflows/cli-unit-test.yml'
+      - 'cli/build_plaac.sh'
+      - 'cli/build_docs.py'
+      - 'cli/src/**'
   pull_request:
     paths: *plaac_cli_paths
 
