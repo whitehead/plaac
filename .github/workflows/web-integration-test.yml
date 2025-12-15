@@ -17,6 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RACK_ENV: test
+    defaults:
+      run:
+        working-directory: web
 
     steps:
       # 1. Checkout the repository
@@ -45,7 +48,7 @@ jobs:
       # 5. Build PLAAC CLI JAR
       - name: Build PLAAC JAR
         run: |
-          cd cli
+          cd ../cli
           ./build_plaac.sh
           cp target/plaac.jar ../web/bin/plaac.jar
 
@@ -55,5 +58,5 @@ jobs:
 
       # 7. Run integration tests
       - name: Run integration specs
-        working-directory: web
+        #working-directory: web
         run: bundle exec rspec spec/integration/plaac_web_spec.rb --format documentation
