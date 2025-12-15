@@ -4,7 +4,7 @@ Quick start from github
 
 Source code and supporting files for the algorithm are located in the ```src``` subdirectory, R code for visualization is located in ```R``` subdirectory.  Compilation can be performed using the provided shell script:
 
-    build_plaac.sh
+    ./build_plaac.sh
 
 This results in a jar file ```plaac.jar``` located in ```target```.  For usage details, this jar file can be run by changing to the ```target``` subdirectory ```cd target``:
 
@@ -113,6 +113,7 @@ or
     java -jar plaac.jar -b background.fa -i input.fa -a 0.5 -p all > plotdata.txt
 
 or include the whole proteome as the input with ```-i``` and use ```print_list.txt``` to give names of sequences to plot. 
+
 Plotting results
 ----------------
 
@@ -149,3 +150,16 @@ of sums rather than averages or per-residue scores, and if all residues have non
 so that scores are monotonic with window length. If other behavior is desired, check the protein length column and filter results as needed. 
 
 The file [```src/scer_fg_28.fasta```](https://github.com/whitehead/PLAAC/blob/master/cli/src/scer_fg_28.fasta) contains the names of the yeast proteins and their prion-like domains (PrLDs) used to compute the foreground frequencies for the algorithm.
+
+### Documentation updates for developers
+
+If new columns are added, developers should rebuild the documentation for the web
+UI by first outputing the headers by running against a dummy file:
+
+    java -jar target/plaac.jar -i dummy.txt -d > plaac_headers.txt
+	
+Convert the plain text output to `.haml` by running:
+
+    ./build_docs.py plaac_headers.txt > ../web/views/_plaac_headers.html
+	
+Then committing the updated documentation to git. 
