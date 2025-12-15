@@ -548,6 +548,7 @@ class plaac {
 
         if (printparameters) {
 	    System.out.println("############################ parameters at run-time ####################################");
+	    System.out.println("## plaac_version=" + VERSION + ";");
             System.out.println("## alpha="+ alpha +"; corelength="+corelength+"; ww1="+ww1+"; ww2="+ww2+"; ww3="+ww3+"; adjustprolines="+adjustprolines+";");
             // could make these AA params tab-separated so the parameters line up, one AA per column
             System.out.println("## fg_used: {" + aaparams2string(fg) + "}");
