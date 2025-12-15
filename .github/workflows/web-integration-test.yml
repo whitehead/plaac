@@ -3,7 +3,7 @@ name: Web UI CI
 on:
   push:
     paths: &plaac_web_paths
-      - '.github/workflows/cli-unit-test.yml'
+      - '.github/workflows/web-integration-test.yml'
       - 'cli/build_plaac.sh'
       - 'cli/build_docs.py'
       - 'cli/src/**'
