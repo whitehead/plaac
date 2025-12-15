@@ -36,11 +36,11 @@ jobs:
       - name: Run PLAAC on test input
         run: |
           java -jar target/plaac.jar \
-            -i examples/MOT3.fasta \
+            -i example/MOT3.fasta \
             > output.tsv
 
       - name: Compare output to gold file
         run: |
           diff -u \
-            examples/MOT3-candidates-plaac-1.1.0.tsv \
+            example/MOT3-candidates-plaac-1.1.0.tsv \
             output.tsv
