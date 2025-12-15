@@ -6,7 +6,7 @@ Source code and supporting files for the algorithm are located in the ```src``` 
 
     ./build_plaac.sh
 
-This results in a jar file ```plaac.jar``` located in ```target```.  For usage details, this jar file can be run by changing to the ```target``` subdirectory ```cd target``:
+This results in a jar file ```plaac.jar``` located in ```target```.  For usage details, this jar file can be run by changing to the ```target``` subdirectory `cd target`:
 
     java -jar plaac.jar
 
