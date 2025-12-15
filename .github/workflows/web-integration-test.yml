@@ -46,8 +46,8 @@ jobs:
       - name: Build PLAAC JAR
         run: |
           cd cli
-          mvn clean package
-          cp target/plaac-*.jar ../web/bin/plaac.jar
+          ./build_plaac.sh
+          cp target/plaac.jar ../web/bin/plaac.jar
 
       # 6. Install Ruby gems
       - name: Install gems
