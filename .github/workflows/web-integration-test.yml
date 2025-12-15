@@ -1,4 +1,4 @@
-name: CI
+name: Web UI CI
 
 on:
   push:
