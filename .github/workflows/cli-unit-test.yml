@@ -1,0 +1,46 @@
+name: PLAAC CLI unit test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  cli-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cli
+
+    strategy:
+      fail-fast: false
+      matrix:
+        java: [11, 17]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      - name: Show Java version
+        run: java -version
+
+      - name: Build plaac.jar
+        run: |
+          ./build_plaac.sh
+
+      - name: Run PLAAC on test input
+        run: |
+          java -jar target/plaac.jar \
+            -i examples/MOT3.fasta \
+            > output.tsv
+
+      - name: Compare output to gold file
+        run: |
+          diff -u \
+            examples/MOT3-candidates-plaac-1.1.0.tsv \
+            output.tsv
