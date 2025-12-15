@@ -17,7 +17,9 @@ PLAAC is written in java and requires that the Java Runtime Environment is insta
 
     java -version
 
-If java is not installed, it can be downloaded from http://www.java.com.  **Note as of PLAAC 1.1.0, Java 11 is the minimum supported version of Java**
+If java is not installed, it can be downloaded from http://www.java.com.  
+
+**Note as of PLAAC 1.1.0, Java 11 is the minimum supported version of Java**
 
 The plotting routines are written in R, and to call them from the command-line requires the R scripting front-end ```Rscript```, which is included with many installations of R.  To check whether it is already installed, open a terminal or command prompt and type:
 
