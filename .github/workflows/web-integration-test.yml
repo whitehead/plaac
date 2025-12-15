@@ -58,5 +58,8 @@ jobs:
 
       # 7. Run integration tests
       - name: Run integration specs
-        #working-directory: web
-        run: bundle exec rspec spec/integration/plaac_web_spec.rb --format documentation
+        run: |
+           mkdir -p logs
+           mkdir -p tmp
+           bundle exec rspec spec/integration/plaac_web_spec.rb --format documentation
+          
