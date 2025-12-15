@@ -7,7 +7,7 @@ rm -rf target
 mkdir target
 
 echo build
-javac -source 8 -target 8 -d target src/*.java
+javac --release 11 -d target src/*.java
 
 echo package
 cp src/mainClass target/.

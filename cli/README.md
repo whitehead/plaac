@@ -17,7 +17,7 @@ PLAAC is written in java and requires that the Java Runtime Environment is insta
 
     java -version
 
-If java is not installed, it can be downloaded from http://www.java.com
+If java is not installed, it can be downloaded from http://www.java.com.  **Note as of PLAAC 1.1.0, Java 11 is the minimum supported version of Java**
 
 The plotting routines are written in R, and to call them from the command-line requires the R scripting front-end ```Rscript```, which is included with many installations of R.  To check whether it is already installed, open a terminal or command prompt and type:
 
@@ -151,15 +151,3 @@ so that scores are monotonic with window length. If other behavior is desired, c
 
 The file [```src/scer_fg_28.fasta```](https://github.com/whitehead/PLAAC/blob/master/cli/src/scer_fg_28.fasta) contains the names of the yeast proteins and their prion-like domains (PrLDs) used to compute the foreground frequencies for the algorithm.
 
-### Documentation updates for developers
-
-If new columns are added, developers should rebuild the documentation for the web
-UI by first outputing the headers by running against a dummy file:
-
-    java -jar target/plaac.jar -i dummy.txt -d > plaac_headers.txt
-	
-Convert the plain text output to `.haml` by running:
-
-    ./build_docs.py plaac_headers.txt > ../web/views/_plaac_headers.html
-	
-Then committing the updated documentation to git. 
