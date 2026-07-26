@@ -1,0 +1,54 @@
+############################ parameters at run-time ####################################
+## alpha=1.0; corelength=60; ww1=41; ww2=41; ww3=41; adjustprolines=true;
+## fg_used: {X=0.00001;A=0.04865;C=0.00219;D=0.01638;E=0.00783;F=0.02537;G=0.07603;H=0.01810;I=0.02018;K=0.01641;L=0.02639;M=0.02975;N=0.25885;P=0.05126;Q=0.15178;R=0.02500;S=0.10988;T=0.03841;V=0.01972;W=0.00157;Y=0.05624;*=0.00001;}
+## bg_scer: {X=0.00000;A=0.05499;C=0.01260;D=0.05859;E=0.06549;F=0.04410;G=0.04980;H=0.02170;I=0.06549;K=0.07349;L=0.09499;M=0.02070;N=0.06149;P=0.04380;Q=0.03960;R=0.04440;S=0.08989;T=0.05919;V=0.05559;W=0.01040;Y=0.03370;*=0.00000;}
+## bg_input: {X=0.00000;A=0.07084;C=0.00465;D=0.03568;E=0.04705;F=0.03051;G=0.08066;H=0.03257;I=0.03723;K=0.05222;L=0.05481;M=0.02689;N=0.12410;P=0.04188;Q=0.10083;R=0.02689;S=0.09204;T=0.04498;V=0.04912;W=0.00672;Y=0.04033;*=0.00000;}
+## bg_used: {X=0.00001;A=0.05499;C=0.01260;D=0.05859;E=0.06549;F=0.04409;G=0.04979;H=0.02170;I=0.06549;K=0.07349;L=0.09499;M=0.02070;N=0.06149;P=0.04379;Q=0.03960;R=0.04439;S=0.08989;T=0.05919;V=0.05559;W=0.01040;Y=0.03370;*=0.00001;}
+## plaac_llr: {X=0.00000;A=-0.12257;C=-1.74969;D=-1.27456;E=-2.12398;F=-0.55278;G=0.42322;H=-0.18129;I=-1.17725;K=-1.49928;L=-1.28078;M=0.36281;N=1.43732;P=0.15739;Q=1.34371;R=-0.57425;S=0.20080;T=-0.43249;V=-1.03644;W=-1.89062;Y=0.51224;*=0.00000;}
+## papa_lods: {X=0.00000;A=-0.39649;C=0.41516;D=-1.27700;E=-0.60502;F=0.83873;G=-0.03922;H=-0.27857;I=0.81370;K=-1.57675;L=-0.04001;M=0.67373;N=0.08030;P=-1.19745;Q=0.06917;R=-0.40586;S=0.13391;T=-0.11457;V=0.81370;W=0.66674;Y=0.77865;*=0.00000;}
+#######################################################################################
+############################ Description of output columns ############################
+## SEQid: sequence name from fasta file
+## MW: Michelitsh-Weissman [PNAS 2000] score --- maximum number of N + Q in window of at most 80 AA
+## MWstart: index of start position of window with max MW score.
+## MWend: index of end position of window with max MW score
+## MWlen: length of window used for MW score [smaller of 80 and PROTlen].
+## LLR: max sum of PLAAC log-likelihood ratios (base 4) in window of size c [NaN if PROTlen < c]
+## LLRstart: index of start position of window with max LLR score [-1 if PROTlen < c]
+## LLRend: index of end position of window with max LLR score [-1 if PROTlen < c]
+## LLRlen: length of window used for LLR score [should be c]
+## NLLR: normalized LLR score, i.e. LLR/LLRlen [NaN if PROTlen < c]
+## VITmaxrun: maximum length of consecutive PrD state in Viterbi parse
+## COREscore: max sum of PLAAC LLRs in window of size c contained entirely within Viterbi parse [NaN if VITmaxrun < c]
+## COREstart: index of start position of window with max COREscore [-1 if VITmaxrun < c]
+## COREend: index of end position of window with max COREscore [-2 if VITmaxrun < c]
+## CORElen: length of window used for CORElen [should be either c or 0]
+## PRDscore: sum of PLAAC LLRs in full region of Viterbi parse containing CORE region, if any [NaN otherwise].
+## PRDstart: index of start position of window with PRDscore [-1 if VITmaxrun < c]
+## PRDend: index of end position of window with PRDscore [-2 if VITmaxrun < c]
+## PRDlen: length of window used for PRDscore
+## PROTlen: number of AAs in protein, not including terminal stop codon if any.
+## HMMall: log-likelihood ratio for sequence under two-state HMM vs. one-state background HMM
+## HMMvit: log-likelihood ratio for sequence under Viterbi parse of two-state HMM vs. one-state background HMM
+## COREaa: AA sequence at which COREscore is attained [- if VITmaxrun < c]
+## STARTaa: first 15 AA of PRDaa [- if VITmaxrun < c]
+## ENDaa: last 15 AA of PRDaa [- if VITmaxrun < c]
+## PRDaa: AA sequence at which PRDscore is attained [- if VITmaxrun < c]
+## FInumaa: number of AAs predicted to be disordered by FoldIndex [Prilusky et al, Bioinformatics, 2005] (exludes runs of under 5 AA)
+## FImeanhydro: hydropathy score <H> for entire protein [Uversky et al, Proteins, 2000]
+## FImeancharge: mean charge <R> for entire protein [Uversky et al, Proteins, 2000]
+## FImeancombo: disorder score for entire protein: 2.785<H> - |<R>| - 1.151 [Uversky et al, Proteins, 2000]
+## FImaxrun: length of longest run of predicted disorder by FoldIndex
+## PAPAcombo: signed distance to PAPA decision surface [as in King et al Brain Res 2012]
+## PAPAprop: maximal score of PAPA prion propensities (averges of averages) in region with negative FI score [Toombs et al MBC 2012]
+## PAPAfi: FI score (averages of averages) at PAPAcen
+## PAPAllr: PLAAC LLR score (average) at PAPAcen
+## PAPAllr2: PLAAC LLR score (average of averages) at PAPAcen
+## PAPAcen: index of center of window at which PAPAprop is obtained
+## PAPAaa: AA sequence of width W centered at PAPAcen
+#######################################################################################
+SEQid	MW	MWstart	MWend	MWlen	LLR	LLRstart	LLRend	LLRlen	NLLR	VITmaxrun	COREscore	COREstart	COREend	CORElen	PRDscore	PRDstart	PRDend	PRDlen	PROTlen	HMMall	HMMvit	COREaa	STARTaa	ENDaa	PRDaa	FInumaa	FImeanhydro	FImeancharge	FImeancombo	FImaxrun	PAPAcombo	PAPAprop	PAPAfi	PAPAllr	PAPAllr2	PAPAcen	PAPAaa
+Sup35p	38	4	83	80	51.215	5	64	60	0.854	133	51.215	5	64	60	89.773	1	133	133	685	81.820	79.598	NQGNNQQNYQQYSQNGNQQQGNNRYQGYQAYNAQAQPAGGYYQNYQGYSGYQQGGYQQYN	MSDSNQGNNQQNYQQ	PQSQGMSLNDFQKQQ	MSDSNQGNNQQNYQQYSQNGNQQQGNNRYQGYQAYNAQAQPAGGYYQNYQGYSGYQQGGYQQYNPDAGYQQQYNPQGGYQQYNPQGGYQQQFNPQGGRGNYKNFNYNNNLQGYQAGFQPQSQGMSLNDFQKQQ	366	0.411	0.004	-0.010	262	0.100	0.100	-0.423	0.861	0.814	25	NQGNNQQNYQQYSQNGNQQQGNNRYQGYQAYNAQAQPAGGY
+Ure2p	38	1	80	80	29.225	17	76	60	0.487	89	29.225	17	76	60	37.909	1	89	89	354	30.842	28.910	RQVNIGNRNSNTTTDQSNINFEFSTGVNNNNNNNSSSNNNNVQNNNSGRNGSQNNDNENN	MMNNNGNQVSNLSNA	NNIKNTLEQHRQQQQ	MMNNNGNQVSNLSNALRQVNIGNRNSNTTTDQSNINFEFSTGVNNNNNNNSSSNNNNVQNNNSGRNGSQNNDNENNIKNTLEQHRQQQQ	107	0.439	0.017	0.054	107	0.103	0.103	-0.130	0.228	0.317	21	MMNNNGNQVSNLSNALRQVNIGNRNSNTTTDQSNINFEFST
+Rnq1p	43	238	317	80	47.459	218	277	60	0.791	282	47.459	218	277	60	165.340	124	405	282	405	154.981	152.584	NNNQNSNNSQQGYNQSYQNGNQNSQGYNNQQYQGGNGGYQQQQGQSGGAFSSLASMAQSY	SGSGGGSQSMGASGL	GNFSQQNNNGNQNRY	SGSGGGSQSMGASGLAALASQFFKSGNNSQGQGQGQGQGQGQGQGQGQGSFTALASLASSFMNSNNNNQQGQNQSSGGSSFGALASMASSFMHSNNNQNSNNSQQGYNQSYQNGNQNSQGYNNQQYQGGNGGYQQQQGQSGGAFSSLASMAQSYLGGGQTQSNQQQYNQQGQNNQQQYQQQGQNYQHQQQGQQQQQGHSSSFSALASMASSYLGNNSNSNSSYGGQQQANEYGRPQQNGQQQSNEYGRPQYGGNQNSNGQHESFNFSGNFSQQNNNGNQNRY	286	0.374	0.007	-0.118	205	0.141	0.141	-0.324	0.911	0.791	234	FMHSNNNQNSNNSQQGYNQSYQNGNQNSQGYNNQQYQGGNG
+Mot3p	38	83	162	80	40.751	98	157	60	0.679	296	40.751	98	157	60	109.847	1	296	296	490	115.787	107.777	NNSNNNNVTAGNNMSASPIVHNNSNNSNNSNISASDYTVANNSTSNNNNNNNNNNNNNNN	MNADHHLQQQQQQRQ	NPSPNLNLNINPAQP	MNADHHLQQQQQQRQQHQQQQHQQQQHQHQHQQQQHTILQNVSNTNNIGSDSLASQPFNTTTVSSNKDDVMVNSGARELPMPLHQQQYIYPYYQYTSNNSNNNNVTAGNNMSASPIVHNNSNNSNNSNISASDYTVANNSTSNNNNNNNNNNNNNNNIHPNQFTAAANMNSNAAAAAYYSFPTANMPIPQQDQQYMFNPASYISHYYSAVNSNNNGNNAANNGSNNSSHSAPAPAPGPPHHHHHHSNTHNNLNNGGAVNTNNAPQHHPTIITDQFQFQLQQNPSPNLNLNINPAQP	416	0.373	-0.010	-0.122	115	0.102	0.102	-0.116	0.502	0.422	109	IYPYYQYTSNNSNNNNVTAGNNMSASPIVHNNSNNSNNSNI

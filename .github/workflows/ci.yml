@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build plaac.jar
+        working-directory: cli
+        run: ./build_plaac.sh
+
+      - name: Run golden / regression tests
+        run: cli/tests/run_tests.sh --no-build
+
+      - name: Upload actual PLAAC output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plaac-actual-output
+          path: cli/tests/actual_output.txt
+          if-no-files-found: warn
