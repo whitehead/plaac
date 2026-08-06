@@ -22,7 +22,7 @@ GEM
     bigdecimal (4.1.2)
     binding_of_caller (0.8.0)
       debug_inspector (>= 0.0.1)
-    bio (1.4.3.0001)
+    bio (2.0.6)
     coffee-script (2.2.0)
       coffee-script-source
       execjs
@@ -126,7 +126,7 @@ DEPENDENCIES
   activesupport (~> 8.1)
   better_errors (~> 2.10.1)
   binding_of_caller (~> 0.8.0)
-  bio (~> 1.4.2)
+  bio (~> 2.0.6)
   coffee-script (~> 2.2.0)
   eventmachine (~> 1.0.9.1)
   haml (~> 5.0)

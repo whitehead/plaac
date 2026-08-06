@@ -19,7 +19,7 @@ gem 'sass', '~> 3.7'
 # utility
 gem 'uuid', '~> 2.3.7'
 gem 'systemu', '~> 2.5.2'
-gem 'bio', '~> 1.4.2'
+gem 'bio', '~> 2.0.6'
 
 # development
 #gem 'shotgun', '~> 0.9.7'
