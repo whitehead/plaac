@@ -36,7 +36,7 @@ GEM
     eventmachine (1.2.7)
     execjs (2.10.1)
     ffi (1.17.2)
-    haml (7.2.2)
+    haml (5.2.2)
       temple (>= 0.8.2)
       thor
       tilt
