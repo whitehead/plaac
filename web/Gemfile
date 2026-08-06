@@ -6,6 +6,7 @@ gem 'eventmachine', '~> 1.0.9.1'
 gem 'sinatra', '~> 4.2'
 gem 'sinatra-extension', '~> 1.0'
 gem 'sinatra-contrib', '~> 4.2'
+gem 'rackup', '~> 2.2'
 
 # Gemfile
 gem 'activesupport', '~> 8.1'
