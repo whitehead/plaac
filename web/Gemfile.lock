@@ -20,10 +20,10 @@ GEM
       rack (>= 0.9.0)
       rouge (>= 1.0.0)
     bigdecimal (4.1.2)
-    binding_of_caller (0.8.0)
-      debug_inspector (>= 0.0.1)
+    binding_of_caller (2.0.0)
+      debug_inspector (>= 1.2.0)
     bio (2.0.6)
-    coffee-script (2.2.0)
+    coffee-script (2.4.1)
       coffee-script-source
       execjs
     coffee-script-source (1.12.2)
@@ -33,11 +33,12 @@ GEM
     diff-lcs (1.6.2)
     drb (2.2.3)
     erubi (1.13.1)
-    eventmachine (1.0.9.1)
-    execjs (2.10.0)
+    eventmachine (1.2.7)
+    execjs (2.10.1)
     ffi (1.17.2)
     haml (5.2.2)
-      temple (>= 0.8.0)
+      temple (>= 0.8.2)
+      thor
       tilt
     i18n (1.15.2)
       concurrent-ruby (~> 1.0)
@@ -46,8 +47,8 @@ GEM
       rb-fsevent (~> 0.10, >= 0.10.3)
       rb-inotify (~> 0.9, >= 0.9.10)
     logger (1.7.0)
-    macaddr (1.6.1)
-      systemu (~> 2.5.0)
+    macaddr (1.7.2)
+      systemu (~> 2.6.5)
     minitest (6.0.6)
       drb (~> 2.0)
       prism (~> 1.5)
@@ -115,8 +116,9 @@ GEM
       logger
       rack (>= 2.2.4, < 4)
     strscan (3.1.8)
-    systemu (2.5.2)
+    systemu (2.6.5)
     temple (0.10.4)
+    thor (1.5.0)
     tilt (2.8.0)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
@@ -131,11 +133,11 @@ PLATFORMS
 DEPENDENCIES
   activesupport (~> 8.1)
   better_errors (~> 2.10.1)
-  binding_of_caller (~> 0.8.0)
+  binding_of_caller (~> 2.0.0)
   bio (~> 2.0.6)
-  coffee-script (~> 2.2.0)
-  eventmachine (~> 1.0.9.1)
-  haml (~> 5.0)
+  coffee-script (~> 2.4.1)
+  eventmachine (~> 1.2.7)
+  haml (~> 7.2)
   nokogiri
   rack-test
   rackup (~> 2.2)
@@ -146,7 +148,7 @@ DEPENDENCIES
   sinatra-contrib (~> 4.2)
   sinatra-extension (~> 1.0)
   sprockets (~> 4.1)
-  systemu (~> 2.5.2)
+  systemu (~> 2.6.5)
   uuid (~> 2.3.7)
   webrick (~> 1.8)
 
