@@ -23,7 +23,7 @@ jobs:
 
     steps:
       # 1. Checkout the repository
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # 2. Set up Ruby
       - name: Set up Ruby
