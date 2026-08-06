@@ -3,9 +3,9 @@ source "https://rubygems.org"
 gem 'eventmachine', '~> 1.0.9.1'
 
 # framework
-gem 'sinatra', '~> 3.0'
+gem 'sinatra', '~> 4.2'
 gem 'sinatra-extension', '~> 1.0'
-gem 'sinatra-contrib', '~> 3.0'
+gem 'sinatra-contrib', '~> 4.2'
 
 # Gemfile
 gem 'activesupport', '~> 8.1'
