@@ -12,3 +12,7 @@ updates:
     schedule:
       interval: "weekly"
     target-branch: "devel"
+    groups:
+      bundler:
+        patterns:
+          - "*"
