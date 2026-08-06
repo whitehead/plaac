@@ -24,7 +24,7 @@ gem 'bio', '~> 1.4.2'
 # development
 #gem 'shotgun', '~> 0.9.7'
 gem 'rerun', '~> 0.14'       # automatic code reloading for modern Rack/Sinatra
-gem 'better_errors', '~> 2.8.0'
+gem 'better_errors', '~> 2.10.1'
 gem 'binding_of_caller', '~> 0.8.0'
 
 # development
