@@ -300,6 +300,34 @@ class plaac {
     }
 
 
+    // --- command-line argument validation helpers ---------------------------
+    // Report a usage error on stderr and exit non-zero, instead of throwing a
+    // raw stack trace (e.g. a non-numeric value for a numeric option) or failing
+    // silently. Diagnostics go to stderr so they never pollute the TSV on stdout.
+    static void usageError(String msg) {
+	System.err.println("plaac: " + msg);
+	System.err.println("For usage details, run with no arguments: java -jar plaac.jar");
+	System.exit(2);
+    }
+
+    static int parseIntArg(String flag, String val) {
+	try {
+	    return Integer.parseInt(val);
+	} catch (NumberFormatException e) {
+	    usageError("option " + flag + " requires an integer, but got '" + val + "'");
+	    return 0; // unreachable: usageError calls System.exit
+	}
+    }
+
+    static double parseDoubleArg(String flag, String val) {
+	try {
+	    return Double.parseDouble(val);
+	} catch (NumberFormatException e) {
+	    usageError("option " + flag + " requires a number, but got '" + val + "'");
+	    return 0; // unreachable: usageError calls System.exit
+	}
+    }
+
     public static void main (String args[]) {
 
 	plaac ms = new plaac(); 
@@ -377,18 +405,34 @@ class plaac {
 	    else if (args[i].equals("-b")) {bgfile = args[i+1]; i++;}
 	    else if (args[i].equals("-B")) {bgfreqfile = args[i+1]; i++;}
             else if (args[i].equals("-F")) {fgfreqfile = args[i+1]; i++;}
-	    else if (args[i].equals("-c")) {corelength = Integer.parseInt(args[i+1]); i++;}
-	    else if (args[i].equals("-w")) {ww1 = Integer.parseInt(args[i+1]); i++;}
-	    else if (args[i].equals("-W")) {ww2 = Integer.parseInt(args[i+1]); i++;}
-	    else if (args[i].equals("-a")) {alpha = Double.parseDouble(args[i+1]); i++;}
-	    else if (args[i].equals("-m")) {hmmtype = Integer.parseInt(args[i+1]); i++;} // different models. not currently used
+	    else if (args[i].equals("-c")) {corelength = parseIntArg("-c", args[i+1]); i++;}
+	    else if (args[i].equals("-w")) {ww1 = parseIntArg("-w", args[i+1]); i++;}
+	    else if (args[i].equals("-W")) {ww2 = parseIntArg("-W", args[i+1]); i++;}
+	    else if (args[i].equals("-a")) {alpha = parseDoubleArg("-a", args[i+1]); i++;}
+	    else if (args[i].equals("-m")) {hmmtype = parseIntArg("-m", args[i+1]); i++;} // different models. not currently used
 	    else if (args[i].equals("-p")) {plotlist = args[i+1]; i++;}
             else if (args[i].equals("-h")) {hmmdotfile = args[i+1]; i++;} 
             else if (args[i].equals("-d")) {printheaders = true; } // don't consume another token, '-d' doesn't take an argument
 	    else if (args[i].equals("-V")) {printversion = true; } // don't consume another token, '-V' doesn't take an argument 
             else if (args[i].equals("-s")) {printparameters = false; } // don't consume another token, '-s' doesn't take an argument 
-	    else {System.out.println("# skipping unknown option " + args[i]);}
+	    else {System.err.println("plaac: skipping unknown option " + args[i]);}
             i++;
+	}
+
+	// A value-taking flag in the last position is not consumed by the loop
+	// above (there is no following token to use as its value). Warn rather
+	// than silently ignoring it, which would run plaac in an unintended mode
+	// (e.g. "-i x.fa -p" with no print-list would run summary mode instead).
+	if (i == args.length - 1) {
+	    String last = args[i];
+	    if (last.equals("-i") || last.equals("-b") || last.equals("-B")
+		|| last.equals("-F") || last.equals("-c") || last.equals("-w")
+		|| last.equals("-W") || last.equals("-a") || last.equals("-m")
+		|| last.equals("-p") || last.equals("-h")) {
+		System.err.println("plaac: option " + last + " requires a value but was given none; ignoring it.");
+	    } else if (last.startsWith("-")) {
+		System.err.println("plaac: skipping unknown option " + last);
+	    }
 	}
 
 	if (printversion) {

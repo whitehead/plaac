@@ -7,6 +7,7 @@ on:
       - 'cli/build_plaac.sh'
       - 'cli/build_docs.py'
       - 'cli/src/**'
+      - 'cli/tests/**'
   pull_request:
     paths: *plaac_cli_paths
 
@@ -50,3 +51,7 @@ jobs:
           diff -u \
             example/MOT3-candidates-plaac-1.1.0.tsv \
             output.tsv
+
+      - name: Run input-validation tests
+        run: |
+          bash tests/test_input_validation.sh --no-build
