@@ -8,7 +8,7 @@ updates:
     target-branch: "devel"
 
   - package-ecosystem: "bundler"
-    directory: "/plaac/web"
+    directory: "/web"
     schedule:
       interval: "weekly"
     target-branch: "devel"
