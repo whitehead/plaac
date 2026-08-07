@@ -10,7 +10,7 @@ on:
       - 'cli/tests/**'
   pull_request:
     paths: *plaac_cli_paths
- release:
+  release:
     types: [created]
     
 jobs:
