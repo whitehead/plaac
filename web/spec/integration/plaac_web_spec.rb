@@ -48,7 +48,18 @@ RSpec.describe 'PLAAC web workflow', type: :request do
     puts last_response.body[0..500]
 
     # Step 5: Compare downloaded TSV content to gold file
+    # Note this strips out version number, since that will change
     gold_content = File.read(gold_path)
-    expect(last_response.body).to eq(gold_content)
+
+    actual = last_response.body.gsub(
+      /^## plaac_version=.*$/,
+      '## plaac_version=<version>;'
+    )
+
+    expected = gold_content.gsub(
+      /^## plaac_version=.*$/,
+      '## plaac_version=<version>;'
+    )
+    expect(actual).to eq(expected)
   end
 end
