@@ -50,9 +50,15 @@ jobs:
 
       - name: Compare output to gold file
         run: |
+          sed -E 's/^(## plaac_version=).*/\1<version>;/' \
+            example/MOT3-candidates-plaac-1.1.0.tsv > gold.normalized.tsv
+
+          sed -E 's/^(## plaac_version=).*/\1<version>;/' \
+            output.tsv > output.normalized.tsv
+
           diff -u \
-            example/MOT3-candidates-plaac-1.1.0.tsv \
-            output.tsv
+            gold.normalized.tsv \
+            output.normalized.tsv          
 
       - name: Run input-validation tests
         run: |
