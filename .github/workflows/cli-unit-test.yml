@@ -94,9 +94,9 @@ jobs:
         run: |
           mkdir plaac-${{ github.event.release.tag_name }}
           cp plaac.jar plaac-${{ github.event.release.tag_name }}/
-          cp example/four_classic_prions.fasta plaac-${{ github.event.release.tag_name }}/
-          cp -a R plaac-${{ github.event.release.tag_name }}/
-          cp README.md plaac-${{ github.event.release.tag_name }}/
+          cp cli/example/four_classic_prions.fasta plaac-${{ github.event.release.tag_name }}/
+          cp -a cli/R plaac-${{ github.event.release.tag_name }}/
+          cp cli/README.md plaac-${{ github.event.release.tag_name }}/
           zip -r plaac-${{ github.event.release.tag_name }}.zip \
             plaac-${{ github.event.release.tag_name }}
 
