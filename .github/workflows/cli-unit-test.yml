@@ -10,7 +10,9 @@ on:
       - 'cli/tests/**'
   pull_request:
     paths: *plaac_cli_paths
-
+  release:
+    types: [created]
+    
 jobs:
   cli-test:
     runs-on: ubuntu-latest
@@ -26,6 +28,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Set up Java ${{ matrix.java }}
         uses: actions/setup-java@v5
@@ -48,10 +52,57 @@ jobs:
 
       - name: Compare output to gold file
         run: |
+          sed -E 's/^(## plaac_version=).*/\1<version>;/' \
+            example/MOT3-candidates-plaac-1.1.0.tsv > gold.normalized.tsv
+
+          sed -E 's/^(## plaac_version=).*/\1<version>;/' \
+            output.tsv > output.normalized.tsv
+
           diff -u \
-            example/MOT3-candidates-plaac-1.1.0.tsv \
-            output.tsv
+            gold.normalized.tsv \
+            output.normalized.tsv          
 
       - name: Run input-validation tests
         run: |
           bash tests/test_input_validation.sh --no-build
+
+      - name: Upload jar artifact
+        if: matrix.java == 11
+        uses: actions/upload-artifact@v7
+        with:
+          name: plaac-jar
+          path: cli/target/plaac.jar
+
+  cli-release:
+    needs: cli-test
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Download jar artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: plaac-jar
+
+      - name: Create release package
+        run: |
+          mkdir plaac-${{ github.event.release.tag_name }}
+          cp plaac.jar plaac-${{ github.event.release.tag_name }}/
+          cp cli/example/four_classic_prions.fasta plaac-${{ github.event.release.tag_name }}/
+          cp -a cli/R plaac-${{ github.event.release.tag_name }}/
+          cp cli/README.md plaac-${{ github.event.release.tag_name }}/
+          cp LICENSE.txt plaac-${{ github.event.release.tag_name }}/
+          zip -r plaac-${{ github.event.release.tag_name }}.zip \
+            plaac-${{ github.event.release.tag_name }}
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            plaac-${{ github.event.release.tag_name }}.zip          
