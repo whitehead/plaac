@@ -1,14 +1,17 @@
 /** /////////////////////////////////////////////////////////////////////////////
     Original program copyright 2009 Whitehead Institute for Biomedial Research;
     additions copyright 2011 BBRI and copyright 2014-2016 University of Massachusetts Medical School.
-    Author: Oliver King (oliver.king@umassmed.edu) 
+    Author: Oliver King (oliver.king@umassmed.edu)
     
     See LICENSE.TXT for license information.  
 
-    Last updated February 11, 2016
+    Source code: https://github.com/whitehead/plaac
+
+    Build:
+     javac --release 11 -d target src/*.java
     
-    Compile with: javac plaac.java
-    To see usage details, run with: java plaac 
+    To see usage details, run with:
+      java -jar plaac.jar
    
 **/ ////////////////////////////////////////////////////////////////////////
 
