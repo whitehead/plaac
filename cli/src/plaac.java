@@ -23,7 +23,7 @@ import java.util.regex.*;
 
 class plaac {
 
-    public static final String VERSION = "1.1.0";
+    public static final String VERSION = Version.VERSION;
     
     static char [] aanames =   {'X','A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y','*'};
     static String [] aanames2 = {"???","Ala","Cys","Asp","Glu","Phe","Gly","His","Ile","Lys","Leu","Met","Asn",
