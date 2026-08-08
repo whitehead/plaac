@@ -8,6 +8,7 @@ on:
       - 'cli/build_docs.py'
       - 'cli/src/**'
       - 'cli/tests/**'
+      - 'cli/python/**'
   pull_request:
     paths: *plaac_cli_paths
   release:
@@ -66,6 +67,14 @@ jobs:
         run: |
           bash tests/test_input_validation.sh --no-build
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Python wrapper tests
+        run: |
+          python3 -m unittest discover -s python -p 'test_*.py' -v
       - name: Upload jar artifact
         if: matrix.java == 11
         uses: actions/upload-artifact@v7
