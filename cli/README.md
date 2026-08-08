@@ -13,25 +13,20 @@ Download the PLAAC command-line ZIP package from the [GitHub Releases page](http
 
 The package contains the precompiled `plaac.jar` together with the ancillary files needed by the command-line application.
 
-PLAAC requires Java 11 or later. Check the installed Java version with:
+> PLAAC requires Java Runtime Environment 11 or later. Check the
+> installed Java version with:
 
     java -version
+
+> If java is not installed, it can be downloaded from http://www.java.com.  
+
+> **Note as of PLAAC 1.1.0, Java 11 is the minimum supported version of Java**
 
 To display the PLAAC command-line options, run:
 
     java -jar plaac.jar
 
 The release package is the preferred way to install a stable version of PLAAC. It does not require a Java compiler or a Git checkout.
-
-> PLAAC is written in java and requires that the Java Runtime
-> Environment is installed. To check whether it is already installed,
-> open a terminal or command prompt and type:
-
->    java -version
-
-> If java is not installed, it can be downloaded from http://www.java.com.  
-
-> **Note as of PLAAC 1.1.0, Java 11 is the minimum supported version of Java**
 
 Building from source
 --------------------
@@ -159,7 +154,7 @@ Plotting results
 > included with many installations of R.  To check whether it is
 > already installed, open a terminal or command prompt and type:
 
->     Rscript --version
+    Rscript --version
    
 > If `Rscript` is not installed, it (along with `R`) can be downloaded from http://www.r-project.org
 
