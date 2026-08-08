@@ -32,12 +32,10 @@ features of prionogenic proteins](http://www.sciencedirect.com/science/article/p
 Prion-Like Amino Acid Composition](http://bioinformatics.oxfordjournals.org/content/early/2014/05/13/bioinformatics.btu310.abstract) *Bioinformatics* doi:10.1093/bioinformatics/btu310
 
 
-Installation
-------------
+Command-line application (cli)
+------------------------------
 
-### Command-line application (cli)
-
-#### Released package
+### Installing released package
 
 For most users, the recommended way to install PLAAC is to download the latest release package from the [GitHub Releases page](https://github.com/whitehead/plaac/releases).
 
@@ -55,7 +53,7 @@ To display the available command-line options, run:
 
     java -jar plaac.jar
 
-#### Building from source
+### Building from source
 
 Building PLAAC from source is primarily intended for developers and
 users who need to work with unreleased code or modify the PLAAC source.
@@ -73,11 +71,11 @@ information identifying the development version and Git commit.
 
 More  detailed instructions for the use of the ```plaac``` cli are found in [```cli/README.md```](https://github.com/whitehead/plaac/blob/master/cli/README.md).
 
-### Web-application
+Web-application
+----------------
 
 The web application is intended primarily for developers maintaining
 the PLAAC website.
-
 
 The web application uses the same compiled Java command-line application
 as the standalone CLI. To build the web application from source, first
