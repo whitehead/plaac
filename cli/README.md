@@ -27,11 +27,11 @@ The release package is the preferred way to install a stable version of PLAAC. I
 > Environment is installed. To check whether it is already installed,
 > open a terminal or command prompt and type:
 
-    java -version
+>    java -version
 
 > If java is not installed, it can be downloaded from http://www.java.com.  
 
-**Note as of PLAAC 1.1.0, Java 11 is the minimum supported version of Java**
+> **Note as of PLAAC 1.1.0, Java 11 is the minimum supported version of Java**
 
 Building from source
 --------------------
@@ -154,11 +154,14 @@ or include the whole proteome as the input with ```-i``` and use ```print_list.t
 Plotting results
 ----------------
 
-The plotting routines are written in R, and to call them from the command-line requires `R` and the front-end ```Rscript```, which is included with many installations of R.  To check whether it is already installed, open a terminal or command prompt and type:
+> The plotting routines are written in R, and to call them from the
+> command-line requires `R` and the front-end ```Rscript```, which is
+> included with many installations of R.  To check whether it is
+> already installed, open a terminal or command prompt and type:
 
-    Rscript --version
+>     Rscript --version
    
-If `Rscript` is not installed, it (along with `R`) can be downloaded from http://www.r-project.org
+> If `Rscript` is not installed, it (along with `R`) can be downloaded from http://www.r-project.org
 
 For usage options of the plotting routines, change into the ```R``` subdirectory of ```cli``` (i.e. ```cd R```) and type:
 

@@ -36,6 +36,8 @@ Installation
 
 ### Command-line application (cli)
 
+#### Released package
+
 For most users, the recommended way to install PLAAC is to download the
 latest release package from the
 [GitHub Releases page](https://github.com/whitehead/plaac/releases).
@@ -44,13 +46,13 @@ Download the PLAAC command-line ZIP package and unpack it. The package
 contains the precompiled `plaac.jar` and the ancillary files needed to
 run PLAAC.
 
-PLAAC requires Java 11 or later. To check whether Java is installed,
-open a terminal or command prompt and type:
+> PLAAC requires Java 11 or later. To check whether Java is installed,
+> open a terminal or command prompt and type:
 
-    java -version
+>    java -version
 
-If Java is not installed, it can be downloaded from
-http://www.java.com/.
+> If Java is not installed, it can be downloaded from
+> http://www.java.com/.
 
 The release package contains a precompiled version of PLAAC, so
 compiling the Java source code is not necessary for normal use.
@@ -59,8 +61,7 @@ To display the available command-line options, run:
 
     java -jar plaac.jar
 
-Building from source
---------------------
+#### Building from source
 
 Building PLAAC from source is primarily intended for developers and
 users who need to work with unreleased code or modify the PLAAC source.
