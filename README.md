@@ -7,10 +7,10 @@ to identify candidate prion subsequences using a hidden-Markov model
 
  http://plaac.wi.mit.edu/
 
-This README.md file describes how to download, install and run PLAAC, as
-well as developer instructions on how to compile from source and set
-up the web framework.  PLLAC is released under the open-source MIT
-license.
+This README.md file describes how to download, install and run
+standalone PLAAC, as well as developer instructions on how to compile
+from source and set up the web framework.  PLAAC is released under the
+open-source MIT license.
 
 Citing PLAAC
 ------------
