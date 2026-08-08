@@ -9,18 +9,18 @@ source is only necessary if you need an unreleased development version or want t
 Installing a released version
 -----------------------------
 
-Download the PLAAC command-line ZIP package from the [GitHub Releases page](https://github.com/whitehead/plaac/releases) and unpack it.
-
-The package contains the precompiled `plaac.jar` together with the ancillary files needed by the command-line application.
-
 > PLAAC requires Java Runtime Environment 11 or later. Check the
 > installed Java version with:
 
     java -version
 
-> If java is not installed, it can be downloaded from http://www.java.com.  
-> **Note as of PLAAC 1.1.0, Java 11 is the minimum supported version
-> of Java**
+> If java is not installed, it can be downloaded from
+> http://www.java.com.  **Note as of PLAAC 1.1.0, Java 11 is the
+> minimum supported version of Java**
+
+Download the PLAAC command-line ZIP package from the [GitHub Releases page](https://github.com/whitehead/plaac/releases) and unpack it.
+
+The package contains the precompiled `plaac.jar` together with the ancillary files needed by the command-line application.
 
 To display the PLAAC command-line options, run:
 
@@ -32,7 +32,7 @@ Building from source
 --------------------
 
 > The source build requires a Java Development Kit (JDK) capable of
-> compiling Java 11 bytecode. The resulting `plaac.jar` is compatible
+> compiling Java 11 bytecode (using `javac`). The resulting `plaac.jar` is compatible
 > with Java 11 and later.
 
 To build the command-line application from the Git repository, first
