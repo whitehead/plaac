@@ -19,8 +19,8 @@ The package contains the precompiled `plaac.jar` together with the ancillary fil
     java -version
 
 > If java is not installed, it can be downloaded from http://www.java.com.  
-
-> **Note as of PLAAC 1.1.0, Java 11 is the minimum supported version of Java**
+> **Note as of PLAAC 1.1.0, Java 11 is the minimum supported version
+> of Java**
 
 To display the PLAAC command-line options, run:
 
