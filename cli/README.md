@@ -1,44 +1,79 @@
-Quick start from github
-------------------------
+PLAAC command-line application
+==============================
 
+PLAAC is a Java command-line application for identifying proteins with Prion-Like Amino Acid Composition.
 
-Source code and supporting files for the algorithm are located in the ```src``` subdirectory, R code for visualization is located in ```R``` subdirectory.  Compilation can be performed using the provided shell script:
+For most users, the recommended way to obtain PLAAC is to download a release package containing the precompiled `plaac.jar`. Building from
+source is only necessary if you need an unreleased development version or want to modify the PLAAC source code.
 
-    ./build_plaac.sh
+Installing a released version
+-----------------------------
 
-This results in a jar file ```plaac.jar``` located in ```target```.  For usage details, this jar file can be run by changing to the ```target``` subdirectory `cd target`:
+Download the PLAAC command-line ZIP package from the [GitHub Releases page](https://github.com/whitehead/plaac/releases) and unpack it.
 
-    java -jar plaac.jar
+The package contains the precompiled `plaac.jar` together with the ancillary files needed by the command-line application.
 
-Detailed installation
----------------------
-
-PLAAC is written in java and requires that the Java Runtime Environment is installed. To check whether it is already installed, open a terminal or command prompt and type:
+PLAAC requires Java 11 or later. Check the installed Java version with:
 
     java -version
 
-If java is not installed, it can be downloaded from http://www.java.com.  
+To display the PLAAC command-line options, run:
+
+    java -jar plaac.jar
+
+The release package is the preferred way to install a stable version of PLAAC. It does not require a Java compiler or a Git checkout.
+
+> PLAAC is written in java and requires that the Java Runtime
+> Environment is installed. To check whether it is already installed,
+> open a terminal or command prompt and type:
+
+    java -version
+
+> If java is not installed, it can be downloaded from http://www.java.com.  
 
 **Note as of PLAAC 1.1.0, Java 11 is the minimum supported version of Java**
 
-The plotting routines are written in R, and to call them from the command-line requires the R scripting front-end ```Rscript```, which is included with many installations of R.  To check whether it is already installed, open a terminal or command prompt and type:
+Building from source
+--------------------
 
-    Rscript --version
-   
-If Rscript is not installed, it (along with R) can be downloaded from http://www.r-project.org
+> The source build requires a Java Development Kit (JDK) capable of
+> compiling Java 11 bytecode. The resulting `plaac.jar` is compatible
+> with Java 11 and later.
 
+To build the command-line application from the Git repository, first
+clone the repository and change into the `cli` directory:
 
-A precompiled version of the java program PLAAC is available for download in ```web/bin/plaac.jar```.  
+    git clone https://github.com/whitehead/plaac.git
+    cd plaac/cli
 
-To run PLAAC, download this file, open a terminal or command prompt and for complete usage options, type:
+Source code and supporting files for the algorithm are located in the ```src``` subdirectory, R code for visualization is located in ```R``` subdirectory.  
+
+Now run the provided shell script:
+
+    ./build_plaac.sh
+	
+The script compiles the Java source and produces:
+
+    target/plaac.jar
+
+It also generates files used by the web application and documentation.
+
+The build uses the Git repository to determine the PLAAC version. Release
+versions are identified by Git tags; development builds include the
+nearest release version together with development and Git commit
+information.
+
+Usage
+-----
+
+### Basic usage
+
+To run PLAAC and see the command-line options (using either the pre-compiled package `.jar` file, or the `.jar` that you compiled from
+source), open a terminal or command prompt and for complete usage options, type:
 
     java -jar plaac.jar
 
 with no additional arguments.
-
-
-Usage
------
 
 ### Use case 1:
 
@@ -118,6 +153,12 @@ or include the whole proteome as the input with ```-i``` and use ```print_list.t
 
 Plotting results
 ----------------
+
+The plotting routines are written in R, and to call them from the command-line requires `R` and the front-end ```Rscript```, which is included with many installations of R.  To check whether it is already installed, open a terminal or command prompt and type:
+
+    Rscript --version
+   
+If `Rscript` is not installed, it (along with `R`) can be downloaded from http://www.r-project.org
 
 For usage options of the plotting routines, change into the ```R``` subdirectory of ```cli``` (i.e. ```cd R```) and type:
 

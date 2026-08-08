@@ -36,22 +36,64 @@ Installation
 
 ### Command-line application (cli)
 
+For most users, the recommended way to install PLAAC is to download the
+latest release package from the
+[GitHub Releases page](https://github.com/whitehead/plaac/releases).
+
+Download the PLAAC command-line ZIP package and unpack it. The package
+contains the precompiled `plaac.jar` and the ancillary files needed to
+run PLAAC.
+
+PLAAC requires Java 11 or later. To check whether Java is installed,
+open a terminal or command prompt and type:
+
+    java -version
+
+If Java is not installed, it can be downloaded from
+http://www.java.com/.
+
+The release package contains a precompiled version of PLAAC, so
+compiling the Java source code is not necessary for normal use.
+
+To display the available command-line options, run:
+
+    java -jar plaac.jar
+
+Building from source
+--------------------
+
+Building PLAAC from source is primarily intended for developers and
+users who need to work with unreleased code or modify the PLAAC source.
+
+The command-line application can be built from a Git checkout using:
+
     cd cli
     ./build_plaac.sh
 
-This will build a ```plaac.jar``` file , as well as column outputs for the website in the ```_plaac_headers.haml``` both in the ```cli/target``` subdirectory.  More  detailed instructions for the use of the ```plaac``` cli are found in [```cli/README.md```](https://github.com/whitehead/plaac/blob/master/cli/README.md).
+This will build a ```plaac.jar``` file , as well as column outputs for the website in the ```_plaac_headers.haml``` both in the ```cli/target``` subdirectory.  
 
+PLAAC versions are derived from Git tags. Release builds use the Git/GitHub
+tag as the source of the version number, while development builds include
+information identifying the development version and Git commit.
+
+More  detailed instructions for the use of the ```plaac``` cli are found in [```cli/README.md```](https://github.com/whitehead/plaac/blob/master/cli/README.md).
 
 ### Web-application
 
-Perform the same steps as for the cli, above, then:
+The web application is intended primarily for developers maintaining
+the PLAAC website.
 
-    cp target/plaac.jar ../web/bin/
-    cp R/plaac_plot.r R/plaac_plot_util.r ../web/bin/
 
-If the column outputs from cli version have changed (i.e. in ```cli/src/plaac.java```), you will also need to update the HAML code for the website:
+The web application uses the same compiled Java command-line application
+as the standalone CLI. To build the web application from source, first
+follow the CLI build instructions above.
 
-    cp target/_plaac_headers.haml ../web/views/
+The generated files can then be installed into the web application as
+described in `web/README.md`.
+
+The web application also requires the R plotting scripts. See
+`web/README.md` for the remaining installation and development
+instructions.
 
 The remaining installation steps are detailed in the [```web/README.md```](https://github.com/whitehead/plaac/blob/master/web/README.md) (note that ```Rscript``` 
 should be installed).
