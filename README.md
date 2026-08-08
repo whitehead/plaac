@@ -43,11 +43,10 @@ For most users, the recommended way to install PLAAC is to download the latest r
 Download the PLAAC command-line ZIP package and unpack it. The package contains the precompiled `plaac.jar` and the ancillary files needed to
 run PLAAC.
 
-> PLAAC requires Java 11 or later. To check whether Java is installed, open a terminal or command prompt and type:
-
-    java -version
-
-> If Java is not installed, it can be downloaded from http://www.java.com/.
+> PLAAC requires Java 11 or later. To check whether Java is installed,
+> open a terminal or command prompt and type: `java -version`.  If
+> Java is not installed, it can be downloaded from
+> http://www.java.com/.
 
 The release package contains a precompiled version of PLAAC, so compiling the Java source code is not necessary for normal use.
 

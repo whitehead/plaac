@@ -10,13 +10,9 @@ Installing a released version
 -----------------------------
 
 > PLAAC requires Java Runtime Environment 11 or later. Check the
-> installed Java version with:
-
-    java -version
-
-> If java is not installed, it can be downloaded from
-> http://www.java.com.  **Note as of PLAAC 1.1.0, Java 11 is the
-> minimum supported version of Java**
+> installed Java version with: `java -version`. If java is not
+> installed, it can be downloaded from http://www.java.com.  **Note as
+> of PLAAC 1.1.0, Java 11 is the minimum supported version of Java**
 
 Download the PLAAC command-line ZIP package from the [GitHub Releases page](https://github.com/whitehead/plaac/releases) and unpack it.
 
