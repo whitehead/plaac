@@ -159,6 +159,37 @@ def test_to_dataframe_raises_in_per_residue_mode():
         run.to_dataframe()
 
 
+# --- jar/package version-skew check (require jar) ---------------------------
+
+@requires_jar
+def test_get_jar_version_returns_string():
+    v = plaac.get_jar_version(plaac.find_jar())
+    assert isinstance(v, str) and v
+
+
+@requires_jar
+def test_check_version_ok_when_unknown_or_matching():
+    # From a source checkout __version__ is "unknown", so check_version is a
+    # no-op and returns the jar version without raising.
+    v = plaac.check_version(plaac.find_jar())
+    assert isinstance(v, str) and v
+
+
+@requires_jar
+def test_check_version_raises_on_mismatch(monkeypatch):
+    monkeypatch.setattr(plaac, "__version__", "9.9.9-does-not-match")
+    with pytest.raises(plaac.PlaacError):
+        plaac.check_version(plaac.find_jar())
+
+
+@requires_jar
+def test_run_skips_version_check_when_disabled(monkeypatch):
+    # A deliberately mismatched version must not raise when the check is off.
+    monkeypatch.setattr(plaac, "__version__", "9.9.9-does-not-match")
+    run = plaac.run(_EXAMPLE, alpha=1, core_length=60, check_jar_version=False)
+    assert run.returncode == 0
+
+
 # --- option pass-throughs (require jar) -------------------------------------
 
 @requires_jar

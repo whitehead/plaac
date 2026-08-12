@@ -7,7 +7,7 @@ name = "plaac"
 description = "Python API for PLAAC (Prion-Like Amino Acid Composition)"
 readme = "README.md"
 requires-python = ">=3.8"
-license = { text = "MIT" }
+license = "MIT"
 dynamic = ["version"]
 dependencies = []
 

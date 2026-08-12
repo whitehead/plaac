@@ -82,8 +82,22 @@ Locating the jar
    resolution **fails** rather than silently using a different jar.
 3. If neither is given, it looks for a jar **bundled inside the installed
    package** (`plaac/plaac.jar`, present in the released wheel), then falls back
-   to `cli/target/plaac.jar` (built) and `web/bin/plaac.jar` (shipped) in a
-   source checkout.
+   to `cli/target/plaac.jar` (built) in a source checkout.
+
+(The web app's `web/bin/plaac.jar` is deliberately *not* searched — it is
+managed separately and would be the most likely to differ in version.)
+
+Version matching
+----------------
+
+The Java implementation and the Python package must be the same version. By
+default `plaac.run()` checks the jar's version (via `plaac.jar -V`) against
+`plaac.__version__` and raises on a mismatch — so a stale or mismatched jar is
+surfaced, not silently used. A **release wheel bundles a matching jar** by
+construction, so this never fires there. In a source checkout the installed
+package version may be `"unknown"`, in which case the check is a no-op; if you
+install the package *and* a jar built from a different checkout is found, the
+check tells you to rebuild. Pass `check_jar_version=False` to bypass it.
 
 Reproducibility
 ---------------

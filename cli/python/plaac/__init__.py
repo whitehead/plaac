@@ -30,6 +30,7 @@ import os
 import shutil
 import subprocess
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional, Sequence, Union
 
@@ -91,11 +92,12 @@ def find_jar(explicit: Optional[PathLike] = None) -> Path:
 
     here = Path(__file__).resolve().parent          # .../cli/python/plaac
     cli_dir = here.parent.parent                     # .../cli
-    repo_dir = cli_dir.parent                        # repo root
+    # web/bin/plaac.jar is deliberately NOT searched: it is a separately-managed
+    # artifact for the web app and is the most likely to differ in version from
+    # the Python package, which would trip the version-skew check (check_version).
     discovered = [
         here / "plaac.jar",                          # bundled in the wheel (self-contained)
         cli_dir / "target" / "plaac.jar",            # built in a source checkout
-        repo_dir / "web" / "bin" / "plaac.jar",      # shipped with the web app
     ]
     for c in discovered:
         if c.is_file():
@@ -106,6 +108,44 @@ def find_jar(explicit: Optional[PathLike] = None) -> Path:
         "it with cli/build_plaac.sh, or pass jar=... / set $PLAAC_JAR. "
         "Searched:\n  " + searched
     )
+
+
+@lru_cache(maxsize=None)
+def get_jar_version(jar_path: PathLike, java: str = "java") -> str:
+    """Return the version a PLAAC jar reports via its ``-V`` flag.
+
+    Cached per (jar, java) so it costs at most one JVM start per jar in a
+    process. Raises :class:`PlaacError` if the version cannot be parsed.
+    """
+    result = subprocess.run(
+        [java, "-jar", str(jar_path), "-V"],
+        check=True, capture_output=True, text=True,
+    )
+    output = result.stdout.strip()
+    prefix = "PLAAC Version: "                        # human-readable prefix to strip
+    if not output.startswith(prefix):
+        raise PlaacError(f"Could not determine PLAAC jar version from: {output!r}")
+    return output[len(prefix):].strip()
+
+
+def check_version(jar_path: PathLike, java: str = "java") -> str:
+    """Raise if the jar's version differs from the installed package version.
+
+    The jar and the Python bindings can drift out of sync -- especially if a
+    prebuilt jar is picked up -- so we require them to match exactly. This is a
+    no-op when the package version is ``"unknown"`` (e.g. running from a source
+    tree that was never installed), so it only enforces a match for installed
+    packages; a release wheel's bundled jar always matches by construction.
+    Returns the jar version.
+    """
+    jar_version = get_jar_version(jar_path, java)
+    if __version__ != "unknown" and jar_version != __version__:
+        raise PlaacError(
+            f"PLAAC version mismatch: the Python package is {__version__} but the "
+            f"jar at {jar_path} reports {jar_version}. Rebuild the jar from the "
+            f"same checkout (cli/build_plaac.sh), or pass jar= / set $PLAAC_JAR."
+        )
+    return jar_version
 
 
 def _coerce(value: str) -> Any:
@@ -211,6 +251,7 @@ def run(
     heap: Optional[str] = None,
     timeout: Optional[float] = None,
     check: bool = True,
+    check_jar_version: bool = True,
     extra_args: Optional[Sequence[str]] = None,
 ) -> PlaacRun:
     """Run PLAAC on a protein FASTA and return a :class:`PlaacRun`.
@@ -224,7 +265,9 @@ def run(
     (``-c``), ``background_fasta`` (``-b``), ``background_freqs`` (``-B``),
     ``print_list`` (``-p``). ``heap`` sets ``-Xmx`` (e.g. ``"4g"``); ``timeout``
     is in seconds; ``check=True`` raises on a non-zero exit; ``extra_args`` is
-    appended verbatim for options not modeled here.
+    appended verbatim for options not modeled here. ``check_jar_version=True``
+    verifies the jar's version matches this package's (skip with ``False`` for a
+    deliberately mismatched jar).
     """
     if isinstance(extra_args, str):
         raise TypeError(
@@ -234,6 +277,8 @@ def run(
     jar_path = find_jar(jar)
     if shutil.which(java) is None:
         raise PlaacError(f"'{java}' not found on PATH. Install a Java runtime (JRE).")
+    if check_jar_version:
+        check_version(jar_path, java)
     input_path = Path(input_fasta)
     if not input_path.is_file():
         raise PlaacError(f"Input FASTA not found: {input_path}")
