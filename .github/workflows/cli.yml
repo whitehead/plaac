@@ -42,26 +42,9 @@ jobs:
         run: |
           ./build_plaac.sh
 
-      - name: Run PLAAC on test input
+      - name: Run MOT3 regression and input-validation tests
         run: |
-          java -jar target/plaac.jar \
-            -i example/MOT3.fasta \
-            > output.tsv
-
-      - name: Compare output to gold file
-        run: |
-          sed -E 's/^(## plaac_version=).*/\1<version>;/' \
-            example/MOT3-candidates-plaac-1.1.0.tsv > gold.normalized.tsv
-
-          sed -E 's/^(## plaac_version=).*/\1<version>;/' \
-            output.tsv > output.normalized.tsv
-
-          diff -u \
-            gold.normalized.tsv \
-            output.normalized.tsv          
-
-      - name: Run input-validation tests
-        run: |
+          bash tests/test_mot3.sh --no-build
           bash tests/test_input_validation.sh --no-build
           
       - name: Upload jar artifact
