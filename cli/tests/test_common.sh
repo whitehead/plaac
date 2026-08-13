@@ -3,7 +3,6 @@ set -u
 TESTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLI_DIR="$(cd "$TESTS_DIR/.." && pwd)"
 JAR="$CLI_DIR/target/plaac.jar"
-EXAMPLE="$CLI_DIR/example/four_classic_prions.fasta"
 
 export LC_ALL=C
 

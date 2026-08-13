@@ -17,7 +17,9 @@
 # Exits non-zero if any test fails.
 
 source "$(dirname "$0")/test_common.sh"
- 
+
+EXAMPLE="$CLI_DIR/example/four_classic_prions.fasta"
+
 echo "Running PLAAC input-validation tests..."
 
 # 1. sanity: a valid invocation still succeeds

@@ -17,11 +17,19 @@ run -i "$CLI_DIR/example/MOT3.fasta"
 sed -E 's/^(## plaac_version=).*/\1<version>;/' "$CLI_DIR/example/MOT3-candidates-plaac-1.1.0.tsv" > gold.normalized.tsv
 sed -E 's/^(## plaac_version=).*/\1<version>;/' $OUT > output.normalized.tsv
 
-diff -u gold.normalized.tsv output.normalized.tsv || {
-    echo "FAIL: MOT3 output differs from expected output"
-    exit 1
-}
+if diff -u gold.normalized.tsv output.normalized.tsv; then
+    pass_msg "MOT3 output matches expected output"
+else
+    fail_msg "MOT3 output differs from expected output"
+fi
 
-echo "PASS: MOT3 output matches expected output"
+echo
+if [[ "$fail" -eq 0 ]]; then
+    echo "All MOT3 tests passed."
+else
+    echo "Some MOT3 tests FAILED."
+fi
+exit "$fail"
+
 
 
