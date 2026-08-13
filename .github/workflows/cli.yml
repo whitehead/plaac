@@ -143,17 +143,19 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: plaac-wheel
-          path: release
+          path: release/
 
       - name: Create release package
         run: |
           package="plaac-${VERSION}"
           mkdir "${package}"
+          ls -l
+          ls -l release
           cp -a \
             release/plaac.jar \
             cli/example/four_classic_prions.fasta \
             cli/README.md \
-            LICENSE.txt \
+            LICENSE.TXT \
             cli/R \
             "${package}/"          
           zip -r "${package}.zip" "${package}"          
