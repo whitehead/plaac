@@ -143,7 +143,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: plaac-wheel
-          path: release/
+          path: wheel/
 
       - name: Create release package
         run: |
@@ -152,7 +152,7 @@ jobs:
           ls -l
           ls -l release
           cp -a \
-            release/plaac.jar \
+            plaac.jar \
             cli/example/four_classic_prions.fasta \
             cli/README.md \
             LICENSE.TXT \
@@ -165,4 +165,4 @@ jobs:
         with:
           files: |
             plaac-${VERSION}.zip
-            release/*.whl
+            wheel/*.whl
