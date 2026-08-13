@@ -3,7 +3,7 @@ name: PLAAC CLI unit test
 on:
   push:
     paths: &plaac_cli_paths
-      - '.github/workflows/cli-unit-test.yml'
+      - '.github/workflows/cli.yml'
       - 'cli/build_plaac.sh'
       - 'cli/build_docs.py'
       - 'cli/src/**'
