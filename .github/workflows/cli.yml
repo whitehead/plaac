@@ -81,7 +81,7 @@ jobs:
       - name: Build Python wheel
         run: |
           cp target/plaac.jar python/plaac/
-          python -m build python
+          python -m pip wheel python
           
       - name: Upload jar artifact
         if: matrix.java == 11
@@ -90,12 +90,12 @@ jobs:
           name: plaac-jar
           path: cli/target/plaac.jar
 
-      - name: Upload jar artifact
+      - name: Upload wheel artifact
         if: matrix.java == 11
         uses: actions/upload-artifact@v7
         with:
           name: plaac-wheel
-          path: cli/python/dist/plaac*.whl
+          path: cli/plaac*.whl
 
   cli-release:
     needs: cli-test
