@@ -89,6 +89,7 @@ jobs:
         run: python -m pip install python/dist/*.whl
         
       - name: Run Python wrapper tests
+        if: matrix.java == 11
         run: python -m pytest python -v
 
       - name: Upload jar artifact
