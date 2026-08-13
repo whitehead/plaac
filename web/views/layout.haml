@@ -17,7 +17,7 @@
       .container
         %a.brand{href: "#{$config[:apppath]}/"} #{$config[:apptitle]}
 
-  =yield
+  != yield
 
   #footer
     #{ENV["RAILS_ENV"]} - #{$version} - #{Time.now.to_s}
