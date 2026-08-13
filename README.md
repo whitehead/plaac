@@ -113,18 +113,14 @@ includes the Java implementation.
 ### Building from source
 
 Building PLAAC from source is primarily intended for developers and
-users who need to work with unreleased code or modify the PLAAC source.
+users who need to work with unreleased code or modify the PLAAC
+source. See [`cli/README.md`](cli/README.md#building-from-source) for
+step-by-step details.
 
-The command-line application can be built from a Git checkout using:
-
-    cd cli
-    ./build_plaac.sh
-
-This will build a ```plaac.jar``` file , as well as column outputs for the website in the ```_plaac_headers.haml``` both in the ```cli/target``` subdirectory.  
-
-PLAAC versions are derived from Git tags. Release builds use the Git/GitHub
-tag as the source of the version number, while development builds include
-information identifying the development version and Git commit.
+> **Note**: PLAAC versions are derived from Git tags. Release builds use the
+> Git/GitHub tag as the source of the version number, while
+> development builds include information identifying the development
+> version and Git commit.
 
 Web-application
 ----------------
