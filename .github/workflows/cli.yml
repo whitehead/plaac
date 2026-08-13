@@ -149,8 +149,6 @@ jobs:
         run: |
           package="plaac-${VERSION}"
           mkdir "${package}"
-          ls -l
-          ls -l release
           cp -a \
             plaac.jar \
             cli/example/four_classic_prions.fasta \
