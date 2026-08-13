@@ -120,7 +120,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: plaac-wheel
-          path: cli/plaac*.whl
+          path: cli/dist/plaac*.whl
 
   cli-release:
     needs: cli-test-python
