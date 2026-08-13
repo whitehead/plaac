@@ -155,12 +155,12 @@ jobs:
             cli/README.md \
             LICENSE.TXT \
             cli/R \
-            "${package}/"          
+            "${package}/"
           zip -r "${package}.zip" "${package}"          
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v3
         with:
           files: |
-            plaac-${VERSION}.zip
+            plaac-*.zip
             wheel/*.whl
