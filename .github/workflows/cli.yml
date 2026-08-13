@@ -78,12 +78,24 @@ jobs:
           python -m pip install pytest
           python -m pytest python -v
 
+      - name: Build Python wheel
+        run: |
+          cp target/plaac.jar python/plaac/
+          python -m build python
+          
       - name: Upload jar artifact
         if: matrix.java == 11
         uses: actions/upload-artifact@v7
         with:
           name: plaac-jar
           path: cli/target/plaac.jar
+
+      - name: Upload jar artifact
+        if: matrix.java == 11
+        uses: actions/upload-artifact@v7
+        with:
+          name: plaac-wheel
+          path: cli/python/dist/plaac*.whl
 
   cli-release:
     needs: cli-test
