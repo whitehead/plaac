@@ -15,7 +15,7 @@ on:
     types: [created]
     
 jobs:
-  cli-test:
+  cli-test-java:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -37,9 +37,6 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
-
-      - name: Show Java version
-        run: java -version
 
       - name: Build plaac.jar
         run: |
@@ -66,32 +63,7 @@ jobs:
       - name: Run input-validation tests
         run: |
           bash tests/test_input_validation.sh --no-build
-
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: '3.11'
-
-      - name: Install Python build tools
-        if: matrix.java == 11
-        run: python -m pip install --upgrade pip build pytest
-
-      - name: Prepare Python package
-        if: matrix.java == 11
-        run: cp target/plaac.jar python/plaac/
-
-      - name: Build Python wheel
-        if: matrix.java == 11
-        run: python -m build --wheel python/
-        
-      - name: Install Python wheel
-        if: matrix.java == 11
-        run: python -m pip install python/dist/*.whl
-        
-      - name: Run Python wrapper tests
-        if: matrix.java == 11
-        run: python -m pytest python -v
-
+          
       - name: Upload jar artifact
         if: matrix.java == 11
         uses: actions/upload-artifact@v7
@@ -99,15 +71,57 @@ jobs:
           name: plaac-jar
           path: cli/target/plaac.jar
 
+  cli-test-python:
+    needs: cli-test-java
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cli
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: plaac-jar
+          path: cli/target
+
+      - name: Set up Java 11
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '11'
+          
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+
+      - name: Install Python build tools
+        run: python -m pip install --upgrade pip build pytest
+
+      - name: Prepare Python package
+        run: cp target/plaac.jar python/plaac/
+
+      - name: Build Python wheel
+        run: python -m build --wheel python/
+        
+      - name: Install Python wheel
+        run: python -m pip install python/dist/*.whl
+        
+      - name: Run Python wrapper tests
+        run: python -m pytest python -v
+
       - name: Upload wheel artifact
-        if: matrix.java == 11
         uses: actions/upload-artifact@v7
         with:
           name: plaac-wheel
           path: cli/plaac*.whl
 
   cli-release:
-    needs: cli-test
+    needs: cli-test-python
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
 
