@@ -127,6 +127,9 @@ jobs:
     permissions:
       contents: write
 
+    env:
+      VERSION: ${{ github.event.release.tag_name }}
+      
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -136,19 +139,28 @@ jobs:
         with:
           name: plaac-jar
 
+      - name: Download wheel artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: plaac-wheel
+          path: release
+
       - name: Create release package
         run: |
-          mkdir plaac-${{ github.event.release.tag_name }}
-          cp plaac.jar plaac-${{ github.event.release.tag_name }}/
-          cp cli/example/four_classic_prions.fasta plaac-${{ github.event.release.tag_name }}/
-          cp -a cli/R plaac-${{ github.event.release.tag_name }}/
-          cp cli/README.md plaac-${{ github.event.release.tag_name }}/
-          cp LICENSE.txt plaac-${{ github.event.release.tag_name }}/
-          zip -r plaac-${{ github.event.release.tag_name }}.zip \
-            plaac-${{ github.event.release.tag_name }}
+          package="plaac-${VERSION}"
+          mkdir "${package}"
+          cp -a \
+            release/plaac.jar \
+            cli/example/four_classic_prions.fasta \
+            cli/README.md \
+            LICENSE.txt \
+            cli/R \
+            "${package}/"          
+          zip -r "${package}.zip" "${package}"          
 
-      - name: Upload release asset
+      - name: Upload release assets
         uses: softprops/action-gh-release@v3
         with:
           files: |
-            plaac-${{ github.event.release.tag_name }}.zip          
+            plaac-${VERSION}.zip
+            release/*.whl
