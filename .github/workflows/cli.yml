@@ -1,4 +1,4 @@
-name: PLAAC CLI unit test
+name: PLAAC CLI Release and CI
 
 on:
   push:
