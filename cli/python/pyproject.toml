@@ -20,8 +20,14 @@ test = ["pytest"]
 [project.urls]
 Homepage = "https://github.com/whitehead/plaac"
 
-[tool.setuptools]
-packages = ["plaac"]
+# src layout: the package lives under src/, so `import plaac` resolves to the
+# installed package, never the in-tree source -- tests run against the built
+# wheel rather than accidentally importing the source tree.
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [tool.setuptools.package-data]
 # The precompiled jar is copied into the package before building the wheel so

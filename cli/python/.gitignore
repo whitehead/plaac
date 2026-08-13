@@ -4,6 +4,7 @@ __pycache__/
 build/
 dist/
 # The jar is a build artifact copied in before packaging, not source.
-plaac/plaac.jar
+src/plaac/plaac.jar
+.pytest_cache/
 # setuptools-scm writes this when configured to; not used here but ignore anyway.
 plaac/_version.py

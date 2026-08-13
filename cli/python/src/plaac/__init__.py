@@ -90,8 +90,8 @@ def find_jar(explicit: Optional[PathLike] = None) -> Path:
             return p.resolve()
         raise PlaacError(f"$PLAAC_JAR is set but no file exists there: {env}")
 
-    here = Path(__file__).resolve().parent          # .../cli/python/plaac
-    cli_dir = here.parent.parent                     # .../cli
+    here = Path(__file__).resolve().parent          # .../plaac (src/plaac in a checkout)
+    cli_dir = here.parents[2]                         # .../cli in a source checkout
     # web/bin/plaac.jar is deliberately NOT searched: it is a separately-managed
     # artifact for the web app and is the most likely to differ in version from
     # the Python package, which would trip the version-skew check (check_version).
