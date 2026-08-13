@@ -14,7 +14,7 @@ gem 'activesupport', '~> 8.1'
 # view
 gem 'sprockets', '~> 4.1'
 gem 'coffee-script', '~> 2.4.1'
-gem 'haml', '~> 5.0'
+gem 'haml', '~> 7.3'
 gem 'sass', '~> 3.7'
 
 # utility
