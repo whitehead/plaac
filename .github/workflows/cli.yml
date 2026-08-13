@@ -81,7 +81,7 @@ jobs:
       - name: Build Python wheel
         run: |
           cp target/plaac.jar python/plaac/
-          python -m pip wheel python
+          python -m pip wheel python/
           
       - name: Upload jar artifact
         if: matrix.java == 11
