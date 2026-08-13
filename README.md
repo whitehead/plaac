@@ -50,7 +50,7 @@ Each release provides two packages:
 For most users who want to run PLAAC from the command line, the ZIP package is
 the simplest option.
 
-### Quick start: command-line ZIP package
+#### Quick start: command-line ZIP package
 
 1. Download the `plaac-v<VERSION>.zip` file from the
    [GitHub Releases page](https://github.com/whitehead/plaac/releases).
@@ -90,7 +90,7 @@ Java source code is not necessary for normal use.
 More detailed instructions for the use of the `plaac` cli are found in
 [`cli/README.md`](cli/README.md).
 
-### Quick start: Python wheel
+#### Quick start: Python wheel
 
 The Python wheel provides a Python package and command-line interface for PLAAC.
 
