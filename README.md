@@ -35,41 +35,92 @@ Prion-Like Amino Acid Composition](http://bioinformatics.oxfordjournals.org/cont
 Command-line application (cli)
 ------------------------------
 
-### Installing released package
+### Installing a released package
 
-For most users, the recommended way to install PLAAC is to download the latest release package from the [GitHub Releases page](https://github.com/whitehead/plaac/releases).
+Released versions of the PLAAC command-line application are available from the
+[GitHub Releases page](https://github.com/whitehead/plaac/releases).
 
-Download the PLAAC command-line ZIP package and unpack it. The package contains the precompiled `plaac.jar` and the ancillary files needed to
-run PLAAC.
+Each release provides two packages:
 
-> PLAAC requires Java 11 or later. To check whether Java is installed,
-> open a terminal or command prompt and type: `java -version`.  If
-> Java is not installed, it can be downloaded from
-> http://www.java.com/.
+- `plaac-v<VERSION>.zip` — a self-contained command-line distribution containing
+  the precompiled `plaac.jar`, example input, R plotting scripts, and documentation.
+- `plaac-<VERSION>-py3-none-any.whl` — a Python package that provides a command-line
+  interface to the same PLAAC Java application.
 
-The release package contains a precompiled version of PLAAC, so compiling the Java source code is not necessary for normal use.
+For most users who want to run PLAAC from the command line, the ZIP package is
+the simplest option.
+
+#### Quick start: command-line ZIP package
+
+1. Download the `plaac-v<VERSION>.zip` file from the
+   [GitHub Releases page](https://github.com/whitehead/plaac/releases).
+
+2. Unpack the ZIP file:
+
+       unzip plaac-v<VERSION>.zip
+
+   This creates a directory named `plaac-v<VERSION>` containing the PLAAC
+   application and supporting files.
+
+3. Change into the unpacked directory:
+
+       cd plaac-v<VERSION>
+
+4. Check that Java 11 or later is installed:
+
+       java -version
+
+   If Java is not installed, it can be downloaded from
+   [java.com](http://www.java.com/).
+
+5. Run PLAAC using the example FASTA file included in the distribution:
+
+       java -jar plaac.jar -i four_classic_prions.fasta
+
+   This runs the command-line application using the included example input
+   and writes the results to standard output.
 
 To display the available command-line options, run:
 
-    java -jar plaac.jar
+       java -jar plaac.jar
+
+The release package contains a precompiled version of PLAAC, so compiling the
+Java source code is not necessary for normal use.
+
+More detailed instructions for the use of the `plaac` cli are found in
+[`cli/README.md`](cli/README.md).
+
+#### Quick start: Python wheel
+
+The Python wheel provides a Python package and command-line interface for PLAAC.
+
+1. Download the `plaac-<VERSION>-py3-none-any.whl` file from the
+   [GitHub Releases page](https://github.com/whitehead/plaac/releases).
+
+2. Install the downloaded wheel:
+
+       python -m pip install plaac-<VERSION>-py3-none-any.whl
+
+   You can also provide the path to the downloaded file if it is in another
+   directory.
+
+3. Use the PLAAC API wrapper as described in the
+   [Python wrapper documentation](cli/python/README.md).
+
+The Python package also requires Java 11 or later because the PLAAC application
+includes the Java implementation.
 
 ### Building from source
 
 Building PLAAC from source is primarily intended for developers and
-users who need to work with unreleased code or modify the PLAAC source.
+users who need to work with unreleased code or modify the PLAAC
+source. See [`cli/README.md`](cli/README.md#building-from-source) for
+step-by-step details.
 
-The command-line application can be built from a Git checkout using:
-
-    cd cli
-    ./build_plaac.sh
-
-This will build a ```plaac.jar``` file , as well as column outputs for the website in the ```_plaac_headers.haml``` both in the ```cli/target``` subdirectory.  
-
-PLAAC versions are derived from Git tags. Release builds use the Git/GitHub
-tag as the source of the version number, while development builds include
-information identifying the development version and Git commit.
-
-More  detailed instructions for the use of the ```plaac``` cli are found in [```cli/README.md```](https://github.com/whitehead/plaac/blob/master/cli/README.md).
+> **Note**: PLAAC versions are derived from Git tags. Release builds use the
+> Git/GitHub tag as the source of the version number, while
+> development builds include information identifying the development
+> version and Git commit.
 
 Web-application
 ----------------
@@ -79,14 +130,10 @@ the PLAAC website.
 
 The web application uses the same compiled Java command-line application
 as the standalone CLI. To build the web application from source, first
-follow the CLI build instructions above.
+follow the CLI source build instructions above to obtain a `plaac.jar` file.
 
-The generated files can then be installed into the web application as
-described in `web/README.md`.
+The generated `plaac.jar` can then be installed into the web
+application.  The application also requires the R plotting scripts (in
+particular `Rscript`). See [`web/README.md`](web/README.md) for the
+remaining installation and development instructions.
 
-The web application also requires the R plotting scripts. See
-`web/README.md` for the remaining installation and development
-instructions.
-
-The remaining installation steps are detailed in the [```web/README.md```](https://github.com/whitehead/plaac/blob/master/web/README.md) (note that ```Rscript``` 
-should be installed).
