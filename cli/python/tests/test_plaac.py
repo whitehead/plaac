@@ -34,7 +34,8 @@ def _jar_available():
 
 
 requires_jar = pytest.mark.skipif(
-    not _jar_available(), reason="plaac.jar / java not available"
+    not _jar_available() and os.environ.get("CI") != "true",
+    reason="plaac.jar / java not available"
 )
 
 # A small, realistic snippet of PLAAC summary output for pure-parsing tests.
