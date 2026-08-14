@@ -71,7 +71,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: plaac-jar
-          path: cli/python/plaac/
+          path: cli/python/src/plaac/
 
       - name: Set up Java 11
         uses: actions/setup-java@v5

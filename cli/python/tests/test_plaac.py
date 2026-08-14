@@ -1,23 +1,25 @@
 """
 Tests for the plaac Python wrapper (pytest).
 
-Pure-parsing tests run anywhere; the end-to-end tests are skipped if a built
-plaac.jar or a Java runtime is unavailable.
+The package uses a src layout, so `import plaac` resolves to the *installed*
+package rather than the in-tree source -- these tests therefore exercise the
+built/installed wheel. Install the package first (`pip install ./cli/python`, or
+`-e` for development). Pure-parsing tests run anywhere; the end-to-end tests are
+skipped if a built plaac.jar or a Java runtime is unavailable.
 
-Run:  pytest cli/python           (or: cd cli/python && pytest)
+Run:  pip install ./cli/python && pytest cli/python
 """
 
 import os
 import subprocess
-import sys
 import tempfile
 
 import pytest
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import plaac  # noqa: E402
+import plaac
 
-_CLI_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# tests/ lives at cli/python/tests/, so the CLI dir is three levels up.
+_CLI_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _EXAMPLE = os.path.join(_CLI_DIR, "example", "four_classic_prions.fasta")
 _CLASSIC = ["Sup35p", "Ure2p", "Rnq1p", "Mot3p"]
 
@@ -32,7 +34,8 @@ def _jar_available():
 
 
 requires_jar = pytest.mark.skipif(
-    not _jar_available(), reason="plaac.jar / java not available"
+    not _jar_available() and os.environ.get("CI") != "true",
+    reason="plaac.jar / java not available"
 )
 
 # A small, realistic snippet of PLAAC summary output for pure-parsing tests.

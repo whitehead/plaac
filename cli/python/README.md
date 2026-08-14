@@ -28,7 +28,7 @@ Install the wheel from a GitHub release (it bundles `plaac.jar`), or build a
 self-contained wheel from a source checkout after building the jar:
 
     cd cli && ./build_plaac.sh
-    cp target/plaac.jar python/plaac/plaac.jar     # bundle the built jar
+    cp target/plaac.jar python/src/plaac/plaac.jar # bundle the built jar
     pip install ./python                            # or: pip install "./python[pandas]"
 
 The package version is derived from the Git tag via `setuptools-scm` — the same
@@ -109,8 +109,11 @@ suite in `cli/tests/` does.
 Testing
 -------
 
-    pip install pytest      # or: pip install "./cli/python[test]"
+    pip install "./cli/python[test]"     # installs the package + pytest
     pytest cli/python -v
 
-Pure-parsing tests run anywhere; the end-to-end tests self-skip if `plaac.jar`
-or Java is unavailable.
+The package uses a **src layout**, so `import plaac` resolves to the installed
+package, not the in-tree source — the tests therefore run against the built /
+installed wheel rather than accidentally importing the source tree. Install the
+package before running them (`-e` for development). Pure-parsing tests run
+anywhere; the end-to-end tests self-skip if `plaac.jar` or Java is unavailable.
