@@ -1,4 +1,4 @@
-name: PLAAC web container
+name: PLAAC web container build
 
 on:
   push:
