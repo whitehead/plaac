@@ -1,0 +1,16 @@
+[Unit]
+Description=PLAAC web application
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=localhost/plaac-web:latest
+PublishPort=4567:4567
+ContainerName=plaac-web
+
+[Service]
+Restart=always
+TimeoutStartSec=90
+
+[Install]
+WantedBy=default.target
