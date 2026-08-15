@@ -22,4 +22,7 @@ RUN mkdir -p tmp logs /tmp/clusty
 
 EXPOSE 4567
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD ruby -rnet/http -e 'exit(Net::HTTP.get_response(URI("http://127.0.0.1:4567/")).is_a?(Net::HTTPSuccess) ? 0 : 1)'
+
 CMD ["bundle", "exec", "rackup", "config.ru", "-p", "4567", "-o", "0.0.0.0"]
