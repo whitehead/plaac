@@ -2,6 +2,9 @@ name: PLAAC web container build
 
 on:
   push:
+    push:
+      branches:
+        - deploy-web
     tags:
       - 'v*'
   workflow_dispatch:
