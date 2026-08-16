@@ -1,10 +1,10 @@
 name: PLAAC web container build
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - '.github/workflows/web-container.yml'
-  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
