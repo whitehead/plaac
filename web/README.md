@@ -65,11 +65,14 @@ The server requires:
 
 The following instructions assume a Debian distribution:
 
+
+#### Initial setup
+
+Install Git:
+
 ```bash
 sudo apt update && sudo apt install -y git
 ```
-
-#### Initial setup
 
 Clone the PLAAC repository on the server:
 
@@ -84,7 +87,7 @@ Run the server setup script:
 ./deploy/setup-plaac-server.sh
 ```
 
-The script, installs podman builds the PLAAC web container from the current checkout, installs the Podman/Quadlet service, enables the service to run without an interactive login, and starts the application.
+The script installs `podman`, builds the PLAAC web container from the current checkout, installs the Podman/Quadlet service, enables the service to run without an interactive login, and starts the application.
 
 Check the service:
 
