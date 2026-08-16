@@ -44,7 +44,7 @@ jobs:
             type=ref,event=tag
             type=sha
             labels: |
-              org.opencontainers.image.description="PLAAC web server container image"
+              org.opencontainers.image.description=PLAAC web server container image
 
       - name: Build and push
         uses: docker/build-push-action@v7
