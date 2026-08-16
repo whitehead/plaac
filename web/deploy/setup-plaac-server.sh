@@ -12,12 +12,12 @@ if ! command -v podman >/dev/null 2>&1; then
 fi
 
 echo "Building $IMAGE..."
-podman build -t "$IMAGE" "$WEB_DIR"
+podman build --format docker -t "$IMAGE" "$WEB_DIR"
 
 mkdir -p "$QUADLET_DIR"
 
 install -m 0644 \
-    "$SCRIPT_DIR/plaac.container" \
+    "$SCRIPT_DIR/quadlet/plaac.container" \
     "$QUADLET_DIR/plaac.container"
 
 loginctl enable-linger "$USER"
