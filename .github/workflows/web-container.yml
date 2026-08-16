@@ -1,4 +1,4 @@
-name: PLAAC web container build
+name: PLAAC docker web container build
 
 on:
   workflow_dispatch:
