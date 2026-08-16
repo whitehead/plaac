@@ -33,7 +33,12 @@ bundle install
 ### Locally
 
 1. Create a ```logs``` directory:```mkdir logs```
-2. Use the included **dev_server** script to launch a  development webserver at [http://localhost:4567](http://localhost:4567)
+2. Ensure the `plaac.jar` is built, following the instructions in [`cli/README.md`](../cli/README.md)
+3. Copy the `plaac.jar` to the right place:
+```
+cp ../cli/target/plaac.jar bin/plaac.jar
+```
+4. Use the included **dev_server** script to launch a  development webserver at [http://localhost:4567](http://localhost:4567)
    (note that **shotgun_server** is now obsolete)
 
 ```bash

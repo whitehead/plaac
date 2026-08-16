@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-WEB_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+REPO_DIR="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
 QUADLET_DIR="${HOME}/.config/containers/systemd"
 IMAGE="localhost/plaac-web:latest"
 
@@ -18,7 +18,7 @@ if ! command -v podman >/dev/null 2>&1; then
 fi
 
 echo "Building $IMAGE..."
-podman build --format docker -t "$IMAGE" "$WEB_DIR"
+podman build --format docker -t "$IMAGE" -f "$REPO_DIR/web/Dockerfile" "$REPO_DIR"
 
 mkdir -p "$QUADLET_DIR"
 
