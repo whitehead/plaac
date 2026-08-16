@@ -3,7 +3,7 @@ name: PLAAC web container build
 on:
   push:
     paths:
-      - .github/workflows/web-container.yml
+      - '.github/workflows/web-container.yml'
     tags:
       - 'v*'
   workflow_dispatch:
