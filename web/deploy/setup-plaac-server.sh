@@ -17,8 +17,6 @@ if ! command -v podman >/dev/null 2>&1; then
     fi
 fi
 
-loginctl enable-linger "$USER"
-
 echo "Building $IMAGE..."
 podman build --format docker -t "$IMAGE" -f "$REPO_DIR/web/Dockerfile" "$REPO_DIR"
 
@@ -27,6 +25,8 @@ mkdir -p "$QUADLET_DIR"
 install -m 0644 \
     "$SCRIPT_DIR/quadlet/plaac.container" \
     "$QUADLET_DIR/plaac.container"
+
+loginctl enable-linger "$USER"
 
 systemctl --user daemon-reload
 systemctl --user restart plaac.service
