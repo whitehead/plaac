@@ -27,7 +27,6 @@ rvm use 3.3.10
 gem install bundler
 bundle install
 ```
--------------------------------------------------
 
 ## Deploying the web application
 
@@ -100,14 +99,6 @@ Check the container:
 ```bash
 podman ps
 ```
-
-Test the application from the server:
-
-```bash
-curl http://127.0.0.1:4567/
-```
-
-A successful response should return HTTP 200.
 
 ### Accessing the application
 
