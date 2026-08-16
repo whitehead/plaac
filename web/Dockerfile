@@ -12,6 +12,7 @@ RUN apt-get update \
 WORKDIR /build
 
 COPY cli/ ./cli/
+COPY .git/ .git/
 
 RUN cd cli && ./build_plaac.sh
 
