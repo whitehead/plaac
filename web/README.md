@@ -109,7 +109,45 @@ curl http://127.0.0.1:4567/
 
 A successful response should return HTTP 200.
 
-The application can then be placed behind a reverse proxy such as Caddy to provide a public domain name and HTTPS.
+### Accessing the application
+
+By default, the application listens on TCP port `4567`.
+
+From the server itself:
+
+```bash
+curl http://127.0.0.1:4567/
+```
+
+A successful response should return HTTP 200. To find the server's IP address on Debian:
+
+```bash
+hostname -I
+```
+
+For example:
+
+```text
+192.168.122.42
+```
+
+From another computer on the same network, access the application at:
+
+```text
+http://192.168.122.42:4567/
+```
+
+For a VPS, `hostname -I` may show the server's private address rather than its public Internet address. The VPS provider's control panel should be used to determine the public IP address when necessary.
+
+If the server is protected by a firewall, TCP port 4567 must be allowed. On a Debian server using UFW:
+
+```bash
+sudo ufw allow 4567/tcp
+```
+
+Cloud VPS providers may also have a separate network firewall or security-group configuration. If so, TCP port 4567 must be allowed there as well.
+
+Port 4567 is suitable for initial testing. For a public production deployment, the application should normally be placed behind a reverse proxy and HTTPS should be used instead of exposing the application directly.
 
 ### Updating an existing deployment
 
