@@ -59,16 +59,14 @@ The deployment uses Podman and systemd/Quadlet. The container image is built loc
 The server requires:
 
 * Linux with systemd
-* Podman
 * Git
 * A user account with permission to run Podman
 * Internet access to clone the PLAAC repository and build the container image
 
-For example, on Debian:
+The following instructions assume a Debian distribution:
 
 ```bash
-sudo apt update
-sudo apt install -y git podman
+sudo apt update && sudo apt install -y git
 ```
 
 #### Initial setup
@@ -86,7 +84,7 @@ Run the server setup script:
 ./deploy/setup-plaac-server.sh
 ```
 
-The script builds the PLAAC web container from the current checkout, installs the Podman/Quadlet service, enables the service to run without an interactive login, and starts the application.
+The script, installs podman builds the PLAAC web container from the current checkout, installs the Podman/Quadlet service, enables the service to run without an interactive login, and starts the application.
 
 Check the service:
 

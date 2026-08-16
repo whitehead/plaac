@@ -7,8 +7,14 @@ QUADLET_DIR="${HOME}/.config/containers/systemd"
 IMAGE="localhost/plaac-web:latest"
 
 if ! command -v podman >/dev/null 2>&1; then
-    echo "error: podman is not installed" >&2
-    exit 1
+    if [ -f /etc/debian_version ] && command -v apt-get >/dev/null 2>&1; then
+        echo "Podman is not installed; installing it..."
+        sudo apt-get update
+        sudo apt-get install -y podman
+    else
+        echo "error: podman is not installed and automatic installation is only supported on Debian" >&2
+        exit 1
+    fi
 fi
 
 echo "Building $IMAGE..."
