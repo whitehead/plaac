@@ -1,3 +1,5 @@
+# temporary container for building CLI plaac.jar
+
 FROM docker.io/library/ruby:3.3-bookworm AS plaac-builder
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -15,6 +17,8 @@ COPY cli/ ./cli/
 COPY .git/ .git/
 
 RUN cd cli && ./build_plaac.sh
+
+# main container for the web application
 
 FROM docker.io/library/ruby:3.3-bookworm
 
@@ -35,6 +39,8 @@ COPY web/Gemfile web/Gemfile.lock ./
 RUN bundle install
 
 COPY web/ ./
+
+# get the plaac.jar from the build container to include in the webserver
 
 COPY --from=plaac-builder /build/cli/target/plaac.jar ./bin/plaac.jar
 
