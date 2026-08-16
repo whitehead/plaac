@@ -4,8 +4,6 @@ on:
   push:
     paths:
       - '.github/workflows/web-container.yml'
-    tags:
-      - 'v*'
   workflow_dispatch:
 
 env:
