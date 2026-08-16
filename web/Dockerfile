@@ -1,3 +1,7 @@
+LABEL org.opencontainers.image.source=https://github.com/whitehead/plaac
+LABEL org.opencontainers.image.description "PLAAC web server container image"
+LABEL org.opencontainers.image.licenses=MIT
+
 # temporary container for building CLI plaac.jar
 
 FROM docker.io/library/ruby:3.3-bookworm AS plaac-builder
