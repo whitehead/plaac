@@ -1,3 +1,20 @@
+FROM docker.io/library/ruby:3.3-bookworm AS plaac-builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        openjdk-17-jdk-headless \
+        python3 \
+        python3-venv \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+COPY cli/ ./cli/
+
+RUN cd cli && ./build_plaac.sh
+
 FROM docker.io/library/ruby:3.3-bookworm
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -10,13 +27,15 @@ RUN apt-get update \
         build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+WORKDIR /app/web
 
-COPY Gemfile Gemfile.lock ./
+COPY web/Gemfile web/Gemfile.lock ./
 
 RUN bundle install
 
-COPY . .
+COPY web/ ./
+
+COPY --from=plaac-builder /build/cli/target/plaac.jar ./bin/plaac.jar
 
 RUN mkdir -p tmp logs /tmp/clusty
 
