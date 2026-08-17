@@ -235,7 +235,7 @@ cd web
 ./deploy/setup-plaac-server.sh
 ```
 
-The script rebuilds the container from the updated source and restarts the service.
+The script rebuilds the container from the updated source and restarts the service. If you had supplied any optional container or domain name options in the original run, you should supply them again, otherwise the script will fallback to defaults. 
 
 ## Contributing/Hacking
 
