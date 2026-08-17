@@ -155,7 +155,15 @@ Run the server setup script:
 ./deploy/setup-plaac-server.sh
 ```
 
-The script installs `podman`, builds the PLAAC web container from the current checkout, installs the Podman/Quadlet service, enables the service to run without an interactive login, and starts the application.
+By default, the script builds the PLAAC web container from the current checkout. Alternatively, a prebuilt container image can be provided as a command-line argument:
+
+```bash
+./deploy/setup-plaac-server.sh <container>
+```
+
+For example, `<container>` can be an image reference supported by Podman, such as `ghcr.io/whitehead/plaac-web:latest`.
+
+The script installs `podman`, builds or uses the specified PLAAC web container, installs the Podman/Quadlet service, enables the service to run without an interactive login, and starts the application.
 
 Check the service:
 
