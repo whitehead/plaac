@@ -2,48 +2,111 @@
 
 ## Requirements
 
-#### Java
-See [java.com](http://www.java.com/en/) or reference your OS's installation instructions.
+The PLAAC web application requires the following software and dependencies:
 
-#### Rscript & dependencies
+- **Java**, required to run the PLAAC Java application.
+- **Rscript**, with the R packages required by PLAAC, including Cairo support.
+- **Ruby >= 3.3.10**.
+- **Bundler** and the Ruby dependencies specified by the application.
+- A built **`plaac.jar`** from the PLAAC CLI component.
 
-On Debian:
-```bash
-sudo apt-get install littler r-cran-cairodevice
-```
-On Fedora:
-```bash
-sudo yum install R-core
-```
-
-#### Ruby >= 3.3.10 ([with rvm](https://rvm.io/))
-```bash
-rvm install 3.3.10
-rvm use 3.3.10
-```
-
-#### Ruby Dependencies ([bundler](http://bundler.io/))
-```bash
-gem install bundler
-bundle install
-```
+The exact installation method for these dependencies depends on the deployment environment. The local installation instructions below provide an example for a development environment.
 
 ## Deploying the web application
 
 ### Local deployment
 
-1. Create a ```logs``` directory:```mkdir logs```
-2. Ensure the `plaac.jar` is built, following the instructions in [`cli/README.md`](../cli/README.md)
-3. Copy the `plaac.jar` to the right place:
+The following steps set up the PLAAC web application for running on a local machine, for development directly from a git checkout.
+
+#### 1. Install the required system dependencies
+
+Install R, on Debian-based systems:
+
+```bash
+sudo apt-get install littler r-cran-cairodevice
 ```
-cp ../cli/target/plaac.jar bin/plaac.jar
+
+On Fedora:
+
+```bash
+sudo yum install R-core
 ```
-4. Use the included **dev_server** script to launch a  development webserver at [http://localhost:4567](http://localhost:4567)
-   (note that **shotgun_server** is now obsolete)
+
+Install Java using [java.com](http://www.java.com/en/) or your
+operating system's package manager and installation instructions. You
+will need both the JRE (for running the JAR) and the JDK (to compile
+it in the `build_plaac.sh` step).
+
+On Debian:
+
+```bash
+sudo apt-get install openjdk-17-jre-headless openjdk-17-jdk-headless
+```
+
+On Fedora:
+
+```bash
+sudo yum install java-17-openjdk-headless java-17-openjdk-devel
+```
+
+#### 2. Install Ruby
+
+PLAAC requires Ruby >= 3.3.10, typically via your distribution packages:
+
+On Debian:
+
+```bash
+sudo apt-get install ruby
+```
+
+On Fedora:
+
+```bash
+sudo yum install ruby rubygems
+```
+
+If using [RVM](https://rvm.io/):
+
+```bash
+rvm install 3.3.10
+rvm use 3.3.10
+```
+
+#### 3. Install the Ruby dependencies
+
+Install Bundler and the application's Ruby dependencies:
+
+```bash
+cd web
+gem install bundler
+bundle install
+cd ..
+```
+
+#### 4. Create the logs directory
+
+```bash
+mkdir logs
+```
+
+#### 5. Build the PLAAC JAR
+
+Ensure that `plaac.jar` is built (detailed instructions are in [`cli/README.md`](../cli/README.md)) and copy the resulting JAR into the web application's `bin` directory:
+
+```bash
+cd ../cli/
+./build_plaac.sh
+cp target/plaac.jar ../web/bin/plaac.jar
+```
+#### 6. Start the development server
+
+Use the included **`dev_server`** script to launch the development webserver at [http://localhost:4567](http://localhost:4567):
 
 ```bash
 bin/dev_server
 ```
+
+The `shotgun_server` script is obsolete and should not be used.
 
 ### In Apache/Nginx
 
