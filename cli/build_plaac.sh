@@ -5,9 +5,12 @@ cd $SCRIPT_DIR
 
 # now get the package version
 
-echo "getting version"
-
-PLAAC_VERSION=$(./get_plaac_version.sh)
+if [ -n "${PLAAC_VERSION:-}" ]; then
+    echo "using supplied version: ${PLAAC_VERSION}"
+else
+    echo "getting version"
+    PLAAC_VERSION=$(./get_plaac_version.sh)
+fi
 
 echo "ok (Version: ${PLAAC_VERSION})"
 
