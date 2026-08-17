@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
 QUADLET_DIR="${HOME}/.config/containers/systemd"
 IMAGE="localhost/plaac-web:latest"
-
+DOMAIN="${DOMAIN:-}"
 
 if [ -f /etc/debian_version ] && command -v apt-get >/dev/null 2>&1; then
     packages=()
@@ -55,9 +55,24 @@ echo "Configuring Caddy..."
 
 sudo tee /etc/caddy/Caddyfile >/dev/null <<'EOF'
 :80 {
-    reverse_proxy 127.0.0.1:4567
+    reverse_proxy 127.0.0.1:4567 {
+        header_up Host localhost
+        header_up -X-Forwarded-Host
+    }
 }
 EOF
+
+if [ -n "$DOMAIN" ]; then
+    sudo tee -a /etc/caddy/Caddyfile >/dev/null <<EOF
+
+$DOMAIN {
+    reverse_proxy 127.0.0.1:4567 {
+        header_up Host localhost
+        header_up -X-Forwarded-Host
+    }
+}
+EOF
+fi
 
 sudo systemctl enable caddy
 sudo systemctl restart caddy
