@@ -12,11 +12,9 @@ The PLAAC web application requires the following software and dependencies:
 
 The exact installation method for these dependencies depends on the deployment environment. The local installation instructions below provide an example for a development environment.
 
-## Deploying the web application
+## Local deployment of web application
 
-### Local deployment
-
-The following steps set up the PLAAC web application for running on a local machine, for development directly from a git checkout.
+The following steps set up the PLAAC web application for running on a local machine, directly from a git checkout.
 
 #### 1. Install the required system dependencies
 
@@ -108,11 +106,9 @@ bin/dev_server
 
 The `shotgun_server` script is obsolete and should not be used.
 
-### In Apache/Nginx
+> **Apache/Nginx** The server is a rack compatable application. Please consult the official guides for your webserver, e..g Ngnix or Apache.
 
-The server is a rack compatable application. Please consult the official guides for your webserver, e..g Ngnix or Apache.
-
-### Container-based deployment
+## Container-based deployment
 
 The web application can be deployed as a Podman container on a Linux
 server. The container includes the Ruby application and its
@@ -122,7 +118,7 @@ installed directly.
 
 The deployment uses Podman and systemd/Quadlet. The container image is built locally from the PLAAC source checkout, so access to a container registry is not required.
 
-#### Server requirements
+### Server requirements
 
 The server requires:
 
@@ -134,22 +130,22 @@ The server requires:
 The following instructions assume a Debian distribution:
 
 
-#### Initial setup
+### Initial setup
 
-Install Git:
+#### 1. Install Git:
 
 ```bash
 sudo apt update && sudo apt install -y git
 ```
 
-Clone the PLAAC repository on the server:
+#### 2. Clone the PLAAC repository on the server
 
 ```bash
 git clone https://github.com/whitehead/plaac.git
 cd plaac/web
 ```
 
-Run the server setup script:
+#### 3. Run the server setup script:
 
 ```bash
 ./deploy/setup-plaac-server.sh
@@ -165,19 +161,19 @@ For example, `<container>` can be an image reference supported by Podman, such a
 
 The script installs `podman`, builds or uses the specified PLAAC web container, installs the Podman/Quadlet service, enables the service to run without an interactive login, and starts the application.
 
-Check the service:
+#### 4. Check the service:
 
 ```bash
 systemctl --user status plaac.service
 ```
 
-Check the container:
+#### 5. Check the container:
 
 ```bash
 podman ps
 ```
 
-#### Accessing the application
+### Accessing the application
 
 By default, the application listens on TCP port `4567`.
 
@@ -223,7 +219,7 @@ If `DOMAIN` is not set, the server remains available through its IP address over
 
 The Caddy HTTP configuration does not contain the server's IP address, so it continues to work if the public IP changes.
 
-#### Updating an existing deployment
+### Updating an existing deployment
 
 To update the application, update the source checkout and run the setup script again:
 
@@ -253,7 +249,6 @@ This is a [sinatra](http://www.sinatrarb.com/) app. Start by looking at  ```lib/
 #### Application flow
 
 Designed to handle the submission of FASTA files to the command-line `plaac.jar` program.
-
 
 **flow**
 ```text
