@@ -113,38 +113,46 @@ By default, the application listens on TCP port `4567`.
 From the server itself:
 
 ```bash
-curl http://127.0.0.1:4567/
+curl -I http://127.0.0.1:4567/
 ```
 
-A successful response should return HTTP 200. To find the server's IP address on Debian:
+A successful response should return HTTP 200. 
+
+The `setup-plaac-server.sh` also configures Caddy as a reverse proxy, so the application can be accessed externally through HTTP without exposing its internal port directly.
+
+By default, access the server using its public IP address:
+
+```text
+http://<server-ip>/
+```
+
+The server's IP address can be found with:
 
 ```bash
 hostname -I
 ```
 
-For example:
-
-```text
-192.168.122.42
-```
-
-From another computer on the same network, access the application at:
-
-```text
-http://192.168.122.42:4567/
-```
-
-For a VPS, `hostname -I` may show the server's private address rather than its public Internet address. The VPS provider's control panel should be used to determine the public IP address when necessary.
-
-If the server is protected by a firewall, TCP port 4567 must be allowed. On a Debian server using UFW:
+For a public deployment, a domain name and access via HTTPS can be configured by setting the `DOMAIN` environment variable:
 
 ```bash
-sudo ufw allow 4567/tcp
+DOMAIN=plaac.example.com ./deploy/setup-plaac-server.sh
 ```
 
-Cloud VPS providers may also have a separate network firewall or security-group configuration. If so, TCP port 4567 must be allowed there as well.
+Caddy will then configure HTTPS automatically:
 
-Port 4567 is suitable for initial testing. For a public production deployment, the application should normally be placed behind a reverse proxy and HTTPS should be used instead of exposing the application directly.
+```text
+https://plaac.example.com/
+```
+
+The domain's DNS record must point to the server's public IP address. If the server's IP address changes, only the DNS record needs to be updated.
+
+If `DOMAIN` is not set, the server remains available through its IP address over HTTP.
+
+#### Technical details
+
+The application listens internally on TCP port `4567`. Caddy proxies requests to this port and listens publicly on port `80`. When a domain is configured, Caddy also listens on port `443` and manages the TLS certificate.  Cloud VPS providers may also have a separate network firewall or security-group configuration. If so, TCP port 4567 must be allowed there as well.
+
+The Caddy HTTP configuration does not contain the server's IP address, so it continues to work if the public IP changes.
 
 ### Updating an existing deployment
 
