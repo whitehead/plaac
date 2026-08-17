@@ -116,7 +116,9 @@ dependencies, the Java runtime required to run `plaac.jar`, and R for
 generating plots. The server therefore does not need Ruby, Java, or R
 installed directly.
 
-The deployment uses Podman and systemd/Quadlet. The container image is built locally from the PLAAC source checkout, so access to a container registry is not required.
+The deployment uses Podman and systemd/Quadlet. The container image is
+either supplied from container registry, or built locally from the
+PLAAC source checkout, if no container image is supplied.
 
 ### Server requirements
 
@@ -128,7 +130,6 @@ The server requires:
 * Internet access to clone the PLAAC repository and build the container image
 
 The following instructions assume a Debian distribution:
-
 
 ### Initial setup
 
@@ -157,7 +158,7 @@ By default, the script builds the PLAAC web container from the current checkout.
 ./deploy/setup-plaac-server.sh <container>
 ```
 
-For example, `<container>` can be an image reference supported by Podman, such as `ghcr.io/whitehead/plaac-web:latest`.
+For example, `<container>` can be an image reference supported by Podman, in the format of `ghcr.io/<username>/plaac-web:latest`.
 
 The script installs `podman`, builds or uses the specified PLAAC web container, installs the Podman/Quadlet service, enables the service to run without an interactive login, and starts the application.
 
