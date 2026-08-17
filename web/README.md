@@ -30,7 +30,7 @@ bundle install
 
 ## Deploying the web application
 
-### Locally
+### Local deployment
 
 1. Create a ```logs``` directory:```mkdir logs```
 2. Ensure the `plaac.jar` is built, following the instructions in [`cli/README.md`](../cli/README.md)
@@ -49,7 +49,7 @@ bin/dev_server
 
 The server is a rack compatable application. Please consult the official guides for your webserver, e..g Ngnix or Apache.
 
-### On a server
+### Container-based deployment
 
 The web application can be deployed as a Podman container on a Linux
 server. The container includes the Ruby application and its
@@ -106,7 +106,7 @@ Check the container:
 podman ps
 ```
 
-### Accessing the application
+#### Accessing the application
 
 By default, the application listens on TCP port `4567`.
 
@@ -148,13 +148,11 @@ The domain's DNS record must point to the server's public IP address. If the ser
 
 If `DOMAIN` is not set, the server remains available through its IP address over HTTP.
 
-#### Technical details
-
-The application listens internally on TCP port `4567`. Caddy proxies requests to this port and listens publicly on port `80`. When a domain is configured, Caddy also listens on port `443` and manages the TLS certificate.  Cloud VPS providers may also have a separate network firewall or security-group configuration. If so, TCP port 4567 must be allowed there as well.
+> The application listens internally on TCP port `4567`. Caddy proxies requests to this port and listens publicly on port `80`. When a domain is configured, Caddy also listens on port `443` and manages the TLS certificate.  Cloud VPS providers may also have a separate network firewall or security-group configuration. If so, TCP port 4567 must be allowed there as well.
 
 The Caddy HTTP configuration does not contain the server's IP address, so it continues to work if the public IP changes.
 
-### Updating an existing deployment
+#### Updating an existing deployment
 
 To update the application, update the source checkout and run the setup script again:
 
