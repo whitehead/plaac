@@ -6,6 +6,7 @@ on:
       - '.github/workflows/cli.yml'
       - 'cli/build_plaac.sh'
       - 'cli/build_docs.py'
+      - 'cli/get_plaac_version.py'      
       - 'cli/src/**'
       - 'cli/tests/**'
       - 'cli/python/**'
