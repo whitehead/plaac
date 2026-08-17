@@ -7,6 +7,7 @@ QUADLET_DIR="${HOME}/.config/containers/systemd"
 CONTAINER_IMAGE="${1:-${IMAGE:-}}"
 IMAGE="${CONTAINER_IMAGE:-localhost/plaac-web:latest}"
 DOMAIN="${DOMAIN:-}"
+PLAAC_VERSION=$("$REPO_DIR/cli/get_plaac_version.sh")
 
 if [ -f /etc/debian_version ] && command -v apt-get >/dev/null 2>&1; then
     packages=()
@@ -41,7 +42,7 @@ if [ -n "$CONTAINER_IMAGE" ]; then
     podman pull "$IMAGE"
 else
     echo "Building $IMAGE..."
-    podman build --cgroup-manager=cgroupfs --format docker -t "$IMAGE" -f "$REPO_DIR/web/Dockerfile" "$REPO_DIR"
+    podman build  --build-arg "PLAAC_VERSION=$PLAAC_VERSION" --cgroup-manager=cgroupfs --format docker -t "$IMAGE" -f "$REPO_DIR/web/Dockerfile" "$REPO_DIR"
 fi
 
 mkdir -p "$QUADLET_DIR"

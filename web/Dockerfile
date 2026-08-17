@@ -4,6 +4,10 @@ FROM docker.io/library/ruby:3.3-bookworm AS plaac-builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+ARG PLAAC_VERSION
+
+ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_PLAAC=${PLAAC_VERSION}
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         openjdk-17-jdk-headless \
@@ -15,7 +19,6 @@ RUN apt-get update \
 WORKDIR /build
 
 COPY cli/ ./cli/
-COPY .git/ .git/
 
 RUN cd cli && ./build_plaac.sh
 

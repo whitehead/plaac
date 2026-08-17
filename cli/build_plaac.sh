@@ -3,33 +3,11 @@
 SCRIPT_DIR=`dirname $0`
 cd $SCRIPT_DIR
 
-# install Python's setuptools-scm to get version information
-VENV=.build-venv
-
-if [ ! -d "$VENV" ]; then
-    echo "Creating Python build environment..."
-    python3 -m venv "$VENV"
-fi
-
-. "$VENV/bin/activate"
-
-python -m pip install --upgrade pip >/dev/null
-python -m pip install -q "setuptools-scm>=8,<9"
-
 # now get the package version
 
 echo "getting version"
 
-PLAAC_VERSION=$(python - <<'EOF'
-from setuptools_scm import get_version
-print(get_version(
-    root="..",
-    version_scheme="guess-next-dev",
-    local_scheme="node-and-date",
-    fallback_version="1.1.0.dev0",
-))
-EOF
-)
+PLAAC_VERSION=$(./get_plaac_version.sh)
 
 echo "ok (Version: ${PLAAC_VERSION})"
 
