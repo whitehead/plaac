@@ -11,10 +11,10 @@ fi
 
 . "$VENV/bin/activate"
 
-python -m pip install --upgrade pip >/dev/null
-python -m pip install -q "setuptools-scm>=8,<9"
+python3 -m pip install --upgrade pip >/dev/null
+python3 -m pip install -q "setuptools-scm>=8,<9"
 
-python - <<'EOF'
+python3 - <<'EOF'
 from setuptools_scm import get_version
 
 print(get_version(
