@@ -20,7 +20,7 @@ from setuptools_scm import get_version
 print(get_version(
     root="..",
     version_scheme="guess-next-dev",
-    local_scheme="node-and-date",se
+    local_scheme="node-and-date",
     fallback_version="1.1.0.dev0",
 ))
 EOF
