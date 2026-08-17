@@ -156,15 +156,23 @@ cd plaac/web
 ./deploy/setup-plaac-server.sh
 ```
 
-By default, the script builds the PLAAC web container from the current checkout. Alternatively, a prebuilt container image can be provided as a command-line argument:
-
-```bash
-./deploy/setup-plaac-server.sh <container>
-```
-
-For example, `<container>` can be an image reference supported by Podman, in the format of `ghcr.io/<username>/plaac-web:latest`.
-
 The script installs `podman`, builds or uses the specified PLAAC web container, installs the Podman/Quadlet service, enables the service to run without an interactive login, and starts the application.
+
+Optional arguments/environment variables:
+
+* **Supply container image**.  By default the script builds the PLAAC web container from the current checkout. Alternatively, a prebuilt container image can be provided as a command-line argument:
+
+  ```bash
+  ./deploy/setup-plaac-server.sh <container>
+  ```
+
+  For example, `<container>` can be an image reference supported by Podman, in the format of `ghcr.io/<username>/plaac-web:latest`.
+
+* **Supply domain name**. You can also optionally supply a domain name to allow access via HTTPS configured by setting the `DOMAIN` environment variable (this is suitable for public deployment):
+
+  ```bash
+  DOMAIN=plaac.example.com ./deploy/setup-plaac-server.sh
+  ```
 
 #### 4. Check the service:
 
@@ -182,13 +190,13 @@ podman ps
 
 By default, the application listens on TCP port `4567`.
 
-From the server itself:
+To check initial setup, from the server itself run:
 
 ```bash
 curl -I http://127.0.0.1:4567/
 ```
 
-A successful response should return HTTP 200. 
+A successful response should return `HTTP 200`. 
 
 The `setup-plaac-server.sh` also configures Caddy as a reverse proxy, so the application can be accessed externally through HTTP without exposing its internal port directly.
 
@@ -204,21 +212,13 @@ The server's IP address can be found with:
 hostname -I
 ```
 
-For a public deployment, a domain name and access via HTTPS can be configured by setting the `DOMAIN` environment variable:
-
-```bash
-DOMAIN=plaac.example.com ./deploy/setup-plaac-server.sh
-```
-
-Caddy will then configure HTTPS automatically:
+If you had set the `DOMAIN` environment variable during the setup above, Caddy will then configure HTTPS automatically with whatever you had used, e.g.:
 
 ```text
 https://plaac.example.com/
 ```
 
-The domain's DNS record must point to the server's public IP address. If the server's IP address changes, only the DNS record needs to be updated.
-
-If `DOMAIN` is not set, the server remains available through its IP address over HTTP.
+The domain's DNS record must point to the server's public IP address. If the server's IP address changes, only the DNS record needs to be updated.  If `DOMAIN` is not set, the server remains available through its IP address over HTTP.
 
 > The application listens internally on TCP port `4567`. Caddy proxies requests to this port and listens publicly on port `80`. When a domain is configured, Caddy also listens on port `443` and manages the TLS certificate.  Cloud VPS providers may also have a separate network firewall or security-group configuration. If so, TCP port 4567 must be allowed there as well.
 
