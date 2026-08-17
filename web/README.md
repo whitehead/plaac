@@ -168,7 +168,7 @@ Optional arguments/environment variables:
 
   For example, `<container>` can be an image reference supported by Podman, in the format of `ghcr.io/<username>/plaac-web:latest`.
 
-* **Supply domain name**. You can also optionally supply a domain name to allow access via HTTPS configured by setting the `DOMAIN` environment variable (this is suitable for public deployment):
+* **Supply domain name**. You can also optionally supply a domain name to allow access via HTTPS, suitable for public deployment. This is configured by setting the `DOMAIN` environment variable:
 
   ```bash
   DOMAIN=plaac.example.com ./deploy/setup-plaac-server.sh
