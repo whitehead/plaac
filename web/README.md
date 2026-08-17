@@ -18,16 +18,16 @@ The following steps set up the PLAAC web application for running on a local mach
 
 #### 1. Install the required system dependencies
 
-Install R, on Debian-based systems:
+Install R and graphviz (needed for `dot` which generates HMM probability image), on Debian-based systems:
 
 ```bash
-sudo apt-get install littler r-cran-cairodevice
+sudo apt-get install littler r-cran-cairodevice graphviz
 ```
 
 On Fedora:
 
 ```bash
-sudo yum install R-core
+sudo yum install R-core graphviz
 ```
 
 Install Java using [java.com](http://www.java.com/en/) or your
@@ -89,19 +89,23 @@ mkdir logs
 
 #### 5. Build the PLAAC JAR
 
-Ensure that `plaac.jar` is built (detailed instructions are in [`cli/README.md`](../cli/README.md)) and copy the resulting JAR into the web application's `bin` directory:
+Ensure that `plaac.jar` is built (detailed instructions are in [`cli/README.md`](../cli/README.md)) and copy the resulting JAR and other generated files into the web application directory:
 
 ```bash
-cd ../cli/
+cd cli/
 ./build_plaac.sh
-cp target/plaac.jar ../web/bin/plaac.jar
+cp target/plaac.jar ../web/bin/
+cp target/_plaac_headers.haml ../web/views/
+cp target/hmm_default.png ../web/public/
+cd ..
 ```
 #### 6. Start the development server
 
 Use the included **`dev_server`** script to launch the development webserver at [http://localhost:4567](http://localhost:4567):
 
 ```bash
-bin/dev_server
+cd web/
+./bin/dev_server
 ```
 
 The `shotgun_server` script is obsolete and should not be used.
