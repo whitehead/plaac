@@ -9,6 +9,7 @@ RUN apt-get update \
         openjdk-17-jdk-headless \
         python3 \
         python3-venv \
+	graphviz \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
@@ -47,6 +48,8 @@ COPY web/ ./
 # get the plaac.jar from the build container to include in the webserver
 
 COPY --from=plaac-builder /build/cli/target/plaac.jar ./bin/plaac.jar
+COPY --from=plaac-builder /build/cli/target/_plaac_headers.haml ./views/_plaac_headers.haml
+COPY --from=plaac-builder /build/cli/target/hmm_default.png ./public/hmm_default.png
 
 RUN mkdir -p tmp logs /tmp/clusty
 

@@ -18,16 +18,16 @@ The following steps set up the PLAAC web application for running on a local mach
 
 #### 1. Install the required system dependencies
 
-Install R, on Debian-based systems:
+Install R and graphviz (needed for `dot` which generates HMM probability image), on Debian-based systems:
 
 ```bash
-sudo apt-get install littler r-cran-cairodevice
+sudo apt-get install littler r-cran-cairodevice graphviz
 ```
 
 On Fedora:
 
 ```bash
-sudo yum install R-core
+sudo yum install R-core graphviz
 ```
 
 Install Java using [java.com](http://www.java.com/en/) or your
@@ -89,19 +89,23 @@ mkdir logs
 
 #### 5. Build the PLAAC JAR
 
-Ensure that `plaac.jar` is built (detailed instructions are in [`cli/README.md`](../cli/README.md)) and copy the resulting JAR into the web application's `bin` directory:
+Ensure that `plaac.jar` is built (detailed instructions are in [`cli/README.md`](../cli/README.md)) and copy the resulting JAR and other generated files into the web application directory:
 
 ```bash
-cd ../cli/
+cd cli/
 ./build_plaac.sh
-cp target/plaac.jar ../web/bin/plaac.jar
+cp target/plaac.jar ../web/bin/
+cp target/_plaac_headers.haml ../web/views/
+cp target/hmm_default.png ../web/public/
+cd ..
 ```
 #### 6. Start the development server
 
 Use the included **`dev_server`** script to launch the development webserver at [http://localhost:4567](http://localhost:4567):
 
 ```bash
-bin/dev_server
+cd web/
+./bin/dev_server
 ```
 
 The `shotgun_server` script is obsolete and should not be used.
@@ -152,15 +156,23 @@ cd plaac/web
 ./deploy/setup-plaac-server.sh
 ```
 
-By default, the script builds the PLAAC web container from the current checkout. Alternatively, a prebuilt container image can be provided as a command-line argument:
-
-```bash
-./deploy/setup-plaac-server.sh <container>
-```
-
-For example, `<container>` can be an image reference supported by Podman, in the format of `ghcr.io/<username>/plaac-web:latest`.
-
 The script installs `podman`, builds or uses the specified PLAAC web container, installs the Podman/Quadlet service, enables the service to run without an interactive login, and starts the application.
+
+Optional arguments/environment variables:
+
+* **Supply container image**.  By default the script builds the PLAAC web container from the current checkout. Alternatively, a prebuilt container image can be provided as a command-line argument:
+
+  ```bash
+  ./deploy/setup-plaac-server.sh <container>
+  ```
+
+  For example, `<container>` can be an image reference supported by Podman, in the format of `ghcr.io/<username>/plaac-web:latest`.
+
+* **Supply domain name**. You can also optionally supply a domain name to allow access via HTTPS, suitable for public deployment. This is configured by setting the `DOMAIN` environment variable:
+
+  ```bash
+  DOMAIN=plaac.example.com ./deploy/setup-plaac-server.sh
+  ```
 
 #### 4. Check the service:
 
@@ -178,13 +190,13 @@ podman ps
 
 By default, the application listens on TCP port `4567`.
 
-From the server itself:
+To check initial setup, from the server itself run:
 
 ```bash
 curl -I http://127.0.0.1:4567/
 ```
 
-A successful response should return HTTP 200. 
+A successful response should return `HTTP 200`. 
 
 The `setup-plaac-server.sh` also configures Caddy as a reverse proxy, so the application can be accessed externally through HTTP without exposing its internal port directly.
 
@@ -200,21 +212,13 @@ The server's IP address can be found with:
 hostname -I
 ```
 
-For a public deployment, a domain name and access via HTTPS can be configured by setting the `DOMAIN` environment variable:
-
-```bash
-DOMAIN=plaac.example.com ./deploy/setup-plaac-server.sh
-```
-
-Caddy will then configure HTTPS automatically:
+If you had set the `DOMAIN` environment variable during the setup above, Caddy will then configure HTTPS automatically with whatever you had used, e.g.:
 
 ```text
 https://plaac.example.com/
 ```
 
-The domain's DNS record must point to the server's public IP address. If the server's IP address changes, only the DNS record needs to be updated.
-
-If `DOMAIN` is not set, the server remains available through its IP address over HTTP.
+The domain's DNS record must point to the server's public IP address. If the server's IP address changes, only the DNS record needs to be updated.  If `DOMAIN` is not set, the server remains available through its IP address over HTTP.
 
 > The application listens internally on TCP port `4567`. Caddy proxies requests to this port and listens publicly on port `80`. When a domain is configured, Caddy also listens on port `443` and manages the TLS certificate.  Cloud VPS providers may also have a separate network firewall or security-group configuration. If so, TCP port 4567 must be allowed there as well.
 
@@ -231,7 +235,7 @@ cd web
 ./deploy/setup-plaac-server.sh
 ```
 
-The script rebuilds the container from the updated source and restarts the service.
+The script rebuilds the container from the updated source and restarts the service. If you had supplied any optional container or domain name options in the original run, you should supply them again, otherwise the script will fallback to defaults. 
 
 ## Contributing/Hacking
 

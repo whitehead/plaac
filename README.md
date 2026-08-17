@@ -128,12 +128,13 @@ Web-application
 The web application is intended primarily for developers maintaining
 the PLAAC website.
 
-The web application uses the same compiled Java command-line application
-as the standalone CLI. To build the web application from source, first
-follow the CLI source build instructions above to obtain a `plaac.jar` file.
+The web application uses the same compiled Java command-line
+application as the standalone CLI. To build the web application from
+source, see [`web/README.md`](web/README.md) for instructions. They
+include:
 
-The generated `plaac.jar` can then be installed into the web
-application.  The application also requires the R plotting scripts (in
-particular `Rscript`). See [`web/README.md`](web/README.md) for the
-remaining installation and development instructions.
+* instructions for building a the web application from the git
+  checkout suitable for local development and testing
+* instructions for a Docker/Podman container based installation
+  suitable for production installs
 
