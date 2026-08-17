@@ -75,6 +75,7 @@ $DOMAIN {
     reverse_proxy 127.0.0.1:4567 {
         header_up Host localhost
         header_up -X-Forwarded-Host
+        header_down Location https://localhost/ https://$DOMAIN/
     }
 }
 EOF
