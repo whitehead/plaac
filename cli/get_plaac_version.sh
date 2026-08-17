@@ -2,6 +2,7 @@
 set -e
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
 VENV="$SCRIPT_DIR/.build-venv"
 
 if [ ! -d "$VENV" ]; then
@@ -18,7 +19,7 @@ python3 - <<'EOF'
 from setuptools_scm import get_version
 
 print(get_version(
-    root="..",
+    root=$REPO_ROOT,
     version_scheme="guess-next-dev",
     local_scheme="node-and-date",
     fallback_version="1.1.0.dev0",
