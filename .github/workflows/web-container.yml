@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: whitehead/plaac-web
+  IMAGE_NAME: alexlancaster/plaac-web
 
 jobs:
   build:
