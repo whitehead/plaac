@@ -4,7 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd -- "$SCRIPT_DIR/../.." && pwd)"
 QUADLET_DIR="${HOME}/.config/containers/systemd"
-IMAGE="localhost/plaac-web:latest"
+CONTAINER_IMAGE="${1:-${IMAGE:-}}"
+IMAGE="${CONTAINER_IMAGE:-localhost/plaac-web:latest}"
 DOMAIN="${DOMAIN:-}"
 
 if [ -f /etc/debian_version ] && command -v apt-get >/dev/null 2>&1; then
@@ -35,14 +36,19 @@ else
     fi
 fi
 
-echo "Building $IMAGE..."
-podman build --cgroup-manager=cgroupfs --format docker -t "$IMAGE" -f "$REPO_DIR/web/Dockerfile" "$REPO_DIR"
+if [ -n "$CONTAINER_IMAGE" ]; then
+    echo "Using container image $IMAGE..."
+    podman pull "$IMAGE"
+else
+    echo "Building $IMAGE..."
+    podman build --cgroup-manager=cgroupfs --format docker -t "$IMAGE" -f "$REPO_DIR/web/Dockerfile" "$REPO_DIR"
+fi
 
 mkdir -p "$QUADLET_DIR"
 
-install -m 0644 \
-    "$SCRIPT_DIR/quadlet/plaac.container" \
-    "$QUADLET_DIR/plaac.container"
+sed "s|@IMAGE@|$IMAGE|g" \
+    "$SCRIPT_DIR/quadlet/plaac.container" |
+    install -m 0644 /dev/stdin "$QUADLET_DIR/plaac.container"
 
 loginctl enable-linger "$USER"
 

@@ -4,7 +4,7 @@ After=network-online.target
 Wants=network-online.target
 
 [Container]
-Image=localhost/plaac-web:latest
+Image=@IMAGE@
 PublishPort=127.0.0.1:4567:4567
 ContainerName=plaac-web
 
