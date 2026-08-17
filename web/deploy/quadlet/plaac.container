@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Container]
 Image=localhost/plaac-web:latest
-PublishPort=4567:4567
+PublishPort=127.0.0.1:4567:4567
 ContainerName=plaac-web
 
 [Service]
