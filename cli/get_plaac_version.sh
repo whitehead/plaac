@@ -14,14 +14,4 @@ fi
 
 python3 -m pip install --upgrade pip >/dev/null
 python3 -m pip install -q "setuptools-scm>=8,<9"
-
-python3 - <<'EOF'
-from setuptools_scm import get_version
-
-print(get_version(
-    root=$REPO_ROOT,
-    version_scheme="guess-next-dev",
-    local_scheme="node-and-date",
-    fallback_version="1.1.0.dev0",
-))
-EOF
+python -m setuptools_scm  --root "$REPO_ROOT" --config "$SCRIPT_DIR/python/pyproject.toml"
