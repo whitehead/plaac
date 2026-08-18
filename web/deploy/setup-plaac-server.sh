@@ -31,8 +31,9 @@ if [ -n "$CONTAINER_IMAGE" ]; then
     podman pull "$IMAGE"
 else
     PLAAC_VERSION=$("$REPO_DIR/cli/get_plaac_version.sh")
+    PLAAC_GIT_SHA=$(git -C "$REPO_DIR" rev-parse HEAD)
     echo "Building $IMAGE..."
-    podman build  --build-arg "PLAAC_VERSION=$PLAAC_VERSION" --cgroup-manager=cgroupfs --format docker -t "$IMAGE" -f "$REPO_DIR/web/Dockerfile" "$REPO_DIR"
+    podman build --build-arg "PLAAC_GIT_SHA=$PLAAC_GIT_SHA"  --build-arg "PLAAC_VERSION=$PLAAC_VERSION" --cgroup-manager=cgroupfs --format docker -t "$IMAGE" -f "$REPO_DIR/web/Dockerfile" "$REPO_DIR"
 fi
 
 mkdir -p "$QUADLET_DIR"

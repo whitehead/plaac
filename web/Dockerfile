@@ -5,7 +5,6 @@ FROM docker.io/library/ruby:3.3-bookworm AS plaac-builder
 ENV DEBIAN_FRONTEND=noninteractive
 
 ARG PLAAC_VERSION
-
 ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_PLAAC=${PLAAC_VERSION}
 
 RUN apt-get update \
@@ -31,6 +30,9 @@ LABEL org.opencontainers.image.description "PLAAC web server container image"
 LABEL org.opencontainers.image.licenses="MIT"
 
 ENV DEBIAN_FRONTEND=noninteractive
+
+ARG PLAAC_GIT_SHA
+ENV PLAAC_GIT_SHA=${PLAAC_GIT_SHA}
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \

@@ -27,7 +27,15 @@ end
 end
 
 ENVIRONMENT = ENV["RAILS_ENV"] || "development"
-$version = `git log | head -n 1`.split(/\s/)[1][0,10] rescue "?"
+
+$version =
+  if (sha = ENV["PLAAC_GIT_SHA"]) && !sha.empty?
+    sha[0, 10]
+  elsif system("git rev-parse --git-dir > /dev/null 2>&1")
+    `git log -1 --format=%H`.strip[0, 10]
+  else
+    "?"
+  end
 
 class Server < Sinatra::Base
   helpers Sinatra::Cookies
@@ -50,6 +58,16 @@ class Server < Sinatra::Base
 
   # read version at startup so it can be displayed to the end user
   PLAAC_JAR = File.expand_path("../../bin/plaac.jar", __FILE__)
+
+  unless File.file?(PLAAC_JAR)
+    abort <<~ERROR
+      ERROR: PLAAC JAR not found: #{PLAAC_JAR}
+
+      The web application requires a built PLAAC CLI JAR in web/bin/.
+      See web/README.md and cli/README.md for instructions on building
+      and installing the JAR into web/bin/.
+      ERROR
+  end
 
   configure do
     set :plaac_version, begin

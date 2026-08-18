@@ -60,6 +60,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            PLAAC_VERSION=${{ steps.version.outputs.version }}          
+            PLAAC_VERSION=${{ steps.version.outputs.version }}
+            PLAAC_GIT_SHA=${{ github.sha }}            
           cache-from: type=gha
           cache-to: type=gha,mode=max
