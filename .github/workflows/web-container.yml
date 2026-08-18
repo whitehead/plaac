@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: whitehead/plaac-web
+  IMAGE_NAME: ${{ github.repository_owner }}/plaac-web
 
 jobs:
   build:
