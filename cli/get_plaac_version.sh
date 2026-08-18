@@ -2,6 +2,7 @@
 set -e
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
 VENV="$SCRIPT_DIR/.build-venv"
 
 if [ ! -d "$VENV" ]; then
@@ -11,16 +12,6 @@ fi
 
 . "$VENV/bin/activate"
 
-python -m pip install --upgrade pip >/dev/null
-python -m pip install -q "setuptools-scm>=8,<9"
-
-python - <<'EOF'
-from setuptools_scm import get_version
-
-print(get_version(
-    root="..",
-    version_scheme="guess-next-dev",
-    local_scheme="node-and-date",
-    fallback_version="1.1.0.dev0",
-))
-EOF
+python3 -m pip install --upgrade pip >/dev/null
+python3 -m pip install -q "setuptools-scm>=8,<9"
+python -m setuptools_scm  --root "$REPO_ROOT" --config "$SCRIPT_DIR/python/pyproject.toml"

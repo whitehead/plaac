@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: whitehead/plaac-web
+  IMAGE_NAME: ${{ github.repository_owner }}/plaac-web
 
 jobs:
   build:
@@ -24,6 +24,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Determine PLAAC version
+        id: version
+        run: |
+          VERSION=$(./cli/get_plaac_version.sh)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "PLAAC Version: $VERSION"
+          
       - name: Log in to GHCR
         uses: docker/login-action@v4
         with:
@@ -52,5 +59,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            PLAAC_VERSION=${{ steps.version.outputs.version }}          
           cache-from: type=gha
           cache-to: type=gha,mode=max

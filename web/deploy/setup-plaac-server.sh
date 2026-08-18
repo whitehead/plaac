@@ -7,32 +7,21 @@ QUADLET_DIR="${HOME}/.config/containers/systemd"
 CONTAINER_IMAGE="${1:-${IMAGE:-}}"
 IMAGE="${CONTAINER_IMAGE:-localhost/plaac-web:latest}"
 DOMAIN="${DOMAIN:-}"
-PLAAC_VERSION=$("$REPO_DIR/cli/get_plaac_version.sh")
 
 if [ -f /etc/debian_version ] && command -v apt-get >/dev/null 2>&1; then
-    packages=()
-
-    if ! command -v podman >/dev/null 2>&1; then
-        packages+=(podman)
-    fi
-
-    if ! command -v caddy >/dev/null 2>&1; then
-        packages+=(caddy)
-    fi
-
-    if [ "${#packages[@]}" -gt 0 ]; then
-        echo "Installing host dependencies: ${packages[*]}..."
-        sudo apt-get update
-        sudo apt-get install -y "${packages[@]}"
-    fi
+    echo "Installing host dependencies..."
+    sudo apt-get update
+    sudo apt-get install -y podman caddy python3-venv
 else
-    if ! command -v podman >/dev/null 2>&1; then
-        echo "error: podman is not installed and automatic installation is only supported on Debian" >&2
-        exit 1
-    fi
+    for command in podman caddy python3; do
+        if ! command -v "$command" >/dev/null 2>&1; then
+            echo "error: $command is not installed and automatic installation is only supported on Debian" >&2
+            exit 1
+        fi
+    done
 
-    if ! command -v caddy >/dev/null 2>&1; then
-        echo "error: caddy is not installed and automatic installation is only supported on Debian" >&2
+    if ! python3 -c 'import venv' >/dev/null 2>&1; then
+        echo "error: Python venv support is not installed" >&2
         exit 1
     fi
 fi
@@ -41,6 +30,7 @@ if [ -n "$CONTAINER_IMAGE" ]; then
     echo "Using container image $IMAGE..."
     podman pull "$IMAGE"
 else
+    PLAAC_VERSION=$("$REPO_DIR/cli/get_plaac_version.sh")
     echo "Building $IMAGE..."
     podman build  --build-arg "PLAAC_VERSION=$PLAAC_VERSION" --cgroup-manager=cgroupfs --format docker -t "$IMAGE" -f "$REPO_DIR/web/Dockerfile" "$REPO_DIR"
 fi
