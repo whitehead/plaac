@@ -26,7 +26,7 @@ RUN cd cli && ./build_plaac.sh
 FROM docker.io/library/ruby:3.3-bookworm
 
 LABEL org.opencontainers.image.source="https://github.com/whitehead/plaac"
-LABEL org.opencontainers.image.description "PLAAC web server container image"
+LABEL org.opencontainers.image.description="PLAAC web server container image"
 LABEL org.opencontainers.image.licenses="MIT"
 
 ENV DEBIAN_FRONTEND=noninteractive
