@@ -1,6 +1,23 @@
 PLAAC
 =====
 
+> [!IMPORTANT]
+
+> **PLAAC web server status:** The PLAAC web server at
+> [plaac.wi.mit.edu](http://plaac.wi.mit.edu/) is currently
+> unavailable while it is being rebuilt. The rebuilt server will use
+> modernized dependencies while retaining the existing overall look
+> and feel. The underlying analysis code has also been updated, which
+> results in some small changes to the ordering of CoreScore rankings.
+
+> In the meantime, PLAAC can be run using the standalone command-line
+> application. New packaged releases are available from the [GitHub
+> Releases page](https://github.com/whitehead/plaac/releases),
+> including a self-contained JAR distribution and a Python wheel with
+> a command-line interface. These packages are intended to make PLAAC
+> easier to install and use without relying on the web server. See the
+> [command-line application](cli/README.md) documentation for details.
+
 PLAAC (Prion-Like Amino Acid Composition) searches protein sequences
 to identify candidate prion subsequences using a hidden-Markov model
 (HMM) algorithm.  The PLAAC website is located at: 
