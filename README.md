@@ -1,6 +1,12 @@
 PLAAC
 =====
 
+> [!WARNING]
+> **PLAAC web server status:** The PLAAC web server at
+> [plaac.wi.mit.edu](http://plaac.wi.mit.edu/) is currently
+> unavailable. There is currently no estimated time for restoration. We will update
+> this notice when the server is back online.
+
 PLAAC (Prion-Like Amino Acid Composition) searches protein sequences
 to identify candidate prion subsequences using a hidden-Markov model
 (HMM) algorithm.  The PLAAC website is located at: 
