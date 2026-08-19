@@ -1,7 +1,7 @@
 PLAAC
 =====
 
-> [!IMPORTANT]
+[!IMPORTANT]
 
 > **PLAAC web server status:** The PLAAC web server at
 > [plaac.wi.mit.edu](http://plaac.wi.mit.edu/) is currently
