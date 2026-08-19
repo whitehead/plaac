@@ -7,7 +7,7 @@ PLAAC
 > unavailable while it is being rebuilt. The rebuilt server will use
 > modernized dependencies while retaining the existing overall look
 > and feel. The underlying analysis code has also been updated, which
-> results in some small changes to the ordering of CoreScore rankings. <br/>
+> results in some small changes to the ordering of `COREScore` rankings. <br/><br/>
 > In the meantime, PLAAC can be run using the standalone command-line
 > application. New packaged releases are available from the [GitHub
 > Releases page](https://github.com/whitehead/plaac/releases),
