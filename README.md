@@ -14,7 +14,9 @@ PLAAC
 > including a self-contained JAR distribution and a Python wheel with
 > a command-line interface. These packages are intended to make PLAAC
 > easier to install and use without relying on the web server. See the
-> [command-line application](cli/README.md) documentation for details.
+> [command-line application](cli/README.md) documentation for details. <br></br>
+> There is currently no estimated time for restoration. We will update
+> this notice when the server is back online.
 
 PLAAC (Prion-Like Amino Acid Composition) searches protein sequences
 to identify candidate prion subsequences using a hidden-Markov model
