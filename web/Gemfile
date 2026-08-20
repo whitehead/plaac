@@ -12,7 +12,7 @@ gem 'rackup', '~> 2.2'
 gem 'activesupport', '~> 8.1'
 
 # view
-gem 'sprockets', '~> 4.1'
+gem 'sprockets', '~> 4.3'
 gem 'coffee-script', '~> 2.4.1'
 gem 'haml', '~> 7.3'
 gem 'sass', '~> 3.7'
