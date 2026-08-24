@@ -36,7 +36,7 @@ GEM
     eventmachine (1.2.7)
     execjs (2.10.1)
     ffi (1.17.2)
-    haml (7.3.1)
+    haml (7.4.1)
       prism (>= 1.1.0)
       temple (>= 0.8.2)
       thor
@@ -112,7 +112,7 @@ GEM
       tilt (~> 2.0)
     sinatra-extension (1.0)
       sinatra-contrib
-    sprockets (4.3.0)
+    sprockets (4.4.0)
       concurrent-ruby (~> 1.1)
       logger
       rack (>= 2.2.4, < 4)
@@ -138,7 +138,7 @@ DEPENDENCIES
   bio (~> 2.0.6)
   coffee-script (~> 2.4.1)
   eventmachine (~> 1.2.7)
-  haml (~> 7.3)
+  haml (~> 7.4)
   nokogiri
   rack-test
   rackup (~> 2.2)
@@ -148,7 +148,7 @@ DEPENDENCIES
   sinatra (~> 4.2)
   sinatra-contrib (~> 4.2)
   sinatra-extension (~> 1.0)
-  sprockets (~> 4.3)
+  sprockets (~> 4.4)
   systemu (~> 2.6.5)
   uuid (~> 2.3.7)
   webrick (~> 1.8)
