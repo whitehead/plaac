@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=61", "wheel", "setuptools-scm>=8,<9"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plaac"
+description = "Python API for PLAAC (Prion-Like Amino Acid Composition)"
+readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT"
+dynamic = ["version"]
+dependencies = []
+
+[project.optional-dependencies]
+# pandas is only needed for PlaacRun.to_dataframe(); the rest is stdlib-only.
+pandas = ["pandas"]
+# development / test dependencies
+test = ["pytest"]
+
+[project.urls]
+Homepage = "https://github.com/whitehead/plaac"
+
+# src layout: the package lives under src/, so `import plaac` resolves to the
+# installed package, never the in-tree source -- tests run against the built
+# wheel rather than accidentally importing the source tree.
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.package-data]
+# The precompiled jar is copied into the package before building the wheel so
+# the installed package is self-contained (found by plaac.find_jar at runtime).
+plaac = ["plaac.jar"]
+
+# Version comes from Git tags -- the same single source of truth the CLI build
+# uses (cli/build_plaac.sh). root points to the repository root, two levels up
+# from this file; the scheme/fallback mirror the CLI so both agree.
+[tool.setuptools_scm]
+root = "../.."
+version_scheme = "guess-next-dev"
+local_scheme = "node-and-date"
+fallback_version = "1.1.0.dev0"

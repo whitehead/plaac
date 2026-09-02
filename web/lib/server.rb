@@ -1,4 +1,5 @@
 # Encoding: utf-8
+require 'active_support/core_ext/object'  # defines Object#try
 require 'bundler/setup'
 require 'sinatra/base'
 require 'sinatra/cookies'
@@ -26,16 +27,66 @@ end
 end
 
 ENVIRONMENT = ENV["RAILS_ENV"] || "development"
-$version = `git log | head -n 1`.split(/\s/)[1][0,10] rescue "?"
+
+$version =
+  if (sha = ENV["PLAAC_GIT_SHA"]) && !sha.empty?
+    sha[0, 10]
+  elsif system("git rev-parse --git-dir > /dev/null 2>&1")
+    `git log -1 --format=%H`.strip[0, 10]
+  else
+    "?"
+  end
 
 class Server < Sinatra::Base
   helpers Sinatra::Cookies
   register Assets
 
+  set :haml, format: :xhtml
+
   enable :sessions
-  set :session_secret, 'marshmallow'
+  #set :session_secret, 'marshmallow'
+
+  # enable sessions with a secure 32-byte secret
+  # use environment variable if set, otherwise generate a random 32-byte key
+  secret_key = ENV['PLAAC_SECRET'] || SecureRandom.hex(32)
+  set :session_secret, secret_key
+
+  # Also set Encryptor key if used
+  Encryptor.key = [secret_key].pack('H*') if defined?(Encryptor)
+  
   set :bind, '0.0.0.0'
 
+  # read version at startup so it can be displayed to the end user
+  PLAAC_JAR = File.expand_path("../../bin/plaac.jar", __FILE__)
+
+  unless File.file?(PLAAC_JAR)
+    abort <<~ERROR
+      ERROR: PLAAC JAR not found: #{PLAAC_JAR}
+
+      The web application requires a built PLAAC CLI JAR in web/bin/.
+      See web/README.md and cli/README.md for instructions on building
+      and installing the JAR into web/bin/.
+      ERROR
+  end
+
+  configure do
+    set :plaac_version, begin
+       cmd = ["java", "-jar", PLAAC_JAR, "-V"]
+       out = IO.popen(cmd, err: [:child, :out]) { |io| io.read }.strip
+
+       # Look for a line like: "PLAAC Version: 1.1.0"
+       if out
+         line = out.lines.find { |l| l =~ /version\s*:/i }
+         line ? line.split(":", 2).last.strip : "unknown"
+       else
+         "unknown"
+       end
+    rescue => e
+      warn "Failed to read PLAAC version: #{e}"
+      "unknown"
+     end
+  end
+  
   configure :development do
     use BetterErrors::Middleware
     BetterErrors.application_root = File.dirname(__FILE__)

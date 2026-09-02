@@ -1,0 +1,150 @@
+name: PLAAC CLI Release and CI
+
+on:
+  push:
+    paths: &plaac_cli_paths
+      - '.github/workflows/cli.yml'
+      - 'cli/build_plaac.sh'
+      - 'cli/build_docs.py'
+      - 'cli/get_plaac_version.py'      
+      - 'cli/src/**'
+      - 'cli/tests/**'
+      - 'cli/python/**'
+  pull_request:
+    paths: *plaac_cli_paths
+  release:
+    types: [created]
+    
+jobs:
+  cli-test-java:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cli
+
+    strategy:
+      fail-fast: false
+      matrix:
+        java: [11, 17]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java ${{ matrix.java }}
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      - name: Build plaac.jar
+        run: |
+          ./build_plaac.sh
+
+      - name: Run MOT3 regression and input-validation tests
+        run: |
+          bash tests/test_mot3.sh --no-build
+          bash tests/test_input_validation.sh --no-build
+          
+      - name: Upload jar artifact
+        if: matrix.java == 11
+        uses: actions/upload-artifact@v7
+        with:
+          name: plaac-jar
+          path: cli/target/plaac.jar
+
+  cli-test-python:
+    needs: cli-test-java
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cli
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: plaac-jar
+          path: cli/python/src/plaac/
+
+      - name: Set up Java 11
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '11'
+          
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+
+      - name: Install Python build tools
+        run: python -m pip install --upgrade pip build pytest
+
+      - name: Build Python wheel
+        run: python -m build --wheel python/
+        
+      - name: Install Python wheel
+        run: python -m pip install python/dist/*.whl
+        
+      - name: Run Python wrapper tests
+        run: python -m pytest python -v
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: plaac-wheel
+          path: cli/python/dist/plaac*.whl
+
+  cli-release:
+    needs: cli-test-python
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    env:
+      VERSION: ${{ github.event.release.tag_name }}
+      
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Download jar artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: plaac-jar
+
+      - name: Download wheel artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: plaac-wheel
+          path: wheel/
+
+      - name: Create release package
+        run: |
+          package="plaac-${VERSION}"
+          mkdir "${package}"
+          cp -a \
+            plaac.jar \
+            cli/example/four_classic_prions.fasta \
+            cli/README.md \
+            LICENSE.TXT \
+            cli/R \
+            "${package}/"
+          zip -r "${package}.zip" "${package}"          
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            plaac-*.zip
+            wheel/*.whl

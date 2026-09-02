@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+# The jar is a build artifact copied in before packaging, not source.
+src/plaac/plaac.jar
+.pytest_cache/
+# setuptools-scm writes this when configured to; not used here but ignore anyway.
+plaac/_version.py

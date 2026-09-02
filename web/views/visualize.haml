@@ -83,7 +83,7 @@
               - #idstr = row[@idx[:SEQid]].split(/\|/)
               - idstr = row.nil? ? ["???"] : row[@idx[:SEQid]].split(/\|/)
               - idstr = "<b>" + idstr[0] + "</b><br/><small>"+ Array(idstr[1..-1]).join("|") + "</small>"
-              = idstr
+              != idstr
               %br
               %br
               %table.long#candidate_list{style:'background: white'}

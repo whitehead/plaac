@@ -1,14 +1,17 @@
 /** /////////////////////////////////////////////////////////////////////////////
     Original program copyright 2009 Whitehead Institute for Biomedial Research;
-    additions copyright 2011 BBRI and copyright 2014 University of Massachusetts Medical School.
-    Author: Oliver King (oliver.king@umassmed.edu) 
+    additions copyright 2011 BBRI and copyright 2014-2016 University of Massachusetts Medical School.
+    Author: Oliver King (oliver.king@umassmed.edu)
     
     See LICENSE.TXT for license information.  
 
-    Last updated May 12, 2014
+    Source code: https://github.com/whitehead/plaac
+
+    Build:
+     javac --release 11 -d target src/*.java
     
-    Compile with: javac plaac.java
-    To see usage details, run with: java plaac 
+    To see usage details, run with:
+      java -jar plaac.jar
    
 **/ ////////////////////////////////////////////////////////////////////////
 
@@ -23,6 +26,8 @@ import java.util.regex.*;
 
 class plaac {
 
+    public static final String VERSION = Version.VERSION;
+    
     static char [] aanames =   {'X','A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y','*'};
     static String [] aanames2 = {"???","Ala","Cys","Asp","Glu","Phe","Gly","His","Ile","Lys","Leu","Met","Asn",
 				 "Pro","Gln","Arg","Ser","Thr","Val","Trp","Tyr","***"};
@@ -228,7 +233,7 @@ class plaac {
 	0.0         // *
     };
 
-    // odds-rations
+    // odds-ratios
     // inconsistency causd by bgpapa2?
     static double [] odpapa2 ={
 	0.0,        // X
@@ -294,15 +299,78 @@ class plaac {
 	// should agree for papa1, not for papa2, but these aren't currently used.
         
 	// recompute_papa_parameters();
-        
-
+	
     }
 
+
+    // --- command-line argument validation helpers ---------------------------
+    // Report a usage error on stderr and exit non-zero, instead of throwing a
+    // raw stack trace (e.g. a non-numeric value for a numeric option) or failing
+    // silently. Diagnostics go to stderr so they never pollute the TSV on stdout.
+    static void usageError(String msg) {
+	System.err.println("plaac: " + msg);
+	System.err.println("For usage details, run with no arguments: java -jar plaac.jar");
+	System.exit(2);
+    }
+
+    static int parseIntArg(String flag, String val) {
+	try {
+	    return Integer.parseInt(val);
+	} catch (NumberFormatException e) {
+	    usageError("option " + flag + " requires an integer, but got '" + val + "'");
+	    return 0; // unreachable: usageError calls System.exit
+	}
+    }
+
+    static double parseDoubleArg(String flag, String val) {
+	try {
+	    return Double.parseDouble(val);
+	} catch (NumberFormatException e) {
+	    usageError("option " + flag + " requires a number, but got '" + val + "'");
+	    return 0; // unreachable: usageError calls System.exit
+	}
+    }
 
     public static void main (String args[]) {
 
 	plaac ms = new plaac(); 
 
+	// some test code for listofruns
+        if (1==0) {
+	
+	    int [] testseq1 = {1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,0,0,0,1,1,0,0,0,1,1,1,1};
+	    int [] testseq2 = {1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,0,0,0,1,1,0,0,0,1,1,1,1,0};
+	    int [] testseq3 = {0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,0,0,0,1,1,0,0,0,1,1,1,1};
+	    int [] testseq4 = {0,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,0,0,0,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1};
+
+	    System.out.println("## test of runs");
+	    System.out.println("#? " + 8 + "\t" + 8  + "\t" +  8 + "\t" +  9);
+	    System.out.println("## " + longestrun(testseq1)[0] + "@" + longestrun(testseq1)[1] +
+			       "\t" + longestrun(testseq2)[0] + "@" + longestrun(testseq2)[1] +
+			       "\t" + longestrun(testseq3)[0] + "@" + longestrun(testseq3)[1] +
+			       "\t" + longestrun(testseq4)[0] + "@" + longestrun(testseq4)[1]);
+	   		  
+	    System.out.println("#? " + 2 + "\t" + 2   + "\t" + 2 + "\t" + 2);
+	    System.out.println("## " + numberofruns(testseq1, 4) + "\t" + numberofruns(testseq2,4) + "\t" + numberofruns(testseq3,4) + "\t" +  numberofruns(testseq4,4));
+	    System.out.println("#? " + 3 + "\t" + 3   + "\t" + 3 + "\t" + 3);
+	    System.out.println("## " + numberofruns(testseq1, 2) + "\t" + numberofruns(testseq2,2) + "\t" + numberofruns(testseq3,2) + "\t" +  numberofruns(testseq4,2));
+	    System.out.println("#? " + 1 + "\t" + 1   + "\t" + 1 + "\t" + 2);
+	    System.out.println("## " + numberofruns(testseq1, 8) + "\t" + numberofruns(testseq2,8) + "\t" + numberofruns(testseq3,8) + "\t" +  numberofruns(testseq4,8));
+	    System.out.println("#? " + 0 + "\t" + 0   + "\t" + 0 + "\t" + 1);
+	    System.out.println("## " + numberofruns(testseq1, 9) + "\t" + numberofruns(testseq2,9) + "\t" + numberofruns(testseq3,9) + "\t" +  numberofruns(testseq4,9));
+	
+	    int [] runlist = listofruns(testseq2,2);
+	    for (int k=0; k<runlist.length; k=k+2) {
+		System.out.print(runlist[k]  + "@"  + runlist[k+1] + " ");
+	    }
+	    System.out.println();
+	    runlist = listofruns(testseq3,2);
+	    for (int k=0; k<runlist.length; k=k+2) {
+		System.out.print(runlist[k]  + "@"  + runlist[k+1] + " ");
+	    }
+	    System.out.println();
+	};
+	
         // if (1==1) {print_aa_params(newfgred); return;}
 	// if (1==1) {print_aa_params(oldfgfreq); return;}
 
@@ -323,6 +391,7 @@ class plaac {
 	double alpha = 1.0;
 	int hmmtype = 1;
 	boolean printheaders = false;   // print the headers at the top of the file (default: false)
+	boolean printversion = false;
        	boolean printparameters = true; // print the parameters at the top of the file (default: true)
 
         // from PAPA: score only first proline in PP or PXP
@@ -332,26 +401,48 @@ class plaac {
         // should check for valid input here!
         int i = 0;
 
-	// to avoid out-of-bounds attempt to grab an option from position i+1 for invalid command line-arguments, 
+      	// to avoid out-of-bounds attempt to grab an option from position i+1 for invalid command line-arguments, 
 	// iteration stops at next-to-last position, unless last position is one of the flags that doesn't take options.
-        while(i<args.length - 1 || (i<args.length && (args[i].equals("-d") || args[i].equals("-s")))) {
+        while(i<args.length - 1 || (i<args.length && (args[i].equals("-d") || args[i].equals("-s") || args[i].equals("-V") ))) {
 	    if (args[i].equals("-i")) {inputfile = args[i+1]; i++;}
 	    else if (args[i].equals("-b")) {bgfile = args[i+1]; i++;}
 	    else if (args[i].equals("-B")) {bgfreqfile = args[i+1]; i++;}
             else if (args[i].equals("-F")) {fgfreqfile = args[i+1]; i++;}
-	    else if (args[i].equals("-c")) {corelength = Integer.parseInt(args[i+1]); i++;}
-	    else if (args[i].equals("-w")) {ww1 = Integer.parseInt(args[i+1]); i++;}
-	    else if (args[i].equals("-W")) {ww2 = Integer.parseInt(args[i+1]); i++;}
-	    else if (args[i].equals("-a")) {alpha = Double.parseDouble(args[i+1]); i++;}
-	    else if (args[i].equals("-m")) {hmmtype = Integer.parseInt(args[i+1]); i++;} // different models. not currently used
+	    else if (args[i].equals("-c")) {corelength = parseIntArg("-c", args[i+1]); i++;}
+	    else if (args[i].equals("-w")) {ww1 = parseIntArg("-w", args[i+1]); i++;}
+	    else if (args[i].equals("-W")) {ww2 = parseIntArg("-W", args[i+1]); i++;}
+	    else if (args[i].equals("-a")) {alpha = parseDoubleArg("-a", args[i+1]); i++;}
+	    else if (args[i].equals("-m")) {hmmtype = parseIntArg("-m", args[i+1]); i++;} // different models. not currently used
 	    else if (args[i].equals("-p")) {plotlist = args[i+1]; i++;}
             else if (args[i].equals("-h")) {hmmdotfile = args[i+1]; i++;} 
-            else if (args[i].equals("-d")) {printheaders = true; } // don't consume another token, '-d' doesn't take an argument 
+            else if (args[i].equals("-d")) {printheaders = true; } // don't consume another token, '-d' doesn't take an argument
+	    else if (args[i].equals("-V")) {printversion = true; } // don't consume another token, '-V' doesn't take an argument 
             else if (args[i].equals("-s")) {printparameters = false; } // don't consume another token, '-s' doesn't take an argument 
-	    else {System.out.println("# skipping unknown option " + args[i]);}
+	    else {System.err.println("plaac: skipping unknown option " + args[i]);}
             i++;
 	}
 
+	// A value-taking flag in the last position is not consumed by the loop
+	// above (there is no following token to use as its value). Warn rather
+	// than silently ignoring it, which would run plaac in an unintended mode
+	// (e.g. "-i x.fa -p" with no print-list would run summary mode instead).
+	if (i == args.length - 1) {
+	    String last = args[i];
+	    if (last.equals("-i") || last.equals("-b") || last.equals("-B")
+		|| last.equals("-F") || last.equals("-c") || last.equals("-w")
+		|| last.equals("-W") || last.equals("-a") || last.equals("-m")
+		|| last.equals("-p") || last.equals("-h")) {
+		System.err.println("plaac: option " + last + " requires a value but was given none; ignoring it.");
+	    } else if (last.startsWith("-")) {
+		System.err.println("plaac: skipping unknown option " + last);
+	    }
+	}
+
+	if (printversion) {
+	    System.out.println("PLAAC Version: "+VERSION);
+	    return;
+	}
+	
 	ww3 = ww2; // don't currenty have a separate command-line paramater for ww3
 
 	if (verbose) {
@@ -367,6 +458,7 @@ class plaac {
 	    System.out.println("## -a -->"+alpha+"<---");
             System.out.println("## -h -->"+hmmdotfile+"<---");
             System.out.println("## -d -->"+printheaders+"<---");
+	    System.out.println("## -V -->"+printversion+"<---");	    
             System.out.println("## -s -->"+(!printparameters)+"<---"); // negated, since s means skip printing
 	} 
 
@@ -426,9 +518,10 @@ class plaac {
             System.out.println("-F fg_freqs.txt, specifying prion-like AA freqs in same format as -B above. Defaults to freqs from 28 S. cerevisiae domains.");
 	    System.out.println("-w window_size, the window size for FoldIndex disorder predictions. Default is 41.");
 	    System.out.println("-W Window_size, the window size for the PAPA algorithm. Default is 41.");
+	    System.out.println("-V, print version and exit.");
 	    System.out.println("-d, print documentation for headers. If flag is not set, headers will not be printed.");
 	    System.out.println("-s, skip printing of run-time parameters at top of file. If flag is not set, run-time parameters will be printed.");
-            System.out.println("-h hmm_filename.txt, writes parameters of HMM to hmm_filenmae.txt in dot format, which can be made into a figure with GraphViz.");
+            System.out.println("-h hmm_filename.txt, writes parameters of HMM to hmm_filename.txt in dot format, which can be made into a figure with GraphViz.");
 	    System.out.println("-p print_list.txt, where print_list.txt has the name of one fasta on each line, and specifies\n  which fastas in input.fa will be plotted");
 	    System.out.println("  The names must exactly match those in input.fa, but do need need the > symbol before the name.");
 	    System.out.println("  If no print_list.txt is specified the output from the program will be a table of summaries for each protein (one per line) in input.fa;");
@@ -502,6 +595,7 @@ class plaac {
 
         if (printparameters) {
 	    System.out.println("############################ parameters at run-time ####################################");
+	    System.out.println("## plaac_version=" + VERSION + ";");
             System.out.println("## alpha="+ alpha +"; corelength="+corelength+"; ww1="+ww1+"; ww2="+ww2+"; ww3="+ww3+"; adjustprolines="+adjustprolines+";");
             // could make these AA params tab-separated so the parameters line up, one AA per column
             System.out.println("## fg_used: {" + aaparams2string(fg) + "}");
@@ -707,7 +801,10 @@ class plaac {
             System.out.println("## PAPAllr2: PLAAC LLR score (average of averages) at PAPAcen");
 	    System.out.println("## PAPAcen: index of center of window at which PAPAprop is obtained"); // move to earlier?
 	    System.out.println("## PAPAaa: AA sequence of width W centered at PAPAcen");
-	    
+            System.out.println("## PRDcount: total number of PrDs of length at least c"); 
+            // PRDcount can be derived from PRDothers, but may be useful is a narrower output table is desired 
+            System.out.println("## PRDall: all PRDs of length at least c, each in format [PRDstart,PRDend,COREstart,COREscore], separated by semicolons"); 
+	    System.out.println("## PRDothers: PRDs of length at least c, excluding one with highest COREscore, each in format [PRDstart,PRDend,COREstart,COREscore], separated by semicolons"); 
 	    System.out.println("#######################################################################################");
 
 	}
@@ -715,7 +812,7 @@ class plaac {
 	System.out.print("SEQid\tMW\tMWstart\tMWend\tMWlen\tLLR\tLLRstart\tLLRend\t");	
 	System.out.print("LLRlen\tNLLR\tVITmaxrun\tCOREscore\tCOREstart\tCOREend\tCORElen\tPRDscore\tPRDstart\tPRDend\tPRDlen\tPROTlen\t");				
 	System.out.print("HMMall\tHMMvit\tCOREaa\tSTARTaa\tENDaa\tPRDaa\tFInumaa\tFImeanhydro\tFImeancharge\tFImeancombo\tFImaxrun\t");
-	System.out.print("PAPAcombo\tPAPAprop\tPAPAfi\tPAPAllr\tPAPAllr2\tPAPAcen\tPAPAaa");
+	System.out.print("PAPAcombo\tPAPAprop\tPAPAfi\tPAPAllr\tPAPAllr2\tPAPAcen\tPAPAaa\tPRDcount\tPRDall\tPRDothers");
 	System.out.println();
 
 
@@ -746,7 +843,9 @@ class plaac {
 	double hmmscore;
 	double hmmscorev;
 
-	int longestprd;
+	int [] longestprd;
+	int [] listofprds;
+	int numberofprds;
 
 	char stopcodon = '*';
 
@@ -813,78 +912,165 @@ class plaac {
              // could use MAP parse here if desired
 	    int [] mp = hmm1.viterbipath;
 
-	    longestprd = longestrun(mp);
+	    // number of PrDs in Viterbi parse that are at least corelength AA long
+	    // alternates length and start index;
 
+	    listofprds = listofruns(mp, corelength);
+	    numberofprds = listofprds.length/2;
+
+            // length of longest PrR and starting index
+	    // (can't just pull longestprd out of listofprds, since listofprds only has those longer than corelength)
+	    longestprd = longestrun(mp); 
+ 
 	    maa3 = mapseq(aa, llr);
-	    double big_neg = -1000000.0;
-
+	       
+            // double [] maa3b = mapseq(aa, llr);
+            // double big_neg = -1000000.0;
+            // CHANGED on Feb 11 2016: We now avoid this hack, by spliting sequence into separate PrD runs in HMM parse, 
+	    // and running hss over each subsequence individually. So no masking of non-PrD positions is necessary, and we
+            // also get PrD coordinates and COREscores for each PrD in parse, not just the one with the best COREscores.
+            // For some genes the COREstart position can now be different, though the COREscores is still the same to within 
+            // round-off error; I think the finite-precision of cumulative sums in cumsum causes in-principle exact ties 
+            // to be broken differently depeding on what offset is present in the cumulative sums (which depends on scores 
+            // for all previous residues, so are alterted by masking or excerpting subsequences.) Could put an epsilon 
+            // tolerance in hss2 to always get the leftmost core in event of ties, if desired.
+  
 	    // A bit of a hack here. The idea is to mask off positions that aren't in the PrD parse when finding the hss, 
-	    // by giving them a sufficiently strong penalty. The implementation of hss doesn't work with -Infinty since
+	    // by giving them a sufficiently strong penalty. The implementation of hss doesn't work with -Infintiy since
 	    // it uses differences in cumulative sums and the diff between -Inf and -Inf isn't well defined. But masking 
 	    // elements by setting them to a large negative number, say -K where K > 2 * max(abs(maa3))*max(corelength) 
 	    // should work, since then any segment with a masked residue would have score < -K/2; if the max scoring segment 
 	    // has such a score then there is no PrD segment of width >= corelength; 
-	    // For fixed rather that variable width windows, an simple implementation that does not use cumulative somes
-	    // would do avoid this issue.
-	    for (int i=0; i < maa3.length; i++) {
-		if (mp[i]==0) maa3[i] = big_neg; 
+	    // For fixed rather that variable width windows, a simple implementation that does not use cumulative sums
+	    // would avoid this issue.
+	    // 
+	    // for (int i=0; i < maa3.length; i++) {
+	    //	if (mp[i]==0) maa3[i] = big_neg; 
+	    // }
+            //
+	    // hs3 = hss(maa3,corelength,corelength); // CHANGED: no longer relax corelength when corelength > prot length 
+	    // if (debug) {
+	    // 	hs3b = hss(maa3,corelength,corelength);
+	    // 	if (!(Double.isNaN(hs3[2]) && Double.isNaN(hs3b[2])) && (hs3[2] != hs3b[2])) {
+	    // 	    System.out.println("## CHECKX3"); 
+	    // 	    System.out.print("## hs3: ");  printrowvec(hs3);
+	    // 	    System.out.print("## hs3b:");  printrowvec(hs3b);
+	    // 	} 
+	    // 	if ((longestprd[0] >= corelength) && (hs3[2] < big_neg/2)) {
+	    // 	    System.out.println("## CHECKX4 " + longestprd[0]); 
+	    // 	    System.out.print("## hs3: "); printrowvec(hs3);
+	    // 	} 
+	    // 	if ((longestprd[0] < corelength) && (hs3[2] > big_neg/2)) {
+	    // 	    System.out.println("## CHECKX5 "  + longestprd[0]); 
+	    // 	    System.out.print("## hs3: "); printrowvec(hs3);
+	    // 	}
+	    // }
+	    
+	    // int corestart = (int) hs3[0];
+	    //int corestop = (int) hs3[1];
+	     
+	    //int aastart = corestart;
+	    //int aastop	= corestop;
+
+	    //int [] prd = {};
+	    //double prdscore = 0;
+	 
+	    // has prd of at least corelength
+	    //if (hs3[2] > big_neg/2) { 
+	    // expand core up and down within PrD parse;
+	    //	while (aastart>=0 && mp[aastart]==1) aastart--; 
+	    //	aastart++;
+	    //	while (aastop<mp.length && mp[aastop]==1) aastop++;
+	    //	aastop--;
+	    //
+	    //	prd = submatrix(aa, aastart, aastop);
+	    //	// score of whole prd?
+	    //	for (int kk = 0; kk<prd.length; kk++) {
+	    //  prdscore = prdscore + llr[prd[kk]];
+	    //	}
+	    //}  else {
+	    //	//  if (aastop - aastart + 1 < corelength) {
+	    //	hs3[2] = 0.0/0.0; // CHANGED: NaN; used to be zero.
+	    //aastart = -1;
+	    //aastop  = -2;
+	    //	corestart = -1;
+	    //	corestop = -2;
+	    //}
+
+            // if (debug) {
+	    //	if (aastop - aastart + 1 > longestprd[0]) {
+	    //	    System.out.println("## CHECKX6 " + longestprd[0]);
+	    //	    System.out.print("## hs3: "); printrowvec(hs3);
+	    //	}
+	    // }
+
+	    int [] allprdstarts = new int[numberofprds];
+	    int [] allprdends = new int[numberofprds];
+            int [] allcorestarts = new int[numberofprds];
+	    int [] allcoreends = new int[numberofprds];
+	    double [] allcorescores = new double[numberofprds];
+
+	    String [] allprdstrings = new String[numberofprds];
+
+	    int bestprddex = -1;
+	    double bestcorescore = -1.0/0.0; // -Inf;
+	    
+	    for (int i=0; i<numberofprds; i++) {
+		allprdstarts[i] = listofprds[2*i+1];
+		allprdends[i] = listofprds[2*i+1] + listofprds[2*i] - 1;
+		double [] submaa3 = submatrix(maa3, allprdstarts[i], allprdends[i]); // take subarray of just this PrD.
+	        double [] hstemp = hss2(submaa3,corelength,corelength);
+		allcorestarts[i] =  allprdstarts[i] + (int) hstemp[0]; // coordinates in hstemp are relative to PrD-start, shift to get coords in full protein.
+		allcoreends[i] =  allprdstarts[i] +  (int) hstemp[1];   
+                allcorescores[i] = hstemp[2];
+		if (allcorescores[i] > bestcorescore) {
+		    bestprddex = i;
+		    bestcorescore = allcorescores[i];
+		}
+		// add one for one-based protein indexing
+		// allprdstrings[i] = String.format("[%d,%d,%d,%d,%.3f];", allprdstarts[i]+1, allprdends[i]+1, allcorestarts[i]+1, allcoreends[i]+1, allcorescores[i]);
+                allprdstrings[i] = String.format("[%d-%d (%.3f @ %d)];", allprdstarts[i]+1, allprdends[i]+1, allcorescores[i], allcorestarts[i]+1);
 	    }
 
-	    hs3 = hss2(maa3,corelength,corelength); //CHANGED: no longer relax corelength when corelength > prot length 
-	    if (debug) {
-		hs3b = hss(maa3,corelength,corelength);
-		if (!(Double.isNaN(hs3[2]) && Double.isNaN(hs3b[2])) && (hs3[2] != hs3b[2])) {
-		    System.out.println("## CHECKX3"); 
-		    System.out.print("## hs3: ");  printrowvec(hs3);
-		    System.out.print("## hs3b:");  printrowvec(hs3b);
-		} 
-		if ((longestprd >= corelength) && (hs3[2] < big_neg/2)) {
-		    System.out.println("## CHECKX4 " + longestprd); 
-		    System.out.print("## hs3: "); printrowvec(hs3);
-		} 
-		if ((longestprd < corelength) && (hs3[2] > big_neg/2)) {
-		    System.out.println("## CHECKX5 "  + longestprd); 
-		    System.out.print("## hs3: "); printrowvec(hs3);
-		}
+            // for (int i=0; i<mp.length; i++) {
+	    //	System.out.println("##\t" + i + "\t" + mp[i] + "\t" + maa3[i] + "\t" + maa3b[i]);
+	    // }
+
+	    String comboprdstring = new String("{");
+            String otherprdstring = new String("{"); // all except best-scoring one
+	    for (int i=0; i<numberofprds; i++) {
+		comboprdstring = comboprdstring + allprdstrings[i];
+		if (i != bestprddex) otherprdstring = otherprdstring + allprdstrings[i];
 	    }
-	   
-	    int corestart = (int) hs3[0];
-	    int corestop = (int) hs3[1];
-	     
-	    int aastart = corestart;
-	    int aastop	= corestop;
+	    comboprdstring = comboprdstring + "}";
+	    otherprdstring = otherprdstring + "}";
+    
+            int corestart, corestop, aastart, aastop;
+            double corescore = 0.0;
 
 	    int [] prd = {};
 	    double prdscore = 0;
 	 
 	    // has prd of at least corelength
-	    if (hs3[2] > big_neg/2) { 
-		// expand core up and down within PrD parse;
-		while (aastart>=0 && mp[aastart]==1) aastart--; 
-		aastart++;
-		while (aastop<mp.length && mp[aastop]==1) aastop++;
-		aastop--;
-	
+	    if (numberofprds > 0) {
+                aastart =  allprdstarts[bestprddex];
+                aastop =  allprdends[bestprddex];
+                corestart = allcorestarts[bestprddex];
+                corestop = allcoreends[bestprddex];
+                corescore = allcorescores[bestprddex];
 		prd = submatrix(aa, aastart, aastop);
 		// score of whole prd?
 		for (int kk = 0; kk<prd.length; kk++) {
 		    prdscore = prdscore + llr[prd[kk]];
 		}
 	    }  else {
-		//  if (aastop - aastart + 1 < corelength) {
-		hs3[2] = 0.0/0.0; // CHANGED: NaN; used to be zero.
+		corescore = 0.0/0.0; // CHANGED: NaN; used to be zero.
 		aastart = -1;
 		aastop  = -2;
 		corestart = -1;
 		corestop = -2;
 	    }
 
-            if (debug) {
-		if (aastop - aastart + 1 > longestprd) {
-		    System.out.println("## CHECKX6 " + longestprd);
-		    System.out.print("## hs3: "); printrowvec(hs3);
-		}
-	    }
 
 	    boolean fastaprds = false;
 	    if (fastaprds) {
@@ -892,7 +1078,7 @@ class plaac {
 		    System.out.println(">" + nm + "-pprd");
 		    System.out.println(aa2string(prd));
 		    System.out.println(">" + nm + "-core");
-		    System.out.println(aa2string(submatrix(aa, (int) hs3[0], (int) (hs3[1])) ));
+		    System.out.println(aa2string(submatrix(aa, corestart, corestop)));
 		}
 	    } else {
 		// use one-based indices for output table (e.g, first AA is at position 1); zero-based is used internally.
@@ -904,15 +1090,15 @@ class plaac {
 				  inf2nan(hs2[2]), 
 				  (int) (hs2[0]+1), (int) (hs2[1]+1), // one-based
 				  (int) (hs2[1]-hs2[0]+1) , 
-				  inf2nan(hs2[2])/(hs2[1]-hs2[0]+1), longestprd,
-				  inf2nan(hs3[2]), 
+				  inf2nan(hs2[2])/(hs2[1]-hs2[0]+1), longestprd[0],
+				  inf2nan(corescore), 
 				  corestart+1, corestop+1, // one-based
 				  corestop-corestart+1 , 
 				  prdscore, 
 				  aastart+1, aastop+1, // one-based
 				  aastop-aastart+1 , 
 				  aa.length, hmmscore, hmmscorev);
-		if (aastop - aastart + 1 >= corelength) {
+		if (numberofprds > 0) {
 		    System.out.print(aa2string(submatrix(aa, corestart, corestop)));
 		    System.out.print("\t");
 		    System.out.print(aa2string(submatrix(aa, aastart, aastart+14)));
@@ -941,10 +1127,28 @@ class plaac {
 				  dr.papamaxllr,
 				  dr.papamaxllr2,
 				  dr.papamaxcenter + 1, //one-based
-				  aa2string(submatrix(aa,  dr.papamaxcenter - ww2/2, dr.papamaxcenter + ww2/2))); // ok for length < w? 
+				  aa2string(submatrix(aa,  dr.papamaxcenter - ww2/2, dr.papamaxcenter + ww2/2))); // ok for length < w?
+        	System.out.format("\t%d", numberofprds); 
+		System.out.format("\t%s", comboprdstring); 
+		System.out.format("\t%s", otherprdstring);
 		System.out.println();
+		
 	    }
-	   
+	    
+	    // // debug
+	    if ((bestprddex == -1) && (aastart >= 0)) {
+	     	System.out.println("finding of PrD inconsistent"); 
+		return;
+	    }
+	    if ((bestprddex > -1) && ((aastart != allprdstarts[bestprddex])
+	    			      || (aastop != allprdends[bestprddex])
+                                      // sometimes different --- numerical precision in cumsum causing ties to be broken differently?
+	    			      // || (Math.abs(corestart - allcorestarts[bestprddex]) > 3) 
+	    			      || (Math.abs(corescore - allcorescores[bestprddex]) > 0.001))) {
+	    	System.out.println("start or stop coords don't agree!"); // hmm, off by one, maybe there are ties?
+	    	return;
+	    }
+	    
 	}
 
     }
@@ -964,7 +1168,7 @@ class plaac {
     /////////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////	       hmms				/////////////////////////
 
-    // two-state HMM with differert fg and bg AA freqs
+    // two-state HMM with different fg and bg AA freqs
     static hmm prionhmm1(double [] fgfreq, double bgfreq []) {
 	// state 0 = normal; state 1 = prion
 	double [][] tmat = {{99.9/100, 0.1/100},{2.0/100, 98.0/100}};
@@ -983,7 +1187,7 @@ class plaac {
     // Set up as two states, but effectively just one state (bg AA freqs) ---
     // can be used to compute likelihood ratio of two state model vs background model
     // This global LLR isn't great for ranking proteins, though, as very long regions
-    // with slight AA biases can out score modest-length regions with strong biases.
+    // with slight AA biases can outscore modest-length regions with strong biases.
     // That is why we score based on max LLR in window of corelength.
     static hmm prionhmm0(double bgfreq []) {
 	// state 0 = normal; state 1 = prion
@@ -1783,9 +1987,12 @@ class plaac {
       	return bv;
     }
 
-    // longest run of 1 in 0-1 vec
-    static int longestrun(int [] bitvec) {
-      	int maxlen = 0;
+    // longest run of 1 in 0-1 vec (or more generally of positive numbers in vector of ints)
+    // returns {length of max run, starting index of run}
+    static int []  longestrun(int [] bitvec) {
+        int [] maxlen = new int[2];
+	maxlen[0] = 0;
+	maxlen[1] = -1;
       	int n = bitvec.length;
       	int i = 0; 
       	while (i < n) {
@@ -1795,7 +2002,10 @@ class plaac {
 		while (i < n && bitvec[i] > 0) i++;
 		int stopdex = i-1;
 		int len = stopdex-startdex+1;		
-		if (len >= maxlen) maxlen=len;
+		if (len >= maxlen[0]) {
+		    maxlen[0] = len;
+		    maxlen[1] = startdex;
+		}
 	    } else { 
 		i++;
 	    }
@@ -1803,9 +2013,12 @@ class plaac {
       	return maxlen;
     }
 
-    // longest run of 1 in 0-1 vec
-    static int longestrun(double [] bitvec) {
-      	int maxlen = 0;
+    // longest run of 1 in 0-1 vec (or more generally of positive numbers in vector of doubles)
+    // returns {length of max run, starting index of run}
+    static int [] longestrun(double [] bitvec) {
+      	int [] maxlen = new int[2];
+	maxlen[0] = 0;
+	maxlen[1] = -1;
       	int n = bitvec.length;
       	int i = 0; 
       	while (i < n) {
@@ -1815,7 +2028,10 @@ class plaac {
 		while (i < n && bitvec[i] > 0) i++;
 		int stopdex = i-1;
 		int len = stopdex - startdex + 1;		
-		if (len >= maxlen) maxlen = len;
+		if (len >= maxlen[0]) {
+		    maxlen[0] = len;
+		    maxlen[1] = startdex;
+		}
 	    } else {
 		i++;
 	    }
@@ -1823,6 +2039,60 @@ class plaac {
       	return maxlen;
     }
 
+
+    // number of nonoverlapping runs of 1 with minimum length >= minlength in 0-1 vec
+    // (more generally, of positive numbers in vector of ints)
+    static int numberofruns(int [] bitvec, int minlength) {
+      	int numruns = 0;
+      	int n = bitvec.length;
+      	int i = 0; 
+      	while (i < n) {
+	    if (bitvec[i] > 0) {
+		int startdex = i;
+		i++;
+		while (i < n && bitvec[i] > 0) i++;
+		int stopdex = i-1;
+		int len = stopdex-startdex+1;		
+		if (len >= minlength) numruns++;
+	    } else { 
+		i++;
+	    }
+      	}
+      	return numruns;
+    }
+
+    // lengths and start indices, interleaved, of nonoverlapping runs of 1 with minimum length >= minlength in 0-1 vec
+    // (more generally, of positive numbers in vector of ints)
+    static int [] listofruns(int [] bitvec, int minlength) {
+	// makes two passes through bitvec; could do one pass by dynamically sizing runlist
+      	int numruns = numberofruns(bitvec, minlength);
+	int [] runlist = new int[2*numruns];
+	int currentrun = 0;
+      	int n = bitvec.length;
+      	int i = 0;
+	// could also break when currentrun >= numruns
+      	while (i < n) {
+	    if (bitvec[i] > 0) {
+		int startdex = i;
+		i++;
+		while (i < n && bitvec[i] > 0) i++;
+		int stopdex = i-1;
+		int len = stopdex-startdex+1;		
+		if (len >= minlength) {
+		    runlist[2*currentrun] = len;
+		    runlist[2*currentrun+1] = startdex;
+		    currentrun++;
+		}
+	    } else { 
+		i++;
+	    }
+      	}
+      	return runlist;
+    }
+
+
+    
+    
 
     static StringBuffer aa2string(int [] aa) {
        	int m = aa.length;
@@ -2766,7 +3036,7 @@ class plaac {
 // As noted in 3.6, straightforward implementations of decoding algorithms are prone to
 // numerical underflow, which can be addressed by using log-probabilties or scaling parameters.
 // Versions below that opeate in log-space end in l, and those that use scaling end in s 
-// (e.g. naive implementation posterio vs posteriorl vs posteriors).
+// (e.g. naive implementation posterior vs posteriorl vs posteriors).
 // It's not needed for the two state HMMs, but for HMMs with many states and relatively 
 // few direct transitions allowed, it can be faster to use a sparse matrix representations 
 // of the transition matrix. Versions that use sparse representations start with s, e.g. 

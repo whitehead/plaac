@@ -1,0 +1,61 @@
+name: Web UI CI
+
+on:
+  push:
+    paths: &plaac_web_paths
+      - '.github/workflows/web-integration-test.yml'
+      - 'cli/build_plaac.sh'
+      - 'cli/build_docs.py'
+      - 'cli/src/**'
+      - 'web/**'
+  pull_request:
+    paths:
+      &plaac_web_paths
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      RACK_ENV: test
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      # 1. Checkout the repository
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # 2. Set up Ruby
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.2  # match your local Ruby version
+          bundler-cache: true
+
+      # 3. Install Java for PLAAC
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # 4. Build PLAAC CLI JAR
+      - name: Build PLAAC JAR
+        run: |
+          cd ../cli
+          ./build_plaac.sh
+          cp target/plaac.jar ../web/bin/plaac.jar
+
+      # 5. Install Ruby gems
+      - name: Install gems
+        run: bundle install --jobs 4 --retry 3
+
+      # 6. Run integration tests
+      - name: Run integration specs
+        run: |
+           mkdir -p logs
+           mkdir -p tmp
+           bundle exec rspec spec/integration/plaac_web_spec.rb --format documentation
+          

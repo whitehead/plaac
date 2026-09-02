@@ -1,13 +1,33 @@
+#!/bin/bash
 
 SCRIPT_DIR=`dirname $0`
 cd $SCRIPT_DIR
+
+# now get the package version
+
+if [ -n "${PLAAC_VERSION:-}" ]; then
+    echo "using supplied version: ${PLAAC_VERSION}"
+else
+    echo "getting version"
+    PLAAC_VERSION=$(./get_plaac_version.sh)
+fi
+
+echo "ok (Version: ${PLAAC_VERSION})"
 
 echo cleanup
 rm -rf target
 mkdir target
 
+# generate version using the tag from github 
+mkdir -p target/generated
+cat > target/generated/Version.java <<EOF
+public class Version {
+    public static final String VERSION = "$PLAAC_VERSION";
+}
+EOF
+
 echo build
-javac -source 8 -target 8 -d target src/*.java
+javac --release 11 -d target src/*.java target/generated/Version.java
 
 echo package
 cp src/mainClass target/.
