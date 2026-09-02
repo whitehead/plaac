@@ -33,14 +33,14 @@ podman run --rm -p 4567:4567 ghcr.io/<username>/plaac-web:latest
 
 Replace `<username>` with the GitHub username or organization that publishes the PLAAC container image.
 
-On macOS, the recommended installation path for Podman is via the [dedicated installer](https://podman.io/docs/installation), they do not recommend using [Homebrew](https://brew.sh/).  [podman desktop](https://podman-desktop.io/downloads), a GUI version, is also available.
+> On macOS, the recommended installation path for Podman is via the [dedicated installer](https://podman.io/docs/installation), they do not recommend using [Homebrew](https://brew.sh/).  [podman desktop](https://podman-desktop.io/downloads), a GUI version, is also available. After you have installed Podman, run the following:
 
-```bash
-podman machine init
-podman machine start
-```
+  ```bash
+  podman machine init
+  podman machine start
+  ```
 
-Then run the container as above.
+> Then run the container as above.
 
 Access the application at [http://localhost:4567](http://localhost:4567).
 
