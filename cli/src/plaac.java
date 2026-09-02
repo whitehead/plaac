@@ -331,6 +331,21 @@ class plaac {
 	}
     }
 
+    // Sequence names are taken verbatim from the FASTA header, and both output tables are
+    // tab-delimited, so a tab inside a header would split SEQid across several fields and
+    // shift every column after it. Map tabs, newlines and other control characters to
+    // spaces, and trim, so that SEQid is always exactly one field. Names that contain no
+    // control characters and no leading or trailing whitespace are returned unchanged.
+    static String tsvSafeName (String s) {
+	if (s == null) return "";
+	StringBuilder sb = new StringBuilder(s.length());
+	for (int i=0; i<s.length(); i++) {
+	    char c = s.charAt(i);
+	    sb.append((c == '\t' || c == '\n' || c == '\r' || Character.isISOControl(c)) ? ' ' : c);
+	}
+	return sb.toString().trim();
+    }
+
     public static void main (String args[]) {
 
 	plaac ms = new plaac(); 
@@ -728,7 +743,7 @@ class plaac {
 		//  dr.printme(genecount + "\t" + name);
 		for (int i=0; i<seq.length; i++) {
                     // print i+1 rather than i, for one-based indices
-		    System.out.print(id + "\t" + nm + "\t" + (i+1) + "\t" + aanames[seq[i]] + "\t" + hmm1.viterbipath[i] + "\t" + hmm1.mappath[i]+"\t");
+		    System.out.print(id + "\t" + tsvSafeName(nm) + "\t" + (i+1) + "\t" + aanames[seq[i]] + "\t" + hmm1.viterbipath[i] + "\t" + hmm1.mappath[i]+"\t");
 		    System.out.format("%.4f\t%.4f\t%.8f\t%.4f\t%.8f\t%.8f\t%.4f\t%.8f", dr.charge[i], dr.hydro[i], dr.fi[i], 
 				      dr.plaacllr[i], dr.papa[i], dr.fix2[i], dr.plaacllrx2[i], dr.papax2[i]);
                     // use exp format here? not a big deal for plotting, but if we want to take logs later could be helpful
@@ -1083,7 +1098,7 @@ class plaac {
 	    } else {
 		// use one-based indices for output table (e.g, first AA is at position 1); zero-based is used internally.
 		System.out.format("%s\t%d\t%d\t%d\t%d\t%.3f\t%d\t%d\t%d\t%.3f\t%d\t%.3f\t%d\t%d\t%d\t%.3f\t%d\t%d\t%d\t%d\t%.3f\t%.3f\t",
-				  nm,
+				  tsvSafeName(nm),
 				  (int) inf2nan(hs1[2]), 
 				  (int) (hs1[0]+1), (int) (hs1[1]+1), // one-based
 				  (int) (hs1[1]-hs1[0]+1), 
@@ -4603,8 +4618,7 @@ class fastareader {
 		}
 		else if (line.charAt(0) == '>') {
 		    ondeck = true;
-		    name = line.substring(1);
-		    name.trim();
+		    name = line.substring(1).trim();
 		    return sb;
 		}
 		else sb.append(line);
