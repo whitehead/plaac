@@ -12,7 +12,7 @@ The recommended approach for most users who just want to run the web application
 
 A prebuilt PLAAC web container can be run locally without installing
 Ruby, Java, R, or the other application dependencies required to run
-`plaac.jar.  This is useful for development and testing on macOS,
+`plaac.jar`.  This is useful for development and testing on macOS,
 Windows, or Linux systems with [Docker](https://www.docker.com/) or
 [Podman](https://podman.io/) installed.
 
