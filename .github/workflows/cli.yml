@@ -43,10 +43,11 @@ jobs:
         run: |
           ./build_plaac.sh
 
-      - name: Run MOT3 regression and input-validation tests
+      - name: Run MOT3 regression, input-validation and SEQid-field tests
         run: |
           bash tests/test_mot3.sh --no-build
           bash tests/test_input_validation.sh --no-build
+          bash tests/test_seqid_field.sh --no-build
           
       - name: Upload jar artifact
         if: matrix.java == 11
