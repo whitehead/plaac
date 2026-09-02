@@ -24,6 +24,20 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Debug Git version
+        run: |
+          echo "github.ref=${{ github.ref }}"
+          echo "github.ref_name=${{ github.ref_name }}"
+          echo "github.ref_type=${{ github.ref_type }}"
+          echo "github.sha=${{ github.sha }}"
+          echo "HEAD=$(git rev-parse HEAD)"
+          echo "Tags pointing at HEAD:"
+          git tag --points-at HEAD
+          echo "All tags:"
+          git tag --list --sort=-version:refname | head -20
+          echo "git describe:"
+          git describe --tags --always --dirty          
+          
       - name: Determine PLAAC version
         id: version
         run: |
