@@ -443,7 +443,7 @@ class Server < Sinatra::Base
 
     if filter
       # filter with grep
-      all_lines = IO.readlines(filename)
+      all_lines = File.readlines(filename)
       all_lines = all_lines.reject{|line| line =~ /^##/}
       all_lines = all_lines.each_with_index.map{|line,i| [line,i]}
       @picklist = all_lines.select{|pair| picklist_ids.include? pair[1] }
