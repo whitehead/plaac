@@ -185,9 +185,7 @@ The PLAAC web application requires the following software and dependencies:
 
 The exact installation method for these dependencies depends on the deployment environment. The local installation instructions below provide an example for a development environment.
 
-## Local deployment of web application
-
-The following steps set up the PLAAC web application for running on a local machine, directly from a git checkout.
+> The following steps set up the PLAAC web application for running on a local machine, directly from a git checkout. Any additional configuration to make this installation available over the network can be done after these steps are completed (the steps in `./deploy/setup-plaac-server.sh` which are Debian-specific, can act as an example to be adapted for your server configuration).
 
 ### 1. Install the required system dependencies
 

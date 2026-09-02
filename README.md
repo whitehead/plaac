@@ -143,15 +143,16 @@ Web-application
 ----------------
 
 The web application is intended primarily for developers maintaining
-the PLAAC website.
+the PLAAC website, but can also be run by users who want to set up
+their own PLAAC web installation.
 
 The web application uses the same compiled Java command-line
-application as the standalone CLI. To build the web application from
-source, see [`web/README.md`](web/README.md) for instructions. They
-include:
+application as the standalone CLI. For instructions on running,
+building, and deploying the web application, see
+[`web/README.md`](web/README.md). These include:
 
-* instructions for building a the web application from the git
-  checkout suitable for local development and testing
-* instructions for a Docker/Podman container based installation
-  suitable for production installs
+* instructions for running the prebuilt container locally
+* instructions for building and deploying the container on a server
+* instructions for installing and running the web application directly
+  from a git checkout for local development and testing
 
