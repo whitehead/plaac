@@ -153,7 +153,7 @@ The `-p 4567:4567` option publishes the application's port from the container to
 
 On macOS and Windows, Docker or Podman provides the Linux environment required to run the container; no separate Debian installation or manually managed server VM is required.
 
-## Container-based deployment
+## Server deployment with Podman
 
 The web application can be deployed as a persistent service on a
 Linux server using Podman. The deployment uses systemd/Quadlet and
