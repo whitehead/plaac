@@ -112,17 +112,58 @@ The `shotgun_server` script is obsolete and should not be used.
 
 > **Apache/Nginx** The server is a rack compatable application. Please consult the official guides for your webserver, e..g Ngnix or Apache.
 
+## Running the prebuilt container locally
+
+A prebuilt PLAAC web container can be run locally without installing
+Ruby, Java, R, or the other application dependencies required to run
+`plaac.jar.  This is useful for development and testing on macOS,
+Windows, or Linux systems with [Docker](https://www.docker.com/) or
+[Podman](https://podman.io/) installed.
+
+The prebuilt containers are published for both `linux/amd64` and
+`linux/arm64` and therefore run natively on Apple Silicon Macs.
+
+For example, using Docker:
+
+```bash
+docker run --rm -p 4567:4567 ghcr.io/<username>/plaac-web:latest
+```
+
+Or using Podman:
+
+```bash
+podman run --rm -p 4567:4567 ghcr.io/<username>/plaac-web:latest
+```
+
+Replace `<username>` with the GitHub username or organization that publishes the PLAAC container image.
+
+On macOS, Podman can be installed using [Homebrew](https://brew.sh/):
+
+```bash
+brew install podman
+podman machine init
+podman machine start
+```
+
+Then run the container as above.
+
+Access the application at [http://localhost:4567](http://localhost:4567).
+
+The `-p 4567:4567` option publishes the application's port from the container to the local machine. No reverse proxy is required for local use.
+
+On macOS and Windows, Docker or Podman provides the Linux environment required to run the container; no separate Debian installation or manually managed server VM is required.
+
 ## Container-based deployment
 
-The web application can be deployed as a Podman container on a Linux
-server. The container includes the Ruby application and its
-dependencies, the Java runtime required to run `plaac.jar`, and R for
-generating plots. The server therefore does not need Ruby, Java, or R
-installed directly.
+The web application can be deployed as a persistent service on a
+Linux server using Podman. The deployment uses systemd/Quadlet and
+can optionally configure Caddy as a reverse proxy for public access
+and HTTPS.
 
-The deployment uses Podman and systemd/Quadlet. The container image is
-either supplied from container registry, or built locally from the
-PLAAC source checkout, if no container image is supplied.
+The container image can either be pulled from a container registry or
+built locally from a PLAAC source checkout, if no container image is
+supplied. The server itself does not need Ruby, Java, or R installed
+directly.
 
 ### Server requirements
 
