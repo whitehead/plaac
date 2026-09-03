@@ -10,41 +10,73 @@ The recommended approach for most users who just want to run the web application
 
 ## Running the prebuilt container locally
 
-A prebuilt PLAAC web container can be run locally without installing
+Prebuilt PLAAC web containers with [Docker](https://www.docker.com/)
+or [Podman](https://podman.io/) are available that work on Windows,
+macOS or Linux systems. They can be run locally without installing
 Ruby, Java, R, or the other application dependencies required to run
-`plaac.jar`.  This is useful for development and testing on macOS,
-Windows, or Linux systems with [Docker](https://www.docker.com/) or
-[Podman](https://podman.io/) installed.
+`plaac.jar` and the web framework.  On macOS and Windows, Docker or
+Podman provides the Linux environment required to run the container;
+no separate Debian installation or manually managed server VM is
+required.
 
-The prebuilt containers are published for both `linux/amd64` and
-`linux/arm64` and therefore run natively on Apple Silicon Macs.
+### 1. Install Podman or Docker
 
-For example, using Docker:
+Podman has a [dedicated
+installer](https://podman.io/docs/installation) and a GUI wrapper,
+[podman desktop](https://podman-desktop.io/downloads), as does
+Docker. 
 
-```bash
-docker run --rm -p 4567:4567 ghcr.io/<username>/plaac-web:latest
-```
+> **Linux**: most Linux distributions will have their own system packages.
 
-Or using Podman:
-
-```bash
-podman run --rm -p 4567:4567 ghcr.io/<username>/plaac-web:latest
-```
-
-Replace `<username>` with the GitHub username or organization that publishes the PLAAC container image.
-
-> On macOS, the recommended installation path for Podman is via the [dedicated installer](https://podman.io/docs/installation), they do not recommend using [Homebrew](https://brew.sh/).  [podman desktop](https://podman-desktop.io/downloads), a GUI version, is also available. After you have installed Podman, run the following:
+> **macOS**, the recommended installation path for Podman is via the
+> dedicated installer, they do not recommend using
+> [Homebrew](https://brew.sh/). After you have installed Podman, run
+> the following:
 >  ```bash
 >  podman machine init
 >  podman machine start
 >  ```
-> Then run the container as above.
+> The prebuilt containers are published for both `linux/amd64` and
+> `linux/arm64` and therefore run natively on Apple Silicon Macs.
+
+### 2. Run the container
+
+With Docker:
+
+```bash
+docker run --rm -p 4567:4567 ghcr.io/<username>/plaac-web:<version>
+```
+
+Or Podman:
+
+```bash
+podman run --rm -p 4567:4567 ghcr.io/<username>/plaac-web:<version>
+```
+
+Replace `<username>` with the GitHub username or organization that
+publishes the PLAAC container image. For example, a publicly
+available PLAAC image is currently published as
+`ghcr.io/alexlancaster/plaac-web`.
+
+Replace `<version>` with the desired PLAAC release version, such as
+`1.1.0b8`. A version-specific tag runs that particular release. The
+`latest` tag can instead be used to run the most recently published
+container, e.g.
+
+```bash
+docker run --rm -p 4567:4567 ghcr.io/alexlancaster/plaac-web:latest
+```
+
+> [!NOTE]
+> The `latest` tag may refer to a development build rather than the
+> most recent released version. For reproducible deployments, use a
+> version-specific tag.
+
+### 3. Access the website
 
 Access the application at [http://localhost:4567](http://localhost:4567).
 
 The `-p 4567:4567` option publishes the application's port from the container to the local machine. No reverse proxy is required for local use.
-
-On macOS and Windows, Docker or Podman provides the Linux environment required to run the container; no separate Debian installation or manually managed server VM is required.
 
 ## Deploy a container on a server
 
@@ -100,7 +132,11 @@ Optional arguments/environment variables:
   ./deploy/setup-plaac-server.sh <container>
   ```
 
-  For example, `<container>` can be an image reference supported by Podman, in the format of `ghcr.io/<username>/plaac-web:latest`.
+  For example, `<container>` can be an image reference supported by
+  Podman, in the format of `ghcr.io/<username>/plaac-web:<version>`.
+  Where `<username>` is the organization or peson hosting the
+  container images and `<version>` is a version like `1.1.0` or
+  `latest` (which is the latest published version).
 
 * **Supply domain name**. You can also optionally supply a domain name to allow access via HTTPS, suitable for public deployment. This is configured by setting the `DOMAIN` environment variable:
 
