@@ -3,8 +3,17 @@ name: PLAAC docker web container build
 on:
   workflow_dispatch:
   push:
-    paths:
-      - '.github/workflows/web-container.yml'
+    paths-ignore: &plaac_web_paths
+      - '.gitignore'
+      - '.github/dependabot.yml'
+      - '.github/workflows/cli.yml'
+      - '.github/workflows/web-integration-test.yml'      
+      - '**/*.md'
+      - 'cli/build_background_files.py'
+      - 'cli/example/generate_example_output.sh'
+      - 'cli/example/generate_scer_spreadsheet.sh'
+      - 'cli/example/visualize_example_output.sh'
+      - 'web/bin/fancy-yeast-spreadsheet.py'
 
 env:
   REGISTRY: ghcr.io

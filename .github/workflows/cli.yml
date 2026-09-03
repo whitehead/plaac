@@ -2,16 +2,19 @@ name: PLAAC CLI Release and CI
 
 on:
   push:
-    paths: &plaac_cli_paths
-      - '.github/workflows/cli.yml'
-      - 'cli/build_plaac.sh'
-      - 'cli/build_docs.py'
-      - 'cli/get_plaac_version.py'      
-      - 'cli/src/**'
-      - 'cli/tests/**'
-      - 'cli/python/**'
+    paths-ignore: &plaac_cli_paths
+      - '.gitignore'
+      - '.github/dependabot.yml'
+      - '.github/workflows/web-integration-test.yml'
+      - '.github/workflows/web-container.yml'      
+      - '**/*.md'
+      - 'cli/build_background_files.py'
+      - 'cli/example/generate_example_output.sh'
+      - 'cli/example/generate_scer_spreadsheet.sh'
+      - 'cli/example/visualize_example_output.sh'
+      - 'web/**'
   pull_request:
-    paths: *plaac_cli_paths
+    paths-ignore: *plaac_cli_paths
   release:
     types: [created]
     
