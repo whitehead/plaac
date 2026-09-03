@@ -62,9 +62,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch
-            #type=ref,event=tag
             type=raw,value=${{ steps.version.outputs.version }}
+            type=ref,event=branch,enable=${{ github.event_name != 'repository_dispatch' }}
             type=sha
 
       - name: Build and push
