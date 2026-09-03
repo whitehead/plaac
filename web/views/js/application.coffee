@@ -204,22 +204,5 @@ $ ->
   $('input[name=file]').on 'change', handle_file_change
   handle_file_change({target: $('#fasta_file')})
 
-  # bootstrap
-  $('.collapse').collapse(toggle: false)
-
-  $('.collapse').on 'show', ->
-    $(this).prev('span').find('i').toggleClass('icon-chevron-right').toggleClass('icon-chevron-down')
-
-  $('.collapse').on 'hidden', ->
-    $(this).prev('span').find('i').toggleClass('icon-chevron-right').toggleClass('icon-chevron-down')
-
-
-  #$('.collapsible').click ->
-  #  visible = !$(this).next().hasClass('collapsed')
-  #  if visible
-  #    $(this).next().addClass('collapsed')
-  #  else
-  #    $(this).next().removeClass('collapsed')
-  
 
 # vim: ft=coffee foldmethod=manual
