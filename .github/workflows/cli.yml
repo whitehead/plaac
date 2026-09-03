@@ -17,6 +17,9 @@ on:
     paths-ignore: *plaac_cli_paths
   release:
     types: [created]
+
+permissions:
+  contents: read
     
 jobs:
   cli-test-java:
