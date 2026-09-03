@@ -39,6 +39,7 @@ plaac = ["plaac.jar"]
 # from this file; the scheme/fallback mirror the CLI so both agree.
 [tool.setuptools_scm]
 root = "../.."
-version_scheme = "guess-next-dev"
+#version_scheme = "guess-next-dev"
+version_scheme = "post-release"
 local_scheme = "node-and-date"
 fallback_version = "1.1.0.dev0"
