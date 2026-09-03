@@ -17,6 +17,9 @@ on:
     paths-ignore:
       &plaac_web_paths
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
