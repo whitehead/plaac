@@ -159,11 +159,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PUBLIC_CONTAINER_TOKEN }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
-
-      - name: Trigger public container build
-        env:
-          GH_TOKEN: ${{ secrets.PUBLIC_CONTAINER_TOKEN }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           gh api \
             --method POST \
