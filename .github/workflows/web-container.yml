@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   release:
     types: [published]
+  repository_dispatch:
+    types: [plaac-release]
     
 env:
   REGISTRY: ghcr.io
@@ -18,24 +20,24 @@ jobs:
       packages: write
 
     steps:
+      # - name: Check out repository
+      #   uses: actions/checkout@v7
+      #   with:
+      #     fetch-depth: 0
       - name: Check out repository
         uses: actions/checkout@v7
         with:
-          fetch-depth: 0
+          repository: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.repository || github.repository }}
+          ref: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.tag || github.ref }}
+          fetch-depth: 0          
 
-      - name: Debug Git version
+      - name: Determine Git revision
+        id: git
         run: |
-          echo "github.ref=${{ github.ref }}"
-          echo "github.ref_name=${{ github.ref_name }}"
-          echo "github.ref_type=${{ github.ref_type }}"
-          echo "github.sha=${{ github.sha }}"
-          echo "HEAD=$(git rev-parse HEAD)"
-          echo "Tags pointing at HEAD:"
-          git tag --points-at HEAD
-          echo "All tags:"
-          git tag --list --sort=-version:refname | head -20
-          echo "git describe:"
-          git describe --tags --always --dirty          
+          echo "Repository: $(git remote get-url origin)"
+          echo "Revision: $(git rev-parse HEAD)"
+          echo "Tags: $(git tag --points-at HEAD | tr '\n' ' ')"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"          
           
       - name: Determine PLAAC version
         id: version
@@ -75,7 +77,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             PLAAC_VERSION=${{ steps.version.outputs.version }}
-            PLAAC_GIT_SHA=${{ github.sha }}            
+            PLAAC_GIT_SHA=${{ steps.git.outputs.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
