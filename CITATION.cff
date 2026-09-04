@@ -1,0 +1,71 @@
+cff-version: 1.2.0
+abstract: >-
+  PLAAC (Prion-Like Amino Acid Composition) is a web and command-line
+  application for identifying proteins with prion-like amino acid composition.
+  PLAAC searches protein sequences for candidate prion-like domains using a
+  hidden-Markov model (HMM) algorithm and provides scores and visualizations
+  for the resulting predictions.
+authors:
+  - family-names: Lancaster
+    given-names: Alexander K.
+    affiliation: >-
+      Amber Biology LLC, RIIS 2.0 and Institute for Globally Distributed Open
+      Research and Education (IGDORE)
+    orcid: https://orcid.org/0000-0002-0002-9263      
+  - family-names: King
+    given-names: Oliver D.
+    affiliation: University of Massachusetts Medical School
+    orcid: https://orcid.org/0000-0002-9460-4491
+  - family-names: Nutter-Upham
+    given-names: Andrew
+    affiliation: Whitehead Institute for Biomedical Research
+title: >-
+  PLAAC: Prion-Like Amino Acid Composition
+url: http://plaac.wi.mit.edu/
+repository-code: https://github.com/whitehead/plaac
+type: software
+keywords:
+  - prions
+  - prion-like domains
+  - protein sequences
+  - bioinformatics
+  - computational biology
+  - hidden Markov models
+license: MIT
+version: v1.1.0rc1
+message: >-
+  If you use PLAAC, please cite Lancaster et al. (2014), which describes
+  the web and command-line applications and their implementation.
+preferred-citation:
+  authors:
+    - family-names: Lancaster
+      given-names: Alex K.
+      affiliation: >-
+        Amber Biology LLC, RIIS 2.0 and Institute for Globally Distributed Open
+        Research and Education (IGDORE)
+      orcid: https://orcid.org/0000-0002-0002-9263	
+    - family-names: Nutter-Upham
+      given-names: Andrew
+      affiliation: Whitehead Institute for Biomedical Research
+    - family-names: Lindquist
+      given-names: Susan
+      affiliation: Whitehead Institute for Biomedical Research
+    - family-names: King
+      given-names: Oliver D.
+      affiliation: University of Massachusetts Medical School
+      orcid: https://orcid.org/0000-0002-9460-4491
+  date-published: 2014-05-13
+  doi: 10.1093/bioinformatics/btu310
+  issn: 1367-4803
+  issue: 17
+  journal: Bioinformatics
+  publisher:
+    name: Oxford University Press
+  start: 2501
+  end: 2502
+  title: >-
+    PLAAC: a web and command-line application to identify proteins with
+    prion-like amino acid composition
+  type: article
+  url: https://doi.org/10.1093/bioinformatics/btu310
+  volume: 30
