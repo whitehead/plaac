@@ -8,6 +8,7 @@ on:
       - '.github/workflows/web-integration-test.yml'
       - '.github/workflows/web-container.yml'      
       - '**/*.md'
+      - 'CITATION.cff'
       - 'cli/build_background_files.py'
       - 'cli/example/generate_example_output.sh'
       - 'cli/example/generate_scer_spreadsheet.sh'
