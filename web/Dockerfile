@@ -50,11 +50,14 @@ RUN bundle install
 
 COPY web/ ./
 
-# get the plaac.jar from the build container to include in the webserver
+# get the plaac.jar and R files from the build container to include in the webserver
 
 COPY --from=plaac-builder /build/cli/target/plaac.jar ./bin/plaac.jar
 COPY --from=plaac-builder /build/cli/target/_plaac_headers.haml ./views/_plaac_headers.haml
 COPY --from=plaac-builder /build/cli/target/hmm_default.png ./public/hmm_default.png
+COPY --from=plaac-builder /build/cli/R/plaac_plot.r ./bin/plaac_plot.r
+COPY --from=plaac-builder /build/cli/R/plaac_plot_util.r ./bin/plaac_plot_util.r
+
 
 RUN mkdir -p tmp logs /tmp/clusty
 

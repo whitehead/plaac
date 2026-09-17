@@ -296,12 +296,14 @@ mkdir logs
 
 ### 5. Build the PLAAC JAR
 
-Ensure that `plaac.jar` is built (detailed instructions are in [`cli/README.md`](../cli/README.md)) and copy the resulting JAR and other generated files into the web application directory:
+Ensure that `plaac.jar` is built (detailed instructions are in [`cli/README.md`](../cli/README.md)) and copy the R plotting code, the resulting JAR and other generated files into the web application directory:
 
 ```bash
 cd cli/
 ./build_plaac.sh
 cp target/plaac.jar ../web/bin/
+cp R/plaac_plot.r ../web/plaac_plot.r
+cp R/plaac_plot_utils.r ../web/plaac_plot_utils.r
 cp target/_plaac_headers.haml ../web/views/
 cp target/hmm_default.png ../web/public/
 cd ..
