@@ -12,7 +12,7 @@ if (length(args) < 2) {
   cat("   figname is the name to save the figure as, ending with .pdf or .png.\n")
   cat("   (For png, one file will be output per protein, with a five digit index included in name.)\n")
   cat("   The optional flag -d plots doubly-smoothed rather than singly-smoothed curves.\n")
-  cat("   The optional flag -c plots all sequences con one page, color-coded by AA type.\n")
+  cat("   The optional flag -c plots all sequences on one page, color-coded by AA type.\n")
   cat("   When -c is used, optional integer afterward gives maximum number of AAs to plot per protein.\n")
   cat("See source-code of plaac_plot_util.r and plaac_plot.r for other plot options.\n")
 } else if (length(args)>2 && args[3]=="-c") {
