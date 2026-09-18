@@ -24,8 +24,7 @@
 source "$(dirname "$0")/test_common.sh"
 
 WORK="$(mktemp -d)"
-echo $WORK
-#trap 'rm -f "$OUT" "$ERR"; rm -rf "$WORK"' EXIT
+trap 'rm -f "$OUT" "$ERR"; rm -rf "$WORK"' EXIT
 
 SEQ=MQNSNQSQNQGQFQQNNMQQQQQQQQQQNQFQQNMPMHQFNMQNQGQFQQNGMQPQFHQQ
 
