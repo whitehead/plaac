@@ -107,7 +107,7 @@ actual="$(grep -v '^#' "$OUT" | grep -v '^###' | awk -F'\t' 'NR > 1 {print $2}' 
 rc_list=$rc
 
 if [[ "$rc_list" -eq 0 && "$actual" -eq "$expected" ]]; then
-    pass_msg "verbose list output contains all $expected input sequences"
+    pass_msg "verbose list output contains all $expected input sequences that include tabs"
 else
     fail_msg "verbose list output lost sequences (expected $expected, got $actual, exit=$rc_list)"
     echo "Unique SEQids in verbose output:"
