@@ -361,7 +361,8 @@ plot_seqs = function(infile="plot_data.txt",
                       showHMMProbs=TRUE,
                       showParses=FALSE, 
                       showAAColors=FALSE,
-                      showSeq=FALSE,  
+                      showSeq=FALSE,
+                      resolutionPng=300,
                       tracks=c("FI","PLAAC","PAPA","THRESH"),
                       seqUnderline=c("FIx2","PLAACx2","PAPAx2"),
                       seqColor="PAPA"){
@@ -403,7 +404,7 @@ plot_seqs = function(infile="plot_data.txt",
     
     if (plotPng) {
       png(file=paste(pngStub, "_", sprintf("%05d",pngCount),".png", sep=""), bg="transparent", 
-          width=plotWidth, height=plotHeight, units="in", res=300, pointsize=12, family="Courier"); 
+          width=plotWidth, height=plotHeight, units="in", res=resolutionPng, pointsize=12, family="Courier");
       pngCount = pngCount+1;
     }
     
@@ -425,7 +426,7 @@ plot_seqs = function(infile="plot_data.txt",
 #######
 
 ## allowing range of n to show would be more flexible than 1:max_n
-color_code_seqs = function(infile="plot_data.txt", outfile="color_plots.pdf", max_n=NA, showLegend=T, showParses=T) {
+color_code_seqs = function(infile="plot_data.txt", outfile="color_plots.pdf", max_n=NA, showLegend=T, showParses=T, resolutionPng=300) {
   # datAll = read.table(infile, header=TRUE, sep="\t", stringsAsFactors=F);
   ## changed from default comment.char="#" in order to allow # in fasta ID
   datRaw = scan(infile, what="character", sep="\n", quiet=T, quote="")
@@ -451,7 +452,7 @@ color_code_seqs = function(infile="plot_data.txt", outfile="color_plots.pdf", ma
   plotPng = grepl("png$", outfile);
   
   if (plotPng) { 
-    png(outfile, height=0.5 + 0.3*(num_seq + ifelse(showLegend, 1.5, 0)), width=8, res=300, units="in", family="Courier", pointsize=12)
+    png(outfile, height=0.5 + 0.3*(num_seq + ifelse(showLegend, 1.5, 0)), width=8, res=resolutionPng, units="in", family="Courier", pointsize=12)
   } else{ 
     pdf(outfile, height=0.5 + 0.3*(num_seq + ifelse(showLegend, 1.5, 0)), width=8, family="Courier", pointsize=12)
   }
