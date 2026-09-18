@@ -110,7 +110,7 @@ bind_picklist_clear = ->
     window.picklist.clear()
 
 bind_picklist_toggle = ->
-  $('input[type=checkbox]:not(.all_toggle)').click ->
+  $('input[name="selected[]"]').click ->
     chk = $(this)
     is_checked = chk.attr('checked')=='checked'
     if is_checked

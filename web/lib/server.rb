@@ -197,6 +197,7 @@ class Server < Sinatra::Base
       bgfreq_filename: bgfreq_filename,
       bg: bg,
       bgfreq_opt: bgfreq_opt,
+      highres: params["highres"] == "1",
     }
 
 
@@ -556,6 +557,9 @@ class Server < Sinatra::Base
     selected = [params[:selected]].flatten.compact.map(&:to_i)
     @job.update_params(:selected, selected)
 
+    highres = params[:highres] == "1"
+    @job.update_params(:highres, highres)
+
     candidates_filename = File.join(@job.working_directory,"plaac_candidates_selected.tsv")
     File.open(candidates_filename,'w') do |candidates_file|
       candidates, picklist = load_candidates(@job, plaac_candidates_file)
@@ -583,13 +587,17 @@ class Server < Sinatra::Base
       bgfreq_opt = " -B #{bgfreq_filename} "
     end
 
+    # set default resolutions
+    png_resolution = @job.params[:highres] ? 300 : 72
+    strip_png_resolution = @job.params[:highres] ? 300 : 100
+
     job.command = <<-COMMAND
     sh -c "cd #{@job.working_directory} &&
       java -jar ./plaac.jar -i #{input_fasta} -c #{core_len} -a #{alpha} -p #{candidates_filename} #{bgfreq_opt} > #{output_filename} &&
       ./plaac_plot.r plaac_candidates_details.tsv plaac_details.pdf &&
-      ./plaac_plot.r plaac_candidates_details.tsv plaac_details.png &&
+      ./plaac_plot.r plaac_candidates_details.tsv plaac_details.png -r #{png_resolution} &&
       ./plaac_plot.r plaac_candidates_details.tsv plaac_strip.pdf -c &&
-      ./plaac_plot.r plaac_candidates_details.tsv plaac_strip.png -c ;
+      ./plaac_plot.r plaac_candidates_details.tsv plaac_strip.png -c -r #{strip_png_resolution};
       touch details_ready
     "
     COMMAND

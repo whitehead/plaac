@@ -22,6 +22,7 @@
       %hr{style:'border-top: 5px solid #eee'}
 
       %h2 Visualize Results
+
       %p Select proteins for visualization and detailed analysis from the available proteins ranked by COREscore.
 
   .row-fluid
@@ -116,6 +117,12 @@
               %input{type:'hidden', name:'token', value: @job.token}
               .pull-right
                 %input#visualize_btn.btn.btn-large{type:'submit',value:'Visualize!'}
+                %label.checkbox{for:'highres'}
+                  %input#highres{type:'checkbox',
+                                 name:'highres',
+                                 value:'1',
+                                 checked:@job.params[:highres]}
+                  High-res PNGs
 
 -#Local Variables: 
 -#indent-tabs-mode: nil
