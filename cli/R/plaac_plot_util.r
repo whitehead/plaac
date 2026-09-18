@@ -3,7 +3,7 @@
 ## Author: Oliver D. King (oliver.king@umassmed.edu) 
 ## See LICENSE.TXT for license information.  
 
-## split long fasta IDs accross lines in plots
+## split long fasta IDs across lines in plots
 hyphenate = function(myString="--", targetWidth=90) {
   if (nchar(myString) < targetWidth + 5) {return(myString);}
   myChars = strsplit(myString,"")[[1]]
@@ -26,7 +26,7 @@ hyphenate = function(myString="--", targetWidth=90) {
 }  
 
 
-## construct coloring of AAs automatically based on order of log-likehood ratios 
+## construct coloring of AAs automatically based on order of log-likelihood ratios 
 ## for PrD vs background frequencies in yeast.
 autocolors = TRUE;
 
@@ -87,9 +87,9 @@ if (autocolors) {
     ));
 }
 
-### This plots the results (gene parse, hydropathy, FoldIndex) that are produced by plaac.java 
+### This plots the results (protein parse, hydropathy, FoldIndex) that are produced by plaac.java 
 ### when using the genelist option. It reads these results from the file "infile" and plots 
-### them one gene per page in a pdf specified by "outfile". Setting showSeq=T causes the AA 
+### them one protein per page in a pdf specified by "outfile". Setting showSeq=T causes the AA 
 ### sequence to be shown beneath the plots.
 
 plot_seq = function(dat, 
@@ -125,7 +125,7 @@ plot_seq = function(dat,
   aaColorVec[which(is.na(aaColorVec))] = "#666666"; # grey
   
   ## resize based on showHMMProbs and showSeq . Input files contains
-  ## seqs of different lengths, so single dixed image size won't be ideal 
+  ## seqs of different lengths, so single fixed image size won't be ideal 
   ## for all of them when showSeq is T
   
   ## first column gives plot order, which can be different than order in file!
@@ -278,7 +278,7 @@ plot_seq = function(dat,
     lines(c(-100,nn),rep(papaThresh,2),col=trackColors["THRESH"],lwd=1.5, lty=2); 
   }
   
-  ## should be smarter about axis tick postioning
+  ## should be smarter about axis tick positioning
   if (nn > 100) { 
     axis(3, at=seq(50,nn,by=100), labels=NA, pos=1.0, tcl=-0.25);
     axis(3, at=seq(0,nn,by=100), labels=seq(0,nn,by=100), pos=1.0, tcl=-0.5, cex.axis=1-min(0.5, floor(nn/1000)/10));
@@ -361,7 +361,8 @@ plot_seqs = function(infile="plot_data.txt",
                       showHMMProbs=TRUE,
                       showParses=FALSE, 
                       showAAColors=FALSE,
-                      showSeq=FALSE,  
+                      showSeq=FALSE,
+                      resolutionPng=300,
                       tracks=c("FI","PLAAC","PAPA","THRESH"),
                       seqUnderline=c("FIx2","PLAACx2","PAPAx2"),
                       seqColor="PAPA"){
@@ -391,7 +392,7 @@ plot_seqs = function(infile="plot_data.txt",
   #      res=72, pointsize=12, family="Courier"); 
   #   ## On Mac get overplotting for later pngs; fixed with Type=X11, 
   #   ## but then Courier isn't found, and mono font doesn't look good.
-  #   ## Could do manualy loop instead...
+  #   ## Could do manual loop instead...
   #} else {
   #  pdf(file=outfile, width=plotWidth, height=plotHeight, pointsize=12, family="Courier");
   # }
@@ -403,7 +404,7 @@ plot_seqs = function(infile="plot_data.txt",
     
     if (plotPng) {
       png(file=paste(pngStub, "_", sprintf("%05d",pngCount),".png", sep=""), bg="transparent", 
-          width=plotWidth, height=plotHeight, units="in", res=72, pointsize=12, family="Courier"); 
+          width=plotWidth, height=plotHeight, units="in", res=resolutionPng, pointsize=12, family="Courier");
       pngCount = pngCount+1;
     }
     
@@ -415,9 +416,9 @@ plot_seqs = function(infile="plot_data.txt",
     plot_seq(dat, showHMMProbs=showHMMProbs, showParses=showParses, showAAColors=showAAColors, showSeq=showSeq,  
               tracks=tracks, seqUnderline=seqUnderline, seqColor=seqColor)
     
-    if (plotPng) {dev.off();}
+    if (plotPng) {invisible(dev.off())}
   }
-  if (!plotPng) {dev.off();}
+  if (!plotPng) {invisible(dev.off())}
   
 }
 
@@ -425,7 +426,7 @@ plot_seqs = function(infile="plot_data.txt",
 #######
 
 ## allowing range of n to show would be more flexible than 1:max_n
-color_code_seqs = function(infile="plot_data.txt", outfile="color_plots.pdf", max_n=NA, showLegend=T, showParses=T) {
+color_code_seqs = function(infile="plot_data.txt", outfile="color_plots.pdf", max_n=NA, showLegend=T, showParses=T, resolutionPng=300) {
   # datAll = read.table(infile, header=TRUE, sep="\t", stringsAsFactors=F);
   ## changed from default comment.char="#" in order to allow # in fasta ID
   datRaw = scan(infile, what="character", sep="\n", quiet=T, quote="")
@@ -451,7 +452,7 @@ color_code_seqs = function(infile="plot_data.txt", outfile="color_plots.pdf", ma
   plotPng = grepl("png$", outfile);
   
   if (plotPng) { 
-    png(outfile, height=100*(0.6 + 0.3*(num_seq + ifelse(showLegend, 1.5, 0))), width=100*8, units="px", family="Courier", pointsize=16)
+    png(outfile, height=0.5 + 0.3*(num_seq + ifelse(showLegend, 1.5, 0)), width=8, res=resolutionPng, units="in", family="Courier", pointsize=12)
   } else{ 
     pdf(outfile, height=0.5 + 0.3*(num_seq + ifelse(showLegend, 1.5, 0)), width=8, family="Courier", pointsize=12)
   }
@@ -503,7 +504,7 @@ color_code_seqs = function(infile="plot_data.txt", outfile="color_plots.pdf", ma
     }  
     text(midx, rep(num_seq + 1 + 0.15, length(aaColors)), names(aaColors), pos=3, cex=1)
   }
-  dev.off()
+  invisible(dev.off())
   
 }
 

@@ -93,7 +93,16 @@
                   /*from FASTA Sequence*
 
           .help-block.mute.footnote *"From input sequence" is only appropriate when running across an entire proteome.
+        %hr.clear
 
+    .row
+      .span10.offset1
+        %label.checkbox
+          %input#highres{type:'checkbox', name:'highres', value:'1'}
+          %b High-res PNGs
+        .help-block.mute.footnote
+          Uses 300 DPI for PNG visualizations
+        %hr.clear
     .row
       .span8
       .span4.text-right
