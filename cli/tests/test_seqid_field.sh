@@ -24,7 +24,8 @@
 source "$(dirname "$0")/test_common.sh"
 
 WORK="$(mktemp -d)"
-trap 'rm -f "$OUT" "$ERR"; rm -rf "$WORK"' EXIT
+echo $WORK
+#trap 'rm -f "$OUT" "$ERR"; rm -rf "$WORK"' EXIT
 
 SEQ=MQNSNQSQNQGQFQQNNMQQQQQQQQQQNQFQQNMPMHQFNMQNQGQFQQNGMQPQFHQQ
 
@@ -91,6 +92,26 @@ if [[ "$rc" -eq 0 && "$rc_s" -eq 0 ]] && diff -q "$WORK/space_res.tsv" "$WORK/ta
 else
     fail_msg "per-residue table differs between tab- and space-separated headers (exit=$rc)"
     diff "$WORK/space_res.tsv" "$WORK/tab_res.tsv" | sed 's/^/        /' | head -4
+fi
+
+# 6. verbose list output (-p list.txt) produces one row per residue.  The list
+#    is copied verbatim from the FASTA headers, including tabs.  Every sequence
+#    in the input must still be represented in the output.
+awk '/^>/ {sub(/^>/, ""); print}' "$CLI_DIR/example/four_classic_prions_tabs.fasta" \
+    > "$WORK/list.txt"
+
+expected="$(grep -c '^>' "$CLI_DIR/example/four_classic_prions_tabs.fasta")"
+
+run -i "$CLI_DIR/example/four_classic_prions_tabs.fasta" -p "$WORK/list.txt"
+actual="$(grep -v '^#' "$OUT" | grep -v '^###' | awk -F'\t' 'NR > 1 {print $2}' | sort -u | grep -c .)"
+rc_list=$rc
+
+if [[ "$rc_list" -eq 0 && "$actual" -eq "$expected" ]]; then
+    pass_msg "verbose list output contains all $expected input sequences"
+else
+    fail_msg "verbose list output lost sequences (expected $expected, got $actual, exit=$rc_list)"
+    echo "Unique SEQids in verbose output:"
+    grep -v '^#' "$OUT" | grep -v '^###' | awk -F'\t' 'NR > 1 {print $2}' | sort -u | sed 's/^/        /'
 fi
 
 echo
