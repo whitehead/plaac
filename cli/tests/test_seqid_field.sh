@@ -103,6 +103,7 @@ awk '/^>/ {sub(/^>/, ""); print}' "$CLI_DIR/example/four_classic_prions_tabs.fas
 expected="$(grep -c '^>' "$CLI_DIR/example/four_classic_prions_tabs.fasta")"
 
 run -i "$CLI_DIR/example/four_classic_prions_tabs.fasta" -p "$WORK/list.txt"
+cat "$OUT"
 actual="$(grep -v '^#' "$OUT" | grep -v '^###' | awk -F'\t' 'NR > 1 {print $2}' | sort -u | grep -c .)"
 rc_list=$rc
 
