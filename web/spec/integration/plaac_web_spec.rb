@@ -1,5 +1,5 @@
 # spec/integration/plaac_web_spec.rb
-require 'spec_helper_new'
+require 'spec_helper'
 require 'nokogiri'
 require 'rack/test'
 
