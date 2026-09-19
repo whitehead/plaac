@@ -56,6 +56,8 @@ jobs:
           cd ../cli
           ./build_plaac.sh
           cp target/plaac.jar ../web/bin/plaac.jar
+          cp R/plaac_plot.r ../web/plaac_plot.r
+          cp R/plaac_plot_util.r ../web/plaac_plot_util.r
 
       # 5. Install Ruby gems
       - name: Install gems

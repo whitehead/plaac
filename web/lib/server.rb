@@ -180,7 +180,7 @@ class Server < Sinatra::Base
       return haml(:index)
     end
 
-    gene_count = `egrep '^>' #{filename} |wc -l`.to_i
+    gene_count = `grep -E '^>' #{filename} |wc -l`.to_i
 
     @@log.info "gene_count: #{gene_count}"
 
