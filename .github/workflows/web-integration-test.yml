@@ -43,9 +43,11 @@ jobs:
           ruby-version: 3.2  # match your local Ruby version
           bundler-cache: true
 
-      # 3. Install Java for PLAAC          
-      - name: Set up R
-        uses: r-lib/actions/setup-r@v2
+      # 3. Install Java for PLAAC
+      - name: Install R
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y r-base      
           
       # 4. Install Java for PLAAC
       - name: Set up Java
