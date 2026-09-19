@@ -62,6 +62,11 @@ RSpec.describe 'PLAAC web workflow', type: :request do
 
     image_urls.each do |image_url|
       get image_url
+      puts "IMAGE: #{image_url}"
+      puts "STATUS: #{last_response.status}"
+      puts "CONTENT-TYPE: #{last_response.content_type}"
+      puts "BODY: #{last_response.body[0..500]}" unless last_response.ok?
+      
       expect(last_response).to be_ok
       expected_type =
         if image_url.end_with?('/strippng')
