@@ -99,6 +99,7 @@ class Server < Sinatra::Base
   @@log = Logger.new(@@base+"/logs/plaac.log")
 
   @@input_fasta="input_sequence.fasta"
+  @@plaac_visualization_fasta="plaac_visualization.fasta"
   @@plaac_candidates="plaac_candidates.tsv"
   @@plaac_candidates_details="plaac_candidates_details.tsv"
   @@plaac_candidates_details_pdf="plaac_candidates.pdf"
@@ -538,6 +539,11 @@ class Server < Sinatra::Base
     return [true, nil]
   end
 
+  # this should match the normalization of tabs done by plaac.jar
+  def tsv_safe_name(name)
+    name.gsub(/[\t\n\r[:cntrl:]]/, ' ').strip
+  end
+
   def display_plaac_candidates
     @@log.info "display_plaac_candidates #{params.inspect}"
     @job = Job.first(:token => params["token"])
@@ -561,18 +567,38 @@ class Server < Sinatra::Base
     @job.update_params(:highres, highres)
 
     candidates_filename = File.join(@job.working_directory,"plaac_candidates_selected.tsv")
+
+    # since the initial generation of the candidates, the SEQid may
+    # have tabs removed, we need to make the FASTA match the picklist,
+    # so we will rewrite SEQids in the visualization-specific FASTA
+    # file to use in subsequent PLAAC jobs
+    visualization_fasta = File.join(@job.working_directory, @@plaac_visualization_fasta)
+    input_fasta_file = File.join(@job.working_directory, @@input_fasta)
+
+    File.open(input_fasta_file) do |input|
+      File.open(visualization_fasta, "w") do |output|
+        input.each_line do |line|
+          if line.start_with?(">")
+            output.puts ">" + tsv_safe_name(line[1..].chomp)  # remove tabs
+          else
+            output.write line
+          end
+        end
+      end
+    end
+
     File.open(candidates_filename,'w') do |candidates_file|
       candidates, picklist = load_candidates(@job, plaac_candidates_file)
       picklist.each do |columns,i|
         name = columns.split(/\t/)[0]
-        # TODO: ultimately the second "name" should be replaced by the a user-specified "common" gene name
-        candidates_file.puts name + "\t" + name
+        # FIXME: originally this had two columns, this is no longer used since sequences may have tabs
+        candidates_file.puts name
         @candidates << name
       end
     end
     local("chmod ug+rw #{candidates_filename}")
 
-    input_fasta = @@input_fasta
+    visualization_fasta = @@plaac_visualization_fasta
     output_filename = @@plaac_candidates_details
 
     job = Job.new(@job.token)
@@ -591,9 +617,10 @@ class Server < Sinatra::Base
     png_resolution = @job.params[:highres] ? 300 : 72
     strip_png_resolution = @job.params[:highres] ? 300 : 100
 
+    # note that we use the normalized visualization FASTA file here, not the original
     job.command = <<-COMMAND
     sh -c "cd #{@job.working_directory} &&
-      java -jar ./plaac.jar -i #{input_fasta} -c #{core_len} -a #{alpha} -p #{candidates_filename} #{bgfreq_opt} > #{output_filename} &&
+      java -jar ./plaac.jar -i #{visualization_fasta} -c #{core_len} -a #{alpha} -p #{candidates_filename} #{bgfreq_opt} > #{output_filename} &&
       ./plaac_plot.r plaac_candidates_details.tsv plaac_details.pdf &&
       ./plaac_plot.r plaac_candidates_details.tsv plaac_details.png -r #{png_resolution} &&
       ./plaac_plot.r plaac_candidates_details.tsv plaac_strip.pdf -c &&
