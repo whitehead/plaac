@@ -43,14 +43,18 @@ jobs:
           ruby-version: 3.2  # match your local Ruby version
           bundler-cache: true
 
-      # 3. Install Java for PLAAC
+      # 3. Install Java for PLAAC          
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+          
+      # 4. Install Java for PLAAC
       - name: Set up Java
         uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 4. Build PLAAC CLI JAR
+      # 5. Build PLAAC CLI JAR
       - name: Build PLAAC JAR
         run: |
           cd ../cli
@@ -59,14 +63,13 @@ jobs:
           cp R/plaac_plot.r ../web/bin/plaac_plot.r
           cp R/plaac_plot_util.r ../web/bin/plaac_plot_util.r
 
-      # 5. Install Ruby gems
+      # 6. Install Ruby gems
       - name: Install gems
         run: bundle install --jobs 4 --retry 3
 
-      # 6. Run integration tests
+      # 7. Run integration tests
       - name: Run integration specs
         run: |
            mkdir -p logs
            mkdir -p tmp
            bundle exec rspec spec/integration/plaac_web_spec.rb --format documentation
-          
