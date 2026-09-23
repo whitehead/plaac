@@ -2156,12 +2156,12 @@ class plaac {
 	    String line;
 	    int i = 1;
 	    while ((line = in.readLine()) != null) {
-		line.trim();
+		line = line.trim();
 		if (line != null) {
 		    String [] chunks = line.split("\\t");
-		    if (defaultvalue == "incr") ht.put(chunks[0], new String(""+i));
+		    if (defaultvalue == "incr") ht.put(line, new String(""+i));
+		    else if (defaultvalue == null) ht.put(line, line);
 		    else if (chunks.length > 1) ht.put(chunks[0], chunks[1]);
-		    else if (defaultvalue == null) ht.put(chunks[0], chunks[0]);
 		    else ht.put(chunks[0], defaultvalue);
 		    i++;
 		    // System.out.println("#"+chunks[0] + "aaa" + ht.get(chunks[0]) + "bbb");
