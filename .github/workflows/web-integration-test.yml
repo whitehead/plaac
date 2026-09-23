@@ -43,7 +43,7 @@ jobs:
           ruby-version: 3.2  # match your local Ruby version
           bundler-cache: true
 
-      # 3. Install Java for PLAAC
+      # 3. Install R for PLAAC
       - name: Install R
         run: |
           sudo apt-get update
