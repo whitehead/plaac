@@ -303,7 +303,7 @@ cd cli/
 ./build_plaac.sh
 cp target/plaac.jar ../web/bin/
 cp R/plaac_plot.r ../web/plaac_plot.r
-cp R/plaac_plot_utils.r ../web/plaac_plot_utils.r
+cp R/plaac_plot_util.r ../web/plaac_plot_util.r
 cp target/_plaac_headers.haml ../web/views/
 cp target/hmm_default.png ../web/public/
 cd ..

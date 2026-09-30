@@ -32,6 +32,28 @@ SEQ=MQNSNQSQNQGQFQQNNMQQQQQQQQQQNQFQQNMPMHQFNMQNQGQFQQNGMQPQFHQQ
 header_cols() { grep -v '^#' "$1" | awk -F'\t' 'NR==1 {print NF; exit}'; }
 data_cols()   { grep -v '^#' "$1" | awk -F'\t' 'NR>1 {print NF}' | sort -u | tr '\n' ' '; }
 
+run_verbose_list_test() {
+    local fasta="$1"
+    local description="$2"
+    local expected actual rc_list
+
+    awk '/^>/ {sub(/^>/, ""); print}' "$CLI_DIR/example/$fasta" \
+        > "$WORK/list.txt"
+
+    expected="$(grep -c '^>' "$CLI_DIR/example/$fasta")"
+
+    run -i "$CLI_DIR/example/$fasta" -p "$WORK/list.txt"
+    actual="$(grep -v '^#' "$OUT" | grep -v '^###' | awk -F'\t' 'NR > 1 {print $2}' | sort -u | grep -c .)"
+    rc_list=$rc
+
+    if [[ "$rc_list" -eq 0 && "$actual" -eq "$expected" ]]; then
+        pass_msg "verbose list output contains all $expected input sequences $description"
+    else
+        fail_msg "verbose list output lost sequences $description (expected $expected, got $actual, exit=$rc_list)"
+        echo "Unique SEQids in verbose output:"
+        grep -v '^#' "$OUT" | grep -v '^###' | awk -F'\t' 'NR > 1 {print $2}' | sort -u | sed 's/^/        /'
+    fi
+}
 echo "Running SEQid field tests..."
 
 # 1. a tab inside the header must not add columns
@@ -92,6 +114,16 @@ else
     fail_msg "per-residue table differs between tab- and space-separated headers (exit=$rc)"
     diff "$WORK/space_res.tsv" "$WORK/tab_res.tsv" | sed 's/^/        /' | head -4
 fi
+
+# 6. verbose list output (-p list.txt) produces one row per residue.  The list
+#    is copied verbatim from the FASTA headers, including tabs.  Every sequence
+#    in the input must still be represented in the output.
+
+# 6. verbose list output (-p list.txt) produces one row per residue.  The list
+#    is copied verbatim from the FASTA headers.  Every sequence in the input
+#    must still be represented in the output.
+run_verbose_list_test "four_classic_prions_tabs.fasta" "that include tabs"
+run_verbose_list_test "four_classic_prions.fasta" "without tabs"
 
 echo
 if [[ "$fail" -eq 0 ]]; then
