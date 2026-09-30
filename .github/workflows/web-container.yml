@@ -13,7 +13,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-test
+    runs-on: ubuntu-26.04
 
     permissions:
       contents: read

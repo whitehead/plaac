@@ -24,7 +24,7 @@ permissions:
     
 jobs:
   cli-test-java:
-    runs-on: ubuntu-test
+    runs-on: ubuntu-26.04
     defaults:
       run:
         working-directory: cli
@@ -65,7 +65,7 @@ jobs:
 
   cli-test-python:
     needs: cli-test-java
-    runs-on: ubuntu-test
+    runs-on: ubuntu-26.04
     defaults:
       run:
         working-directory: cli
@@ -114,7 +114,7 @@ jobs:
   cli-release:
     needs: cli-test-python
     if: github.event_name == 'release'
-    runs-on: ubuntu-test
+    runs-on: ubuntu-26.04
 
     permissions:
       contents: write

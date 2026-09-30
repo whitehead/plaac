@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-test
+    runs-on: ubuntu-26.04
     env:
       RACK_ENV: test
     defaults:
