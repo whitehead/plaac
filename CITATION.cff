@@ -32,7 +32,7 @@ keywords:
   - computational biology
   - hidden Markov models
 license: MIT
-version: v1.1.0rc1
+version: v1.1.0
 message: >-
   If you use PLAAC, please cite Lancaster et al. (2014), which describes
   the web and command-line applications and their implementation.
