@@ -5,6 +5,20 @@ require 'rack/test'
 
 RSpec.describe 'PLAAC web workflow', type: :request do
 
+  describe 'JavaScript assets' do
+    [
+      '/coffee/application.js',
+      '/coffee/console_stub.js'
+    ].each do |path|
+      it "serves #{path}" do
+        get path
+
+        expect(last_response).to be_ok
+        expect(last_response.body).not_to be_empty
+      end
+    end
+  end  
+  
   def run_web_workflow(fasta_name)
     fasta_path = File.expand_path("../../../cli/example/#{fasta_name}", __dir__)
 
