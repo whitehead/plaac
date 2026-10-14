@@ -17,7 +17,7 @@ on:
   pull_request:
     paths-ignore: *plaac_cli_paths
   release:
-    types: [created]
+    types: [published]
 
 permissions:
   contents: read
